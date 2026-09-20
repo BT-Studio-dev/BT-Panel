@@ -117,6 +117,21 @@ const LOCAL_DEV_ORIGINS: string[] = [
   "http://127.0.0.1:*",
   "http://[::1]:*",
 ];
+/**
+ * Known hosted dev/preview provider origins. Added EXPLICITLY (not derived
+ * from request headers) so sign-in still passes the origin check when a
+ * relay drops/mangles the forwarded headers the same-host shortcut relies
+ * on, or when an explicit `BETTER_AUTH_URL` pins the base URL to a stale
+ * host (e.g. a rebuilt GitHub Codespace whose generated name changed, or a
+ * `.env` that the current `dev` script did not load). Cookie scope keeps
+ * the CSRF exposure bounded to same-host sessions.
+ */
+const KNOWN_PREVIEW_ORIGINS: string[] = [
+  // GitHub Codespaces forwarded-port hosts: https://<name>-<port>.app.github.dev
+  "https://*.app.github.dev",
+  // Arena sandbox previews: https://<port>-<sandboxId>.e2b.app
+  "https://*.e2b.app",
+];
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
   // (not only the preview wildcard).
@@ -148,7 +163,7 @@ const trustedOrigins = async (
     .get("x-forwarded-proto")
     ?.split(",")[0]
     ?.trim();
-  const origins: string[] = [...LOCAL_DEV_ORIGINS];
+  const origins: string[] = [...LOCAL_DEV_ORIGINS, ...KNOWN_PREVIEW_ORIGINS];
   if (forwardedHost) {
     if (forwardedProto) {
       // Same-host allowance: the relay forwards the browser's Host + scheme.
