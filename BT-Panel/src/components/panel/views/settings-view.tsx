@@ -13,6 +13,7 @@ import {
   MonitorCog,
   Moon,
   Play,
+  RefreshCw,
   ShieldCheck,
   Sun,
   Trash2,
@@ -537,11 +538,28 @@ function WallpaperPanel() {
     setPage(1);
   }, [debouncedQuery]);
 
+  const [fetchTick, setFetchTick] = useState(0);
   useEffect(() => {
     if (mode !== "catalog") return;
     let cancelled = false;
     setState((s) => ({ ...s, loading: true, error: "" }));
-    fetchWallpaperCatalog({ data: { category, page, query: debouncedQuery } })
+    const fetchPromise = fetchWallpaperCatalog({ data: { category, page, query: debouncedQuery } });
+    // Watchdog: if the RPC call ever hangs (dropped response over a preview
+    // relay / dead socket), resolve to the honest "unavailable" state instead
+    // of leaving the spinner up forever. Never fabricate entries.
+    const watchdog = new Promise<"timeout">((resolve) => {
+      window.setTimeout(() => resolve("timeout"), 25000);
+    });
+    void Promise.race([fetchPromise.then(() => "ok" as const), watchdog]).then((verdict) => {
+      if (!cancelled && verdict === "timeout") {
+        setState({
+          loading: false,
+          result: null,
+          error: "The wallpaper catalog request did not respond in time — check the server connection and try again.",
+        });
+      }
+    });
+    fetchPromise
       .then((result) => {
         if (!cancelled) setState({ loading: false, result, error: "" });
       })
@@ -557,7 +575,7 @@ function WallpaperPanel() {
     return () => {
       cancelled = true;
     };
-  }, [mode, category, page, debouncedQuery]);
+  }, [mode, category, page, debouncedQuery, fetchTick]);
 
   const result = state.result;
   const categories = result?.categories?.length ? result.categories : WALLPAPER_CATEGORIES;
@@ -697,6 +715,12 @@ function WallpaperPanel() {
           </div>
           {result?.note ? <p className="mt-3 text-[12px] font-semibold text-warn">{result.note}</p> : null}
           {state.error ? <p className="mt-3 text-[13px] font-semibold text-danger">{state.error}</p> : null}
+          {state.error ? (
+            <button type="button" className="btn-ghost mt-2 inline-flex items-center gap-1.5" onClick={() => setFetchTick((t) => t + 1)}>
+              <RefreshCw className="size-3.5" />
+              Retry
+            </button>
+          ) : null}
           <div className="relative mt-4 min-h-[180px]">
             {state.loading ? (
               <div className="absolute inset-0 z-10 grid place-items-center rounded-xl bg-black/30 text-[13px] font-bold text-steel">
