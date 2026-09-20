@@ -1,5 +1,6 @@
 import { hexToRgb, toHexColor } from "@/lib/utils";
 import { DEFAULT_THEME, type ThemeMode, type ThemeSettings } from "./types";
+import { parseShaderWallpaper } from "./shader-catalog";
 
 /**
  * Personal header-toggle override (sun/moon button). Any signed-in user can
@@ -41,9 +42,12 @@ export function applyTheme(theme: ThemeSettings) {
   const root = document.documentElement;
   const mode = effectiveThemeMode(theme);
   root.dataset.themeMode = mode;
-  const wallpaper = theme.wallpaperUrl
-    ? `url("${theme.wallpaperUrl.replace(/"/g, '\\"')}")`
-    : "none";
+  // Live shaders render as a WebGL canvas instead of a CSS background —
+  // keep the sentinel out of --wallpaper-url entirely (no bogus fetch).
+  const wallpaper =
+    theme.wallpaperUrl && !parseShaderWallpaper(theme.wallpaperUrl)
+      ? `url("${theme.wallpaperUrl.replace(/"/g, '\\"')}")`
+      : "none";
   const tint = toHexColor(theme.glassTint, DEFAULT_THEME.glassTint);
   const accent = toHexColor(theme.accentColor, DEFAULT_THEME.accentColor);
   root.style.setProperty("--wallpaper-url", wallpaper);

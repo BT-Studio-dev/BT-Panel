@@ -127,6 +127,8 @@ function cleanText(value: unknown, fallback: string, max: number): string {
 function sanitizeUrl(value: unknown, max = 2000): string {
   const candidate = String(value || "").trim().slice(0, max);
   if (!candidate) return "";
+  // Live-shader sentinel backgrounds (Panel Background Engine → Live Shaders).
+  if (/^shader:(waves|aurora|mesh)$/.test(candidate)) return candidate;
   if (candidate.startsWith("/") || candidate.startsWith("data:image/") || candidate.startsWith("data:video/")) {
     return candidate;
   }

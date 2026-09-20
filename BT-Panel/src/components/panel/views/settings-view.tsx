@@ -16,7 +16,10 @@ import {
   ShieldCheck,
   Sun,
   Trash2,
+  Waves as WavesIcon,
 } from "lucide-react";
+import { SHADER_VARIANTS, parseShaderWallpaper, shaderWallpaperValue } from "@/lib/panel/shader-catalog";
+import { ShaderBackground } from "../shader-background";
 import { addMedia, addMusicTrack, deleteMedia, deleteMusicTrack, fetchWallpaperCatalog } from "@/lib/panel/server";
 import { usePanelUi } from "@/lib/panel/store";
 import { DEFAULT_THEME, type SettingsTab } from "@/lib/panel/types";
@@ -483,22 +486,24 @@ function loadWallpaperFavorites(): WallpaperFavorite[] {
 function detectMediaType(url: string): string {
   const u = url.trim();
   if (!u) return "—";
+  if (/^shader:/i.test(u)) return "Live Shader";
   if (/^data:video\//i.test(u) || /\.(mp4|webm|m4v|mov)(\?|#|$)/i.test(u)) return "Video";
   if (/^data:image\//i.test(u) || /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(u)) return "Image";
   return "Image (assumed)";
 }
 
-type EngineMode = "catalog" | "upload" | "url" | "favorites";
+type EngineMode = "catalog" | "upload" | "url" | "favorites" | "shaders";
 
 const MODE_TABS: { id: EngineMode; label: (favCount: number) => string }[] = [
   { id: "catalog", label: () => "4K Wallpapers" },
   { id: "upload", label: () => "Upload Media" },
   { id: "url", label: () => "Custom URL" },
   { id: "favorites", label: (n) => `Favorites ( ${n} )` },
+  { id: "shaders", label: () => "Live Shaders" },
 ];
 
 function WallpaperPanel() {
-  const { setDraft, persistTheme, media, setMedia } = usePanel();
+  const { draft, setDraft, persistTheme, media, setMedia } = usePanel();
   const [mode, setMode] = useState<EngineMode>("catalog");
   const [favorites, setFavorites] = useState<WallpaperFavorite[]>(() => loadWallpaperFavorites());
   const [category, setCategory] = useState("all");
@@ -601,7 +606,13 @@ function WallpaperPanel() {
     setMode("url");
   }
 
-  const modeIcon = { catalog: Globe, upload: CloudUpload, url: Link2, favorites: Heart } as const;
+  const modeIcon = {
+    catalog: Globe,
+    upload: CloudUpload,
+    url: Link2,
+    favorites: Heart,
+    shaders: WavesIcon,
+  } as const;
 
   return (
     <div className="glass p-5">
@@ -921,6 +932,77 @@ function WallpaperPanel() {
               ))}
             </div>
           )}
+        </div>
+      ) : null}
+
+      {mode === "shaders" ? (
+        <div className="mt-4">
+          <p className="text-[12.5px] font-semibold text-steel">
+            Animated WebGL backgrounds rendered live in your panel, tinted by the current Accent Color — no image
+            files, always sharp. Preview flips the whole panel instantly.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <button
+                type="button"
+                className={[
+                  "relative grid aspect-[16/10] w-full place-items-center overflow-hidden rounded-[12px] border bg-black/40",
+                  !draft.wallpaperUrl ? "border-[var(--accent)]/70 ring-2 ring-[var(--accent-glow)]" : "border-white/10 hover:border-white/30",
+                ].join(" ")}
+                onClick={() => previewWallpaper("", "no background")}
+              >
+                <span className="text-[12px] font-extrabold text-steel">Off / Default Gradient</span>
+              </button>
+              <div className="mt-2 flex gap-2">
+                <button type="button" className="btn-ghost min-h-9 flex-1 text-[11px]" onClick={() => previewWallpaper("", "no background")}>
+                  <Eye className="size-3.5" /> Live Preview
+                </button>
+                <button
+                  type="button"
+                  className="btn-accent min-h-9 flex-1 text-[11px]"
+                  onClick={() => applyWallpaper("", "the default background")}
+                >
+                  <Check className="size-3.5" /> Apply
+                </button>
+              </div>
+            </div>
+            {SHADER_VARIANTS.map((variant) => {
+              const value = shaderWallpaperValue(variant.id);
+              const active = parseShaderWallpaper(draft.wallpaperUrl) === variant.id;
+              return (
+                <div key={variant.id}>
+                  <div
+                    className={[
+                      "relative aspect-[16/10] w-full overflow-hidden rounded-[12px] border",
+                      active ? "border-[var(--accent)]/70 ring-2 ring-[var(--accent-glow)]" : "border-white/10",
+                    ].join(" ")}
+                  >
+                    <ShaderBackground variant={variant.id} />
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 py-2 text-left">
+                      <span className="block text-[12px] font-extrabold">{variant.name}</span>
+                      <span className="block text-[10px] font-semibold text-steel">{variant.description}</span>
+                    </span>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      className="btn-ghost min-h-9 flex-1 text-[11px]"
+                      onClick={() => previewWallpaper(value, variant.name)}
+                    >
+                      <Eye className="size-3.5" /> Live Preview
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-accent min-h-9 flex-1 text-[11px]"
+                      onClick={() => applyWallpaper(value, variant.name)}
+                    >
+                      <Check className="size-3.5" /> Apply
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : null}
     </div>
