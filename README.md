@@ -29,7 +29,7 @@
 
 ```bash
 # Clone the repository
-git clone [https://github.com/BT-Studio-dev/BT-Panel.git](https://github.com/BT-Studio-dev/BT-Panel.git)
+git clone https://github.com/BT-Studio-dev/BT-Panel.git
 
 # Navigate into the project directory
 cd BT-Panel
