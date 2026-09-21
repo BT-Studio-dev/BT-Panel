@@ -71,18 +71,17 @@ function Home() {
     };
   }, [isPending, user, auto]);
 
-  // No splash screen — keep the wallpaper visible while the session resolves
-  // or the silent preview sign-in runs. Watchdog: a lost response would leave
-  // the wallpaper-only page up forever, so after 20s offer Refresh / Sign in
-  // manually on top of the wallpaper (wallpaper stays the background).
-  const [stalled, setStalled] = useState(false);
+  // No splash screen and NO status cards — keep the wallpaper visible while
+  // the session resolves or the silent preview sign-in runs. Watchdog: if a
+  // response is lost in transit (slow/lost relay), waiting forever would leave
+  // a wallpaper-only page; recover SILENTLY by reloading every 20s of waiting
+  // (the reload re-runs the same zero-UI boot — the user never sees a card).
   useEffect(() => {
     const waiting = isPending || auto === "working";
-    if (!waiting) {
-      setStalled(false);
-      return;
-    }
-    const t = window.setTimeout(() => setStalled(true), 20000);
+    if (!waiting) return;
+    const t = window.setTimeout(() => {
+      window.location.reload();
+    }, 20000);
     return () => window.clearTimeout(t);
   }, [isPending, auto]);
 
@@ -90,28 +89,6 @@ function Home() {
     return (
       <div className="relative min-h-dvh">
         <WallpaperLayer theme={DEFAULT_THEME} />
-        {stalled ? (
-          <div className="absolute inset-0 z-20 grid place-items-center px-6">
-            <div className="max-w-sm rounded-xl border border-white/10 bg-black/70 px-6 py-5 text-center backdrop-blur-md">
-              <p className="text-[13px] font-bold text-ice">Still checking your session…</p>
-              <p className="mt-1 text-[12px] font-semibold text-steel">
-                The connection is slow or a request was lost. Refreshing usually fixes it.
-              </p>
-              <div className="mt-4 flex justify-center gap-2">
-                <button
-                  type="button"
-                  className="btn-accent"
-                  onClick={() => window.location.reload()}
-                >
-                  Refresh
-                </button>
-                <a href="/login" className="btn-ghost">
-                  Sign in manually
-                </a>
-              </div>
-            </div>
-          </div>
-        ) : null}
       </div>
     );
   }
