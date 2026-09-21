@@ -9,6 +9,15 @@ import { getPreviewAutoLogin, getPublicAppearance, resolveLoginEmail } from "@/l
 
 export const Route = createFileRoute("/login")({ component: Login });
 
+/** Race a promise against a timeout — a dropped RPC/auth response must never
+ * leave the form stuck (dead relay socket class of bug). `null` on timeout. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => window.setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 function Login() {
   const { user, isPending } = useCurrentUserState();
   const [identifier, setIdentifier] = useState("");
@@ -42,23 +51,29 @@ function Login() {
     } catch {
       /* storage unavailable */
     }
-    void getPreviewAutoLogin()
+    void (withTimeout(getPreviewAutoLogin(), 10000))
       .then(async (creds) => {
         if (!creds) return;
         setBusy(true);
-        const result = await authClient.signIn.email({
-          email: creds.email,
-          password: creds.password,
-          callbackURL: "/",
-        });
-        if (result.error) {
-          setBusy(false);
+        const result = await withTimeout(
+          authClient.signIn.email({
+            email: creds.email,
+            password: creds.password,
+            callbackURL: "/",
+          }),
+          15000,
+        );
+        setBusy(false);
+        if (!result || result.error) {
+          if (!result) toast.error("Preview sign-in timed out — sign in manually with admin / admin.");
           return;
         }
         window.location.assign("/");
       })
       .catch(() => {
-        /* leave the normal login form in place */
+        // Leave the normal login form in place AND make sure the button isn't
+        // left busy forever if the request dropped.
+        setBusy(false);
       });
   }, [isPending, user]);
 
@@ -69,8 +84,13 @@ function Login() {
     setError("");
     setBusy(true);
     try {
-      const { email } = await resolveLoginEmail({ data: { identifier } });
-      const result = await authClient.signIn.email({ email, password, callbackURL: "/" });
+      const resolved = await withTimeout(resolveLoginEmail({ data: { identifier } }), 15000);
+      if (!resolved) throw new Error("The server didn't respond in time — check the connection and try again.");
+      const result = (await withTimeout(
+        authClient.signIn.email({ email: resolved.email, password, callbackURL: "/" }),
+        15000,
+      )) as Awaited<ReturnType<typeof authClient.signIn.email>> | null;
+      if (!result) throw new Error("Sign-in didn't respond in time — please try again.");
       if (result.error) throw new Error(result.error.message || "Invalid username or password.");
       window.location.assign("/");
     } catch (err) {
