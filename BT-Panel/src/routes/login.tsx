@@ -1,11 +1,11 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { AuthShell } from "@/components/panel/auth-shell";
-import { getPublicAppearance, resolveLoginEmail } from "@/lib/panel/server";
+import { getPreviewAutoLogin, getPublicAppearance, resolveLoginEmail } from "@/lib/panel/server";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -23,6 +23,44 @@ function Login() {
       .then((a) => setRegistrationOpen(a.allowRegistration))
       .catch(() => setRegistrationOpen(true));
   }, []);
+
+  // Preview auto sign-in: sandbox/personal-dev previews wipe their embedded DB
+  // on every environment restart, invalidating all sessions — reopening the
+  // link would otherwise force re-typing admin/admin every time. The server
+  // returns creds ONLY outside production (see `getPreviewAutoLogin`): sign in
+  // silently and land on the dashboard. An explicit sign-out in this tab sets
+  // a flag (consumed once) so Logout isn't instantly undone.
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (autoTried.current || isPending || user) return;
+    autoTried.current = true;
+    try {
+      if (window.sessionStorage.getItem("btpanel.signed-out") === "1") {
+        window.sessionStorage.removeItem("btpanel.signed-out");
+        return;
+      }
+    } catch {
+      /* storage unavailable */
+    }
+    void getPreviewAutoLogin()
+      .then(async (creds) => {
+        if (!creds) return;
+        setBusy(true);
+        const result = await authClient.signIn.email({
+          email: creds.email,
+          password: creds.password,
+          callbackURL: "/",
+        });
+        if (result.error) {
+          setBusy(false);
+          return;
+        }
+        window.location.assign("/");
+      })
+      .catch(() => {
+        /* leave the normal login form in place */
+      });
+  }, [isPending, user]);
 
   if (!isPending && user) return <Navigate to="/" />;
 

@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
+import { SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD } from "@/lib/auth/seed-admin";
 import { getSql } from "@/lib/db";
 import {
   DEFAULT_SETTINGS,
@@ -398,6 +400,32 @@ export const getPublicAppearance = createServerFn({ method: "GET" }).handler(
       },
       allowRegistration: settings.allowRegistration,
     };
+  },
+);
+
+/**
+ * Preview-only auto sign-in credentials for the seeded admin.
+ *
+ * The live preview (sandbox / personal dev run) resets its embedded DB every
+ * time the environment restarts, which invalidates all sessions — so anyone
+ * opening the preview gets the login form again. In that preview context the
+ * seeded `admin`/`admin` creds are public-by-design (see `seed-admin.ts`), so
+ * handing them to the client is safe and lets the login page sign in silently
+ * → open the link, land on the dashboard.
+ *
+ * HARD GATES (all must pass):
+ *   - email/password auth is enabled (this build),
+ *   - NODE_ENV is NOT "production"  → real deployments always require login,
+ *   - BTPANEL_AUTOLOGIN is not "off" → explicit opt-out for public dev demos.
+ * On any real deployment (production build / NODE_ENV=production) this returns
+ * null and the login form behaves exactly as before.
+ */
+export const getPreviewAutoLogin = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ email: string; password: string } | null> => {
+    if (!emailAndPasswordEnabled) return null;
+    if (process.env.NODE_ENV === "production") return null;
+    if (process.env.BTPANEL_AUTOLOGIN?.trim() === "off") return null;
+    return { email: SEED_ADMIN_EMAIL, password: SEED_ADMIN_PASSWORD };
   },
 );
 

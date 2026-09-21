@@ -230,6 +230,14 @@ export async function signOut(redirectTo = "/"): Promise<void> {
     },
     clearToken: () => setBearerToken(null),
     redirect: () => {
+      // Preview auto sign-in gate: an EXPLICIT sign-out must not be undone the
+      // moment the login page mounts by the preview auto sign-in. Flag the tab
+      // (sessionStorage only — next tab/session auto-signs-in as intended).
+      try {
+        window.sessionStorage.setItem("btpanel.signed-out", "1");
+      } catch {
+        /* storage unavailable */
+      }
       window.location.href = redirectTo;
     },
   });
