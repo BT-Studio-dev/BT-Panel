@@ -10,6 +10,7 @@ import { usePanel } from "./context";
 import { AccountView } from "./views/account-view";
 import { HomeView } from "./views/home-view";
 import { MusicPanel, SettingsView } from "./views/settings-view";
+import { PterodactylView } from "./views/pterodactyl-view";
 import { TeamView } from "./views/team-view";
 import { TutorialsView } from "./views/tutorials-view";
 import { UpdatesView } from "./views/updates-view";
@@ -30,7 +31,6 @@ export function PanelShell() {
   }, [settings.faviconTitle, settings.panelName, settings.faviconLogo]);
 
   if (loading) {
-    // No splash screen — keep the wallpaper visible while the panel loads.
     return (
       <div className="relative min-h-dvh">
         <WallpaperLayer theme={draft} />
@@ -55,12 +55,16 @@ export function PanelShell() {
   return (
     <div className="relative min-h-dvh">
       <WallpaperLayer theme={draft} />
+
       <div className="relative z-10 flex min-h-dvh">
         <Sidebar />
+
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />
+
           <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-8 md:px-6">
             {view === "home" ? <HomeView /> : null}
+            {view === "pterodactyl" ? <PterodactylView /> : null}
             {view === "tutorials" ? <TutorialsView /> : null}
             {view === "team" ? <TeamView /> : null}
             {view === "music" ? <MusicPanel /> : null}
@@ -71,6 +75,7 @@ export function PanelShell() {
           </main>
         </div>
       </div>
+
       <MusicPlayer />
       <SoundEffects />
       <OnboardingTour />
