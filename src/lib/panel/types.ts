@@ -1,6 +1,15 @@
 export type PanelRole = "owner" | "admin" | "member";
 export type PanelStatus = "active" | "suspended";
-export type PanelView = "home" | "tutorials" | "team" | "music" | "settings" | "users" | "updates" | "account";
+export type PanelView =
+  | "home"
+  | "pterodactyl"
+  | "tutorials"
+  | "team"
+  | "music"
+  | "settings"
+  | "users"
+  | "updates"
+  | "account";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "music" | "bars" | "access";
 export type PresenceFilter = "all" | "online" | "offline";
 
@@ -28,11 +37,8 @@ export type GeneralSettings = {
   panelSubtitle: string;
   welcomeTitle: string;
   welcomeMessage: string;
-  /** Browser tab title (falls back to panelName when empty). */
   faviconTitle: string;
-  /** Sidebar/login logo — URL, /path or data:image (empty = built-in mark). */
   panelLogo: string;
-  /** Browser tab icon — URL, /path or data:image (empty = /favicon.svg). */
   faviconLogo: string;
 };
 
@@ -44,11 +50,8 @@ export type BarsSettings = {
 };
 
 export type AccessSettings = {
-  /** Public visitors may create accounts from /register. */
   allowRegistration: boolean;
-  /** Show the Tutorials page + sidebar entry. */
   tutorialsEnabled: boolean;
-  /** Auto-start the onboarding walkthrough on first login. */
   onboardingTour: boolean;
 };
 
@@ -96,7 +99,6 @@ export type PanelProfile = {
 export type PublicAppearance = {
   theme: ThemeSettings;
   general: GeneralSettings;
-  /** Login page needs this to hide the sign-up link (and register to refuse). */
   allowRegistration: boolean;
 };
 
@@ -111,7 +113,6 @@ export type BootstrapPayload = {
 
 export const DEFAULT_THEME: ThemeSettings = {
   mode: "dark",
-  // No bundled wallpaper ships with the repo — clean dark gradient base.
   wallpaperUrl: "",
   bgBlur: 0,
   bgOpacity: 100,
