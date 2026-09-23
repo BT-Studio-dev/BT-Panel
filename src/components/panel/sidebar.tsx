@@ -5,6 +5,7 @@ import {
   Menu,
   Music2,
   RefreshCw,
+  Server,
   Settings,
   UserRound,
   Users,
@@ -19,6 +20,7 @@ import { usePanel } from "./context";
 
 const NAV: { id: PanelView; label: string; icon: typeof Home; admin?: boolean }[] = [
   { id: "home", label: "Home", icon: Home },
+  { id: "pterodactyl", label: "Pterodactyl", icon: Server, admin: true },
   { id: "tutorials", label: "Tutorials", icon: BookOpen },
   { id: "team", label: "Team", icon: Users },
   { id: "music", label: "Music", icon: Music2 },
@@ -44,13 +46,9 @@ export function Sidebar() {
   return (
     <>
       {mobileOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          aria-label="Close menu"
-          onClick={() => setMobileOpen(false)}
-        />
+        <button type="button" className="fixed inset-0 z-30 bg-black/50 md:hidden" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
       ) : null}
+
       <aside
         className={cn(
           "glass glass-strong fixed inset-y-0 left-0 z-40 flex flex-col border-r p-4 transition-[width,transform] duration-200 md:static md:translate-x-0",
@@ -64,15 +62,13 @@ export function Sidebar() {
             <div className="min-w-0">
               <div className="truncate text-[15px] font-extrabold tracking-tight">{settings.panelName}</div>
               {settings.panelSubtitle ? (
-                <div className="truncate text-[10px] font-bold tracking-[0.14em] text-steel uppercase">
-                  {settings.panelSubtitle}
-                </div>
+                <div className="truncate text-[10px] font-bold tracking-[0.14em] text-steel uppercase">{settings.panelSubtitle}</div>
               ) : null}
             </div>
           </div>
-          {sidebarCollapsed ? (
-            <BrandMark className="mx-auto size-8" src={settings.panelLogo || undefined} />
-          ) : null}
+
+          {sidebarCollapsed ? <BrandMark className="mx-auto size-8" src={settings.panelLogo || undefined} /> : null}
+
           <button
             type="button"
             className="hidden size-8 shrink-0 items-center justify-center rounded-[9px] border border-white/15 bg-black/40 text-steel md:inline-flex"
@@ -85,39 +81,30 @@ export function Sidebar() {
 
         <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto scrollbar-thin">
           <SectionLabel collapsed={sidebarCollapsed}>Dashboard</SectionLabel>
+
           {items
             .filter((item) => !item.admin && item.id !== "account")
             .map((item) => (
-              <NavButton
-                key={item.id}
-                item={item}
-                active={view === item.id}
-                collapsed={sidebarCollapsed}
-                onClick={() => setView(item.id)}
-              />
+              <NavButton key={item.id} item={item} active={view === item.id} collapsed={sidebarCollapsed} onClick={() => setView(item.id)} />
             ))}
+
           {isAdmin ? (
             <>
               <SectionLabel collapsed={sidebarCollapsed}>
                 Admin
-                <span className="ml-2 rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-white">
-                  ADMIN
-                </span>
+                <span className="ml-2 rounded-full bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-white">ADMIN</span>
               </SectionLabel>
+
               {items
                 .filter((item) => item.admin)
                 .map((item) => (
-                  <NavButton
-                    key={item.id}
-                    item={item}
-                    active={view === item.id}
-                    collapsed={sidebarCollapsed}
-                    onClick={() => setView(item.id)}
-                  />
+                  <NavButton key={item.id} item={item} active={view === item.id} collapsed={sidebarCollapsed} onClick={() => setView(item.id)} />
                 ))}
             </>
           ) : null}
+
           <SectionLabel collapsed={sidebarCollapsed}>Account</SectionLabel>
+
           <NavButton
             item={NAV.find((item) => item.id === "account")!}
             active={view === "account"}
@@ -136,12 +123,10 @@ export function Sidebar() {
               </div>
             ) : null}
           </div>
+
           <button
             type="button"
-            className={cn(
-              "nav-item text-danger",
-              sidebarCollapsed && "justify-center px-2.5",
-            )}
+            className={cn("nav-item text-danger", sidebarCollapsed && "justify-center px-2.5")}
             onClick={() => void signOut("/login")}
           >
             <LogOut className="size-4 shrink-0" />
@@ -155,11 +140,7 @@ export function Sidebar() {
 
 function SectionLabel({ collapsed, children }: { collapsed: boolean; children: React.ReactNode }) {
   if (collapsed) return <div className="h-3" />;
-  return (
-    <div className="flex items-center px-2.5 pt-4 pb-2 text-[10px] font-extrabold tracking-[0.14em] text-white/50 uppercase">
-      {children}
-    </div>
-  );
+  return <div className="flex items-center px-2.5 pt-4 pb-2 text-[10px] font-extrabold tracking-[0.14em] text-white/50 uppercase">{children}</div>;
 }
 
 function NavButton({
@@ -174,6 +155,7 @@ function NavButton({
   onClick: () => void;
 }) {
   const Icon = item.icon;
+
   return (
     <button
       type="button"
