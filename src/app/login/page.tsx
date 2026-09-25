@@ -21,6 +21,12 @@ export default async function LoginPage() {
       subtitle="Enter your credentials to access your servers"
       allowRegistration={settings.allowRegistration}
       demos={demoOwner ? DEMO_ACCOUNTS : []}
+      google={{
+        googleOauthEnabled: settings.googleOauthEnabled,
+        googleClientId: settings.googleClientId,
+        googleClientSecret: settings.googleClientSecret,
+        googleAllowedEmail: settings.googleAllowedEmail,
+      }}
     />
   );
 }
