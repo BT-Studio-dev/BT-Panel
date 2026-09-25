@@ -73,6 +73,17 @@ export const panelSettings = pgTable("panel_settings", {
   allowRegistration: boolean("allow_registration").notNull().default(true),
   tutorialsEnabled: boolean("tutorials_enabled").notNull().default(true),
   showDemoLogin: boolean("show_demo_login").notNull().default(true),
+  passwordResetEnabled: boolean("password_reset_enabled").notNull().default(true),
+  smtpHost: text("smtp_host").notNull().default(""),
+  smtpPort: integer("smtp_port").notNull().default(587),
+  smtpSecure: boolean("smtp_secure").notNull().default(false),
+  smtpUser: text("smtp_user").notNull().default(""),
+  smtpPass: text("smtp_pass").notNull().default(""),
+  smtpFrom: text("smtp_from").notNull().default("BT Panel <no-reply@btpanel.local>"),
+  googleOauthEnabled: boolean("google_oauth_enabled").notNull().default(false),
+  googleClientId: text("google_client_id").notNull().default(""),
+  googleClientSecret: text("google_client_secret").notNull().default(""),
+  googleAllowedEmail: text("google_allowed_email").notNull().default(""),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -119,3 +130,23 @@ export const mediaFiles = pgTable("media_files", {
   createdBy: text("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * One-shot password reset tokens. The plaintext token never lives in the DB —
+ * only its sha256 hash does. `usedAt` is stamped when consumed so a token can
+ * only be used once; `expiresAt` is short (default 30 min) so a leaked
+ * mailbox message self-heals quickly.
+ */
+export const passwordResetTokens = pgTable(
+  "password_reset_tokens",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("password_reset_tokens_user_idx").on(t.userId)],
+);
