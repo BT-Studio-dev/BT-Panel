@@ -2,7 +2,7 @@ import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { db, pool } from "@/db";
-import { mediaFiles, panelSettings, serverEvents, servers, sessions, users } from "@/db/schema";
+import { mediaFiles, panelSettings, passwordResetTokens, serverEvents, servers, sessions, users } from "@/db/schema";
 import {
   CPU_OPTIONS,
   DISK_OPTIONS,
@@ -27,7 +27,7 @@ import {
   type ServerStatus,
 } from "@/lib/panel/types";
 import { toHexColor } from "@/lib/utils";
-import { HttpError, hashPassword, newId, verifyPassword } from "./core";
+import { HttpError, hashPassword, newId, newToken, sha256, verifyPassword } from "./core";
 
 export type UserRow = typeof users.$inferSelect;
 type ServerRow = typeof servers.$inferSelect;
@@ -89,9 +89,33 @@ create table if not exists panel_settings (
   allow_registration boolean not null default true,
   tutorials_enabled boolean not null default true,
   show_demo_login boolean not null default true,
+  password_reset_enabled boolean not null default true,
+  smtp_host text not null default '',
+  smtp_port integer not null default 587,
+  smtp_secure boolean not null default false,
+  smtp_user text not null default '',
+  smtp_pass text not null default '',
+  smtp_from text not null default 'BT Panel <no-reply@btpanel.local>',
+  google_oauth_enabled boolean not null default false,
+  google_client_id text not null default '',
+  google_client_secret text not null default '',
+  google_allowed_email text not null default '',
   updated_at timestamptz not null default now()
 );
 insert into panel_settings (id) values (1) on conflict (id) do nothing;
+-- Column backfill for upgrades from older versions where the table
+-- already exists from before the new columns were added.
+alter table panel_settings add column if not exists password_reset_enabled boolean not null default true;
+alter table panel_settings add column if not exists smtp_host text not null default '';
+alter table panel_settings add column if not exists smtp_port integer not null default 587;
+alter table panel_settings add column if not exists smtp_secure boolean not null default false;
+alter table panel_settings add column if not exists smtp_user text not null default '';
+alter table panel_settings add column if not exists smtp_pass text not null default '';
+alter table panel_settings add column if not exists smtp_from text not null default 'BT Panel <no-reply@btpanel.local>';
+alter table panel_settings add column if not exists google_oauth_enabled boolean not null default false;
+alter table panel_settings add column if not exists google_client_id text not null default '';
+alter table panel_settings add column if not exists google_client_secret text not null default '';
+alter table panel_settings add column if not exists google_allowed_email text not null default '';
 create table if not exists servers (
   id text primary key,
   name text not null,
@@ -127,6 +151,15 @@ create table if not exists media_files (
   created_by text,
   created_at timestamptz not null default now()
 );
+create table if not exists password_reset_tokens (
+  id text primary key,
+  user_id text not null,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint password_reset_tokens_user_id_users_id_fk foreign key (user_id) references users(id) on delete cascade
+);
+create index if not exists password_reset_tokens_user_idx on password_reset_tokens (user_id);
 `;
 
 const globalForSetup = globalThis as typeof globalThis & { __btpReady?: Promise<void> };
@@ -239,8 +272,18 @@ function rowToSettings(row: SettingsRow): PanelSettings {
     showRole: row.showRole,
     showHeaderUser: row.showHeaderUser,
     allowRegistration: row.allowRegistration,
-    tutorialsEnabled: row.tutorialsEnabled,
     showDemoLogin: row.showDemoLogin,
+    passwordResetEnabled: row.passwordResetEnabled,
+    smtpHost: row.smtpHost,
+    smtpPort: row.smtpPort,
+    smtpSecure: row.smtpSecure,
+    smtpUser: row.smtpUser,
+    smtpPass: row.smtpPass,
+    smtpFrom: row.smtpFrom,
+    googleOauthEnabled: row.googleOauthEnabled,
+    googleClientId: row.googleClientId,
+    googleClientSecret: row.googleClientSecret,
+    googleAllowedEmail: row.googleAllowedEmail,
   };
 }
 
@@ -309,8 +352,20 @@ export async function updateSettings(input: Record<string, unknown>): Promise<Pa
   put("showRole", bool(input.showRole));
   put("showHeaderUser", bool(input.showHeaderUser));
   put("allowRegistration", bool(input.allowRegistration));
-  put("tutorialsEnabled", bool(input.tutorialsEnabled));
   put("showDemoLogin", bool(input.showDemoLogin));
+  put("passwordResetEnabled", bool(input.passwordResetEnabled));
+  put("smtpHost", str(input.smtpHost, 200));
+  const port = intIn(input.smtpPort, 1, 65535);
+  put("smtpPort", port);
+  put("smtpSecure", bool(input.smtpSecure));
+  put("smtpUser", str(input.smtpUser, 200));
+  put("smtpPass", typeof input.smtpPass === "string" ? input.smtpPass.slice(0, 400) : undefined);
+  const smtpFrom = str(input.smtpFrom, 200);
+  put("smtpFrom", smtpFrom);
+  put("googleOauthEnabled", bool(input.googleOauthEnabled));
+  put("googleClientId", str(input.googleClientId, 240));
+  put("googleClientSecret", typeof input.googleClientSecret === "string" ? input.googleClientSecret.slice(0, 400) : undefined);
+  put("googleAllowedEmail", str(input.googleAllowedEmail, 200));
   if (Object.keys(patch).length === 0) throw new HttpError(400, "Nothing to update.");
   const rows = await db
     .update(panelSettings)
@@ -705,6 +760,70 @@ export async function getMedia(id: string) {
   await ensureDatabase();
   const rows = await db.select({ mime: mediaFiles.mime, data: mediaFiles.data }).from(mediaFiles).where(eq(mediaFiles.id, id)).limit(1);
   return rows[0] ?? null;
+}
+
+// ── Password reset tokens ──────────────────────────────────────────────────
+const RESET_TTL_MS = 30 * 60_000; // 30 minutes — a leaked mailbox self-heals quickly.
+
+export async function createPasswordResetToken(userId: string): Promise<string> {
+  const token = newToken();
+  const id = sha256(token);
+  const expiresAt = new Date(Date.now() + RESET_TTL_MS);
+  await db.insert(passwordResetTokens).values({ id, userId, expiresAt });
+  return token;
+}
+
+export type ConsumedReset = { userId: string } | { expired: true } | { used: true } | { invalid: true };
+
+export async function consumePasswordResetToken(token: string): Promise<ConsumedReset> {
+  const id = sha256(token);
+  const rows = await db
+    .select()
+    .from(passwordResetTokens)
+    .where(eq(passwordResetTokens.id, id))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return { invalid: true };
+  if (row.usedAt) return { used: true };
+  if (row.expiresAt.getTime() < Date.now()) return { expired: true };
+  return { userId: row.userId };
+}
+
+/** Atomically mark a token used and return true only if we won the race. */
+async function markTokenUsedOnce(id: string): Promise<boolean> {
+  const res = await db
+    .update(passwordResetTokens)
+    .set({ usedAt: new Date() })
+    .where(and(eq(passwordResetTokens.id, id), sql`${passwordResetTokens.usedAt} is null`))
+    .returning({ id: passwordResetTokens.id });
+  return res.length > 0;
+}
+
+export async function resetPasswordWithToken(token: string, next: unknown): Promise<void> {
+  if (typeof next !== "string" || next.length < 8 || next.length > 128) {
+    throw new HttpError(400, "New password must be at least 8 characters.");
+  }
+  const result = await consumePasswordResetToken(token);
+  if ("invalid" in result) throw new HttpError(400, "That reset link is invalid — request a new one.");
+  if ("expired" in result) throw new HttpError(400, "That reset link has expired — request a new one.");
+  if ("used" in result) throw new HttpError(400, "That reset link was already used — request a new one.");
+  const id = sha256(token);
+  const won = await markTokenUsedOnce(id);
+  if (!won) throw new HttpError(400, "That reset link was just used — request a new one.");
+  await db.update(users).set({ passwordHash: await hashPassword(next) }).where(eq(users.id, result.userId));
+  // Any existing sessions become invalid once the password changes.
+  await db.delete(sessions).where(eq(sessions.userId, result.userId));
+  // A demo account changed its password: the printed hint would be stale.
+  if (DEMO_ACCOUNTS.some((account) => account.id === result.userId)) {
+    await db.update(panelSettings).set({ showDemoLogin: false }).where(eq(panelSettings.id, 1));
+  }
+}
+
+/** Sweep expired/unused tokens so the table doesn't grow forever. */
+export async function purgePasswordResetTokens(): Promise<void> {
+  await pool.query(
+    `delete from password_reset_tokens where expires_at < now() or used_at is not null and created_at < now() - interval '7 days'`,
+  );
 }
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
