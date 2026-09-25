@@ -3,7 +3,6 @@ export type PanelStatus = "active" | "suspended";
 export type PanelView =
   | "home"
   | "servers"
-  | "tutorials"
   | "team"
   | "music"
   | "settings"
@@ -50,11 +49,37 @@ export type BarsSettings = {
 
 export type AccessSettings = {
   allowRegistration: boolean;
-  tutorialsEnabled: boolean;
   showDemoLogin: boolean;
+  passwordResetEnabled: boolean;
 };
 
-export type PanelSettings = ThemeSettings & GeneralSettings & BarsSettings & AccessSettings;
+/** Outbound mail server used to deliver password reset links. */
+export type SmtpSettings = {
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPass: string;
+  smtpFrom: string;
+};
+
+/** "Sign in with Google" — only active when `googleOauthEnabled` is true and
+ *  both a client id and a client secret are configured. `googleAllowedEmail`
+ *  is an optional whitelist that, when set, restricts the OAuth login to a
+ *  single email address (typical for single-user panels). */
+export type GoogleOauthSettings = {
+  googleOauthEnabled: boolean;
+  googleClientId: string;
+  googleClientSecret: string;
+  googleAllowedEmail: string;
+};
+
+export type PanelSettings = ThemeSettings &
+  GeneralSettings &
+  BarsSettings &
+  AccessSettings &
+  SmtpSettings &
+  GoogleOauthSettings;
 
 export type PanelProfile = {
   userId: string;
@@ -115,10 +140,10 @@ export const DEFAULT_THEME: ThemeSettings = {
   glassTint: "#0a0c14",
   navText: "#9da3b4",
   navTextActive: "#e7e9f0",
-  glassBlur: 20,
-  glassSaturate: 160,
-  borderRadius: 16,
-  glassOpacity: 62,
+  glassBlur: 32,
+  glassSaturate: 180,
+  borderRadius: 18,
+  glassOpacity: 88,
   showTeam: true,
 };
 
@@ -141,8 +166,24 @@ export const DEFAULT_BARS: BarsSettings = {
 
 export const DEFAULT_ACCESS: AccessSettings = {
   allowRegistration: true,
-  tutorialsEnabled: true,
   showDemoLogin: true,
+  passwordResetEnabled: true,
+};
+
+export const DEFAULT_SMTP: SmtpSettings = {
+  smtpHost: "",
+  smtpPort: 587,
+  smtpSecure: false,
+  smtpUser: "",
+  smtpPass: "",
+  smtpFrom: "BT Panel <no-reply@btpanel.local>",
+};
+
+export const DEFAULT_GOOGLE_OAUTH: GoogleOauthSettings = {
+  googleOauthEnabled: false,
+  googleClientId: "",
+  googleClientSecret: "",
+  googleAllowedEmail: "",
 };
 
 export const DEFAULT_SETTINGS: PanelSettings = {
@@ -150,6 +191,8 @@ export const DEFAULT_SETTINGS: PanelSettings = {
   ...DEFAULT_GENERAL,
   ...DEFAULT_BARS,
   ...DEFAULT_ACCESS,
+  ...DEFAULT_SMTP,
+  ...DEFAULT_GOOGLE_OAUTH,
 };
 
 export const THEME_KEYS = Object.keys(DEFAULT_THEME) as (keyof ThemeSettings)[];
@@ -176,7 +219,6 @@ export function isAdminRole(role: PanelRole | string | undefined): boolean {
 export const PANEL_VIEWS: PanelView[] = [
   "home",
   "servers",
-  "tutorials",
   "team",
   "music",
   "settings",
