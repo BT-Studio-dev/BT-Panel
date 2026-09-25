@@ -25,14 +25,14 @@ export function PresenceAvatar({
   const dim = size === "lg" ? "size-24" : size === "sm" ? "size-9" : "size-10";
   const image = src && src.length > 0 ? src : "/avatar.svg";
   return (
-    <div className={cn("relative shrink-0", dim)} title={name}>
+    <div className={cn("relative shrink-0 overflow-hidden", dim)} title={name}>
       <div
         className={cn(
           "grid size-full place-items-center overflow-hidden rounded-[12px] bg-fill-strong",
           size === "lg" && "rounded-[22px]",
         )}
       >
-        <img src={image} alt="" className="size-full object-cover" />
+        <img src={image} alt="" className="block size-full object-cover" aria-hidden="true" />
       </div>
       {online !== undefined ? (
         <span className={cn("presence-dot", online && "on", size === "lg" && "right-1 bottom-1 size-4")} />
@@ -361,24 +361,31 @@ export function Modal({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/55 p-4 backdrop-blur-[2px]" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-50 grid overflow-y-auto bg-black/85 p-4 [place-items:center]"
+      onMouseDown={onClose}
+    >
       <div
-        className={cn("glass glass-strong view-enter w-full", wide ? "max-w-3xl" : "max-w-lg")}
+        className={cn(
+          "glass-modal view-enter relative flex w-full flex-col overflow-hidden",
+          wide ? "max-w-3xl" : "max-w-lg",
+          "max-h-[calc(100dvh-2rem)]",
+        )}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
-          <div>
-            <h3 className="text-[16px] font-extrabold">{title}</h3>
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-5 py-4">
+          <div className="min-w-0">
+            <h3 className="truncate text-[16px] font-extrabold">{title}</h3>
             {subtitle ? <p className="mt-0.5 text-[12px] font-semibold text-steel">{subtitle}</p> : null}
           </div>
           <button type="button" className="icon-btn size-8" onClick={onClose} aria-label="Close">
             <X className="size-4" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
       </div>
     </div>
   );
