@@ -33,9 +33,3 @@ git clone https://github.com/BT-Studio-dev/BT-Panel.git
 
 # Navigate into the project directory
 cd BT-Panel
-
-# Install dependencies
-pnpm install
-
-# Start the development server
-pnpm dev
