@@ -7,8 +7,10 @@ import {
   Check,
   CloudUpload,
   Eye,
+  Globe,
   Image as ImageIcon,
   Link2,
+  Mail,
   MonitorCog,
   Moon,
   ShieldCheck,
@@ -28,7 +30,7 @@ import { DEFAULT_THEME, type SettingsTab, type ThemeMode, type ThemeSettings } f
 import { api, cn, compressImageFile, isVideoUrl } from "@/lib/utils";
 import { usePanel } from "../context";
 import { ShaderCanvas } from "../wallpaper-layer";
-import { ColorField, Field, Slider, Spinner, Switch, ToggleRow } from "../ui";
+import { ColorField, Field, Slider, Spinner, ToggleRow } from "../ui";
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: "general", label: "General" },
@@ -212,7 +214,6 @@ const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[]
 function AppearancePanel() {
   const { draft, setDraft, persistTheme, clearModeOverride, setSettingsTab } = usePanel();
   const [saving, setSaving] = useState(false);
-  const [autoSave, setAutoSave] = useState(true);
   const [url, setUrl] = useState("");
   const timer = useRef<number | null>(null);
 
@@ -225,7 +226,6 @@ function AppearancePanel() {
 
   function onGlassChange(patch: Partial<ThemeSettings>) {
     setDraft(patch);
-    if (!autoSave) return;
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => void persistTheme(patch, { quiet: true }), 700);
   }
@@ -316,10 +316,10 @@ function AppearancePanel() {
         </div>
 
         <div className="grid content-start gap-4">
-          <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => setDraft({ bgBlur: v })} />
-          <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => setDraft({ bgOpacity: v })} />
+          <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => onGlassChange({ bgBlur: v })} />
+          <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => onGlassChange({ bgOpacity: v })} />
           <div>
-            <ColorField label="Accent Color" value={draft.accentColor} onChange={(v) => setDraft({ accentColor: v })} />
+            <ColorField label="Accent Color" value={draft.accentColor} onChange={(v) => onGlassChange({ accentColor: v })} />
             <div className="mt-2 flex flex-wrap gap-1.5">
               {ACCENT_PRESETS.map((c) => (
                 <button
@@ -330,25 +330,26 @@ function AppearancePanel() {
                     draft.accentColor.toLowerCase() === c ? "border-white" : "border-transparent",
                   )}
                   style={{ background: c, boxShadow: `0 0 12px ${c}66` }}
-                  onClick={() => setDraft({ accentColor: c })}
+                  onClick={() => onGlassChange({ accentColor: c })}
                   aria-label={`Accent ${c}`}
                 />
               ))}
             </div>
           </div>
-          <ColorField label="Glass Tint" value={draft.glassTint} hint="Base color for glassmorphism panels" onChange={(v) => setDraft({ glassTint: v })} />
+          <ColorField label="Glass Tint" value={draft.glassTint} hint="Base color for glassmorphism panels" onChange={(v) => onGlassChange({ glassTint: v })} />
           <Slider
             label="Glass Opacity"
             value={draft.glassOpacity}
             max={100}
             suffix="%"
             hint="0% = fully transparent, 100% = full tint"
-            onChange={(v) => setDraft({ glassOpacity: v })}
+            onChange={(v) => onGlassChange({ glassOpacity: v })}
           />
-          <ColorField label="Nav Text" value={draft.navText} hint="Sidebar inactive item text" onChange={(v) => setDraft({ navText: v })} />
-          <ColorField label="Nav Text Active" value={draft.navTextActive} hint="Sidebar active item text" onChange={(v) => setDraft({ navTextActive: v })} />
-          <Slider label="Glass Blur" value={draft.glassBlur} max={40} suffix="px" onChange={(v) => setDraft({ glassBlur: v })} />
-          <Slider label="Border Radius" value={draft.borderRadius} max={24} suffix="px" onChange={(v) => setDraft({ borderRadius: v })} />
+          <ColorField label="Nav Text" value={draft.navText} hint="Sidebar inactive item text" onChange={(v) => onGlassChange({ navText: v })} />
+          <ColorField label="Nav Text Active" value={draft.navTextActive} hint="Sidebar active item text" onChange={(v) => onGlassChange({ navTextActive: v })} />
+          <Slider label="Glass Blur" value={draft.glassBlur} max={40} suffix="px" onChange={(v) => onGlassChange({ glassBlur: v })} />
+          <Slider label="Glass Saturate" value={draft.glassSaturate} min={100} max={250} suffix="%" onChange={(v) => onGlassChange({ glassSaturate: v })} />
+          <Slider label="Border Radius" value={draft.borderRadius} max={24} suffix="px" onChange={(v) => onGlassChange({ borderRadius: v })} />
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-accent" disabled={saving} onClick={() => void save()}>
               {saving ? <Spinner /> : <Check className="size-4" />} Save Theme
@@ -368,86 +369,7 @@ function AppearancePanel() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-[14px] border border-line-strong p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h4 className="text-[14px] font-extrabold">Glassmorphism, Transparency &amp; Blur Sliders</h4>
-          <div className="flex items-center gap-2 text-[12px] font-bold">
-            <Switch checked={autoSave} onChange={setAutoSave} label="Auto-save changes" />
-            Auto-save changes
-          </div>
-        </div>
-        <GlassSlider
-          label="Card Transparency Bar"
-          value={100 - draft.glassOpacity}
-          min={0}
-          max={100}
-          unit="%"
-          ticks={["0% (Solid Dark)", "50% (Balanced Glass)", "100% (Ultra Clear)"]}
-          onChange={(v) => onGlassChange({ glassOpacity: 100 - v })}
-        />
-        <GlassSlider
-          label="Backdrop Blur Bar"
-          value={draft.glassBlur}
-          min={0}
-          max={40}
-          unit="px"
-          ticks={["0px (No Blur)", "20px (Frost Glass)", "40px (Heavy Cyber Blur)"]}
-          onChange={(v) => onGlassChange({ glassBlur: v })}
-        />
-        {!autoSave ? (
-          <button type="button" className="btn-accent mt-4" disabled={saving} onClick={() => void save()}>
-            {saving ? <Spinner /> : <Check className="size-4" />} Save Appearance
-          </button>
-        ) : null}
       </div>
-    </div>
-  );
-}
-
-function GlassSlider({
-  label,
-  value,
-  min,
-  max,
-  unit,
-  ticks,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  unit: string;
-  ticks: [string, string, string];
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-[12.5px] font-bold">
-          <span className="text-ice">{label}:</span>{" "}
-          <span className="text-accent">
-            {min}
-            {unit}
-          </span>{" "}
-          <span className="text-accent opacity-60">|----------------</span>{" "}
-          <span className="text-accent">
-            {max}
-            {unit}
-          </span>
-        </div>
-        <span className="rounded-md border border-line-strong bg-sunken px-2 py-0.5 text-[12px] font-extrabold text-accent">
-          {value}
-          {unit}
-        </span>
-      </div>
-      <input type="range" className="range-input mt-2" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} />
-      <div className="mt-1 flex justify-between gap-2 text-[10.5px] font-semibold text-steel">
-        {ticks.map((t) => (
-          <span key={t}>{t}</span>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -784,39 +706,189 @@ function AccessPanel() {
   const { settings, persistSettings } = usePanel();
   const [form, setForm] = useState({
     allowRegistration: settings.allowRegistration,
-    tutorialsEnabled: settings.tutorialsEnabled,
     showDemoLogin: settings.showDemoLogin,
+    passwordResetEnabled: settings.passwordResetEnabled,
+    smtpHost: settings.smtpHost,
+    smtpPort: settings.smtpPort,
+    smtpSecure: settings.smtpSecure,
+    smtpUser: settings.smtpUser,
+    smtpPass: settings.smtpPass,
+    smtpFrom: settings.smtpFrom,
+    googleOauthEnabled: settings.googleOauthEnabled,
+    googleClientId: settings.googleClientId,
+    googleClientSecret: settings.googleClientSecret,
+    googleAllowedEmail: settings.googleAllowedEmail,
   });
   const [saving, setSaving] = useState(false);
+  const googleReady =
+    form.googleOauthEnabled && form.googleClientId.trim() && form.googleClientSecret.trim();
   return (
-    <div className="glass p-5">
-      <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
-        <ShieldCheck className="size-4 text-accent" /> Access &amp; Feature Toggles
-      </h3>
-      <p className="mt-1 text-[13px] font-semibold text-steel">Control who can join and which pages are available.</p>
-      <div className="mt-4 grid gap-2">
-        <ToggleRow
-          label="Public registration"
-          hint="Visitors can create member accounts from the sign-up page"
-          checked={form.allowRegistration}
-          onChange={(v) => setForm({ ...form, allowRegistration: v })}
-        />
-        <ToggleRow
-          label="Tutorials page"
-          hint="Show the Tutorials page and its sidebar entry"
-          checked={form.tutorialsEnabled}
-          onChange={(v) => setForm({ ...form, tutorialsEnabled: v })}
-        />
-        <ToggleRow
-          label="Demo credentials hint"
-          hint="Show the demo owner login on the sign-in page (turns off automatically once that password changes)"
-          checked={form.showDemoLogin}
-          onChange={(v) => setForm({ ...form, showDemoLogin: v })}
-        />
+    <div className="grid gap-4">
+      <div className="glass p-5">
+        <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
+          <ShieldCheck className="size-4 text-accent" /> Access &amp; Feature Toggles
+        </h3>
+        <p className="mt-1 text-[13px] font-semibold text-steel">Control who can join and which pages are available.</p>
+        <div className="mt-4 grid gap-2">
+          <ToggleRow
+            label="Public registration"
+            hint="Visitors can create member accounts from the sign-up page"
+            checked={form.allowRegistration}
+            onChange={(v) => setForm({ ...form, allowRegistration: v })}
+          />
+          <ToggleRow
+            label="Demo credentials hint"
+            hint="Show the demo owner login on the sign-in page (turns off automatically once that password changes)"
+            checked={form.showDemoLogin}
+            onChange={(v) => setForm({ ...form, showDemoLogin: v })}
+          />
+          <ToggleRow
+            label="Forgot password"
+            hint="Show a “Forgot password?” link on the sign-in page and let users email themselves a reset link"
+            checked={form.passwordResetEnabled}
+            onChange={(v) => setForm({ ...form, passwordResetEnabled: v })}
+          />
+        </div>
       </div>
+
+      <div className="glass p-5">
+        <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
+          <Mail className="size-4 text-accent" /> Password reset email (SMTP)
+        </h3>
+        <p className="mt-1 text-[13px] font-semibold text-steel">
+          Where to send the reset link. With Gmail, use an <strong className="text-ice">App Password</strong> (not your normal
+          password) and set <code className="rounded bg-fill px-1 font-mono text-[11px]">SMTP_SECURE=true</code> for port 465.
+          Leave the host blank to fall back to the console transport (logs the link to the server).
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field label="SMTP host" hint="e.g. smtp.gmail.com">
+            <input
+              className="panel-input"
+              value={form.smtpHost}
+              placeholder="smtp.gmail.com"
+              onChange={(e) => setForm({ ...form, smtpHost: e.target.value })}
+            />
+          </Field>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <Field label="SMTP port" hint="587 for STARTTLS, 465 for SMTPS">
+              <input
+                className="panel-input font-mono"
+                type="number"
+                min={1}
+                max={65535}
+                value={form.smtpPort}
+                onChange={(e) => setForm({ ...form, smtpPort: Number(e.target.value) || 587 })}
+              />
+            </Field>
+            <Field label="TLS">
+              <button
+                type="button"
+                className={cn("pill-tab h-[44px] px-4", form.smtpSecure && "active")}
+                onClick={() => setForm({ ...form, smtpSecure: !form.smtpSecure })}
+              >
+                {form.smtpSecure ? "SSL/TLS" : "STARTTLS"}
+              </button>
+            </Field>
+          </div>
+          <Field label="Username" hint="Usually your full email address for Gmail">
+            <input
+              className="panel-input"
+              value={form.smtpUser}
+              placeholder="you@gmail.com"
+              onChange={(e) => setForm({ ...form, smtpUser: e.target.value })}
+            />
+          </Field>
+          <Field label="Password / App Password" hint="For Gmail: create one at myaccount.google.com → App passwords">
+            <input
+              className="panel-input font-mono"
+              type="password"
+              value={form.smtpPass}
+              placeholder="••••••••••••••••"
+              onChange={(e) => setForm({ ...form, smtpPass: e.target.value })}
+            />
+          </Field>
+          <Field label="From address" hint="Shown in the recipient's inbox" className="sm:col-span-2">
+            <input
+              className="panel-input"
+              value={form.smtpFrom}
+              placeholder='BT Panel <no-reply@btpanel.local>'
+              onChange={(e) => setForm({ ...form, smtpFrom: e.target.value })}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <div className="glass p-5">
+        <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
+          <Globe className="size-4 text-accent" /> Continue with Google
+        </h3>
+        <p className="mt-1 text-[13px] font-semibold text-steel">
+          Let visitors sign in with their Google account. Create OAuth credentials at
+          {" "}
+          <a className="text-accent underline" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">
+            console.cloud.google.com/apis/credentials
+          </a>{" "}
+          and add <code className="rounded bg-fill px-1 font-mono text-[11px]">{`<your-panel-url>/api/auth/google/callback`}</code> as an authorized redirect URI.
+        </p>
+        <div className="mt-3">
+          <ToggleRow
+            label="Enable Google sign-in"
+            hint="Show a “Continue with Google” button on the sign-in page"
+            checked={form.googleOauthEnabled}
+            onChange={(v) => setForm({ ...form, googleOauthEnabled: v })}
+          />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field label="Google Client ID" hint="Ends with .apps.googleusercontent.com">
+            <input
+              className="panel-input font-mono"
+              value={form.googleClientId}
+              placeholder="xxxxx.apps.googleusercontent.com"
+              onChange={(e) => setForm({ ...form, googleClientId: e.target.value })}
+            />
+          </Field>
+          <Field label="Google Client Secret">
+            <input
+              className="panel-input font-mono"
+              type="password"
+              value={form.googleClientSecret}
+              placeholder="GOCSPX-…"
+              onChange={(e) => setForm({ ...form, googleClientSecret: e.target.value })}
+            />
+          </Field>
+          <Field
+            label="Restrict to one email (optional)"
+            hint="When set, only this Google account may sign in"
+            className="sm:col-span-2"
+          >
+            <input
+              className="panel-input"
+              type="email"
+              value={form.googleAllowedEmail}
+              placeholder="owner@gmail.com"
+              onChange={(e) => setForm({ ...form, googleAllowedEmail: e.target.value })}
+            />
+          </Field>
+        </div>
+        {form.googleOauthEnabled ? (
+          <p
+            className={cn(
+              "mt-3 rounded-[10px] border px-3 py-2 text-[12px] font-semibold",
+              googleReady
+                ? "border-ok/35 bg-ok/10 text-ok"
+                : "border-warn/35 bg-warn/10 text-warn",
+            )}
+          >
+            {googleReady
+              ? "Google sign-in is configured. Visitors will see a “Continue with Google” button."
+              : "Add both a Client ID and Client Secret to enable the button."}
+          </p>
+        ) : null}
+      </div>
+
       <button
         type="button"
-        className="btn-accent mt-5"
+        className="btn-accent justify-self-start"
         disabled={saving}
         onClick={async () => {
           setSaving(true);
