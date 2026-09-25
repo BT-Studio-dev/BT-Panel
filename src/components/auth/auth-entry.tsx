@@ -2,10 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getLocalModeOverride } from "@/lib/panel/theme";
-import type { BootstrapPayload, ThemeSettings } from "@/lib/panel/types";
+import type { BootstrapPayload, GoogleOauthSettings, ThemeSettings } from "@/lib/panel/types";
 import { api, cachePanel, clearCachedPanel, clearStoredToken, getCachedPanel, getStoredToken } from "@/lib/utils";
 import { PanelShell } from "@/components/panel/shell";
-import { AuthShell, LoginForm, RegisterForm, RegistrationClosed } from "./auth-forms";
+import {
+  AuthShell,
+  ForgotForm,
+  LoginForm,
+  RegisterForm,
+  RegistrationClosed,
+  ResetForm,
+} from "./auth-forms";
 
 export type DemoAccount = { label: string; username: string; password: string };
 
@@ -26,8 +33,11 @@ export function AuthEntry({
   demos = [],
   registrationOpen = true,
   firstUser = false,
+  resetToken = "",
+  google,
+  passwordResetEnabled = true,
 }: {
-  mode: "login" | "register";
+  mode: "login" | "register" | "forgot" | "reset";
   theme: ThemeSettings;
   panelName: string;
   panelLogo: string;
@@ -37,6 +47,9 @@ export function AuthEntry({
   demos?: readonly DemoAccount[];
   registrationOpen?: boolean;
   firstUser?: boolean;
+  resetToken?: string;
+  google?: GoogleOauthSettings;
+  passwordResetEnabled?: boolean;
 }) {
   const [panel, setPanel] = useState<BootstrapPayload | null>(null);
 
@@ -85,11 +98,27 @@ export function AuthEntry({
   return (
     <AuthShell theme={theme} panelName={panelName} panelLogo={panelLogo} title={title} subtitle={subtitle}>
       {mode === "login" ? (
-        <LoginForm allowRegistration={allowRegistration} demos={demos} onAuthenticated={open} />
-      ) : registrationOpen || firstUser ? (
-        <RegisterForm onAuthenticated={open} />
+        <LoginForm
+          allowRegistration={allowRegistration}
+          demos={demos}
+          google={{
+            googleOauthEnabled: google?.googleOauthEnabled ?? false,
+            googleClientId: google?.googleClientId ?? "",
+            googleClientSecret: "",
+            googleAllowedEmail: "",
+          }}
+          onAuthenticated={open}
+        />
+      ) : mode === "register" ? (
+        registrationOpen || firstUser ? (
+          <RegisterForm onAuthenticated={open} />
+        ) : (
+          <RegistrationClosed />
+        )
+      ) : mode === "forgot" ? (
+        <ForgotForm panelName={panelName} enabled={passwordResetEnabled} />
       ) : (
-        <RegistrationClosed />
+        <ResetForm panelName={panelName} token={resetToken} />
       )}
     </AuthShell>
   );
