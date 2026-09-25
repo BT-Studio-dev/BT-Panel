@@ -39,8 +39,8 @@
   --text-primary: #e7e9f0;
   --text-dim: #9da3b4;
   --text-faint: rgb(255 255 255 / 0.55);
-  --glass-border: rgb(255 255 255 / 0.1);
-  --glass-shine: rgb(255 255 255 / 0.05);
+  --glass-border: rgb(255 255 255 / 0.16);
+  --glass-shine: rgb(255 255 255 / 0.08);
   --console-bg: rgb(3 4 8 / 0.72);
 }
 
@@ -155,7 +155,7 @@
     background-image: var(--wallpaper-url), var(--default-wallpaper);
     background-size: cover, cover;
     background-position: center, center;
-    filter: blur(var(--bg-blur));
+    filter: blur(var(--bg-blur)) brightness(0.78) saturate(0.9);
     opacity: var(--bg-opacity);
     transform: scale(1.04);
     transition: opacity 300ms ease;
@@ -186,7 +186,8 @@
     border: 1px solid var(--glass-border);
     border-radius: var(--panel-radius);
     box-shadow:
-      0 8px 32px rgb(0 0 0 / 0.28),
+      0 8px 32px rgb(0 0 0 / 0.36),
+      0 1px 0 rgb(255 255 255 / 0.04) inset,
       inset 0 1px 0 var(--glass-shine);
   }
 
@@ -216,6 +217,24 @@
 
   .glass-soft {
     background: rgb(var(--glass-tint) / calc(0.5 * var(--glass-opacity)));
+  }
+
+  /*
+   * Modals need to fully block the page behind them. `.glass` is translucent on
+   * purpose (so its backdrop-filter can blur what's behind), but stacking it on
+   * a `.glass-strong` variant over a darkened scrim still leaves content
+   * bleeding through at the default 62% opacity. Force a near-solid panel and
+   * drop the backdrop-filter so the dialog content is never see-through.
+   */
+  .glass-modal {
+    background-color: rgb(10 12 20 / 1);
+    background: rgb(var(--glass-tint) / 1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 24px 64px rgb(0 0 0 / 0.6),
+      inset 0 1px 0 var(--glass-shine);
   }
 
   /* ── Controls ──────────────────────────────────────────────────────────── */
