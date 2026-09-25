@@ -1,0 +1,22 @@
+[Unit]
+Description=BT Panel - glassmorphism control panel for game & app servers
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=btpanel
+WorkingDirectory=/opt/bt-panel
+EnvironmentFile=/opt/bt-panel/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start
+Restart=always
+RestartSec=5
+
+# Hardening: the panel writes nothing outside its own directory.
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
