@@ -2,27 +2,23 @@
 
 import { useState } from "react";
 import {
-  BookOpen,
   ExternalLink,
   GitBranch,
-  Image as ImageIcon,
+  Mail,
   Music2,
-  Palette,
   Pause,
   Play,
   RefreshCw,
   Repeat,
   Rocket,
-  Server,
-  SlidersHorizontal,
   Users,
   Volume2,
   type LucideIcon,
 } from "lucide-react";
-import { PANEL_VERSION, REPO_URL, type PanelProfile, type PanelView, type SettingsTab } from "@/lib/panel/types";
+import { PANEL_VERSION, REPO_URL, type PanelProfile } from "@/lib/panel/types";
 import { cn, formatJoined, timeAgo } from "@/lib/utils";
 import { usePanel } from "../context";
-import { BrandMark, EmptyState, PresenceAvatar, Slider, Spinner, ToggleRow, useNow } from "../ui";
+import { BrandMark, EmptyState, Modal, PresenceAvatar, Slider, Spinner, ToggleRow, useNow } from "../ui";
 
 // ── Team ────────────────────────────────────────────────────────────────────
 type PresenceFilter = "all" | "online" | "offline";
@@ -31,6 +27,7 @@ export function TeamView() {
   const { team, profile, settings, isAdmin } = usePanel();
   const now = useNow(30000);
   const [filter, setFilter] = useState<PresenceFilter>("all");
+  const [profileMember, setProfileMember] = useState<PanelProfile | null>(null);
   const isOnline = (m: PanelProfile) => m.online || m.userId === profile.userId;
 
   if (!settings.showTeam && !isAdmin) {
@@ -84,62 +81,103 @@ export function TeamView() {
                     {online ? "Online now" : `Last seen ${now ? timeAgo(member.lastSeen, now) : "—"}`} · Joined {formatJoined(member.createdAt)}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  className="btn-ghost shrink-0 px-2.5 py-1 text-[11.5px] font-extrabold"
+                  onClick={() => setProfileMember(member)}
+                  aria-label={`View profile of ${member.username}`}
+                >
+                  View
+                </button>
               </div>
             );
           })
         )}
       </div>
+      <Modal
+        open={!!profileMember}
+        onClose={() => setProfileMember(null)}
+        title={profileMember ? `${profileMember.username}'s profile` : ""}
+        subtitle={profileMember ? (profileMember.online ? "Online now" : "Team member") : undefined}
+        wide
+      >
+        {profileMember ? (
+          <ProfileDetails member={profileMember} now={now} isYou={profileMember.userId === profile.userId} />
+        ) : null}
+      </Modal>
     </div>
   );
 }
 
-// ── Tutorials ───────────────────────────────────────────────────────────────
-type Step = { icon: LucideIcon; title: string; body: string; cta: string; go: { view: PanelView; tab?: SettingsTab }; admin?: boolean };
-
-const STEPS: Step[] = [
-  { icon: Palette, title: "1 · Set your branding", body: "Admin Settings → General names the panel, sets the browser tab title and uploads your own panel and favicon logos.", cta: "Open General", go: { view: "settings", tab: "general" }, admin: true },
-  { icon: ImageIcon, title: "2 · Pick a background", body: "Admin Settings → 4K Wallpapers opens the Panel Background Engine: curated wallpapers, live WebGL shaders, uploads and custom URLs.", cta: "Open wallpapers", go: { view: "settings", tab: "wallpapers" }, admin: true },
-  { icon: SlidersHorizontal, title: "3 · Tune the glass", body: "Admin Settings → Appearance controls wallpaper blur/opacity, accent and nav colors — plus the Glassmorphism Transparency & Blur bars with auto-save.", cta: "Open appearance", go: { view: "settings", tab: "appearance" }, admin: true },
-  { icon: Server, title: "4 · Deploy a server", body: "Servers → Create Server picks a game or app template (Minecraft, Rust, CS2, Node.js…), a node and resource limits. Start it and watch the console boot live.", cta: "Open servers", go: { view: "servers" } },
-  { icon: Users, title: "5 · Add your team", body: "User Management creates accounts and assigns roles (owner / admin / member). The Team view shows everyone with live presence dots.", cta: "Open team", go: { view: "team" } },
-  { icon: Music2, title: "6 · Set the mood", body: "The Music page plays the bundled ambient loop across every view — toggle autoplay and loop, and it remembers your volume.", cta: "Open music", go: { view: "music" } },
-];
-
-export function TutorialsView() {
-  const { isAdmin, setView, setSettingsTab } = usePanel();
+function ProfileDetails({ member, now, isYou }: { member: PanelProfile; now: number | null; isYou: boolean }) {
+  const isOnline = member.online || isYou;
   return (
-    <div>
-      <div className="mb-4">
-        <h2 className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight">
-          <BookOpen className="size-5 text-accent" />
-          Tutorials
-        </h2>
-        <p className="mt-1 text-[13px] font-semibold text-steel">Get the panel looking and running the way you want — six quick steps.</p>
+    <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
+      <div className="flex flex-col items-center text-center">
+        <PresenceAvatar name={member.username} src={member.profilePic} size="lg" online={isOnline} />
+        <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+          <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white uppercase">{member.role}</span>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-wide uppercase",
+              member.status === "suspended" ? "bg-danger/15 text-danger" : "bg-ok/15 text-ok",
+            )}
+          >
+            {member.status}
+          </span>
+        </div>
+        {isYou ? (
+          <span className="mt-2 rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-extrabold text-accent">THIS IS YOU</span>
+        ) : null}
       </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {STEPS.map((step) => {
-          const locked = step.admin && !isAdmin;
-          return (
-            <div key={step.title} className="glass flex flex-col p-4">
-              <div className="flex items-center gap-2.5">
-                <span className="grid size-9 place-items-center rounded-[10px] border border-accent/35 bg-accent/12 text-accent">
-                  <step.icon className="size-4" />
-                </span>
-                <div className="text-[14px] font-extrabold">{step.title}</div>
-              </div>
-              <p className="mt-2 flex-1 text-[12.5px] leading-relaxed font-semibold text-steel">{step.body}</p>
-              <button
-                type="button"
-                className="btn-ghost mt-3 min-h-9 w-fit px-3 text-[12px]"
-                disabled={locked}
-                title={locked ? "Administrators only" : undefined}
-                onClick={() => (step.go.tab ? setSettingsTab(step.go.tab) : setView(step.go.view))}
-              >
-                {locked ? "Admins only" : step.cta}
-              </button>
+
+      <div className="grid gap-4">
+        <section>
+          <div className="text-[10.5px] font-extrabold tracking-[0.12em] text-steel uppercase">Username</div>
+          <div className="mt-1 text-[16px] font-extrabold text-ice">{member.username}</div>
+        </section>
+
+        {member.email ? (
+          <section>
+            <div className="text-[10.5px] font-extrabold tracking-[0.12em] text-steel uppercase">Email</div>
+            <div className="mt-1 flex items-center gap-2 break-all text-[13.5px] font-bold">
+              <Mail className="size-3.5 shrink-0 text-steel" />
+              <span>{member.email}</span>
             </div>
-          );
-        })}
+          </section>
+        ) : null}
+
+        <section>
+          <div className="flex items-center justify-between">
+            <div className="text-[10.5px] font-extrabold tracking-[0.12em] text-steel uppercase">Bio</div>
+            <span className="text-[10px] font-bold tracking-[0.12em] text-faint uppercase">
+              {member.bio?.trim() ? `${member.bio.trim().length} chars` : "Empty"}
+            </span>
+          </div>
+          <div
+            className={cn(
+              "mt-1 min-h-[64px] whitespace-pre-wrap rounded-[12px] border px-3 py-2.5 text-[13.5px] font-semibold leading-relaxed",
+              member.bio?.trim()
+                ? "border-line bg-fill text-ice"
+                : "border-dashed border-line-strong bg-fill/40 italic text-faint",
+            )}
+          >
+            {member.bio?.trim() || "No bio yet — this member hasn't written anything about themselves."}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-2">
+          <div className="rounded-[12px] border border-line bg-fill px-3 py-2.5">
+            <div className="text-[10px] font-extrabold tracking-[0.12em] text-steel uppercase">Last seen</div>
+            <div className="mt-0.5 text-[13px] font-extrabold text-ice">
+              {isOnline ? "Online now" : now ? timeAgo(member.lastSeen, now) : "—"}
+            </div>
+          </div>
+          <div className="rounded-[12px] border border-line bg-fill px-3 py-2.5">
+            <div className="text-[10px] font-extrabold tracking-[0.12em] text-steel uppercase">Joined</div>
+            <div className="mt-0.5 text-[13px] font-extrabold text-ice">{formatJoined(member.createdAt)}</div>
+          </div>
+        </section>
       </div>
     </div>
   );
