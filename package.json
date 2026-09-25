@@ -18,6 +18,9 @@
     "react-dom": "19.2.6",
     "sonner": "^2.0.8"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.19.15",
