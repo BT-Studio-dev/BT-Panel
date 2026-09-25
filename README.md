@@ -1,35 +1,34 @@
-# 🎛️ BT Panel
+# 🎛️ BT-Panel
 
-> Next-generation glassmorphism control panel for game and application server management.
+A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, and Drizzle ORM.
 
----
+## ✨ Features
 
-### ✨ Features
-
-- 💎 **Glassmorphism UI:** Modern, ultra-sleek interface designed for readability and aesthetic appeal.
-- 🌌 **Live Shader Visuals:** Interactive WebGL background shaders with custom animation controls.
-- 🖼️ **4K Wallpaper Engine:** High-resolution desktop-class dynamic background options.
-- 🌗 **Theme Engine:** Built-in Dark, Light, and OLED True Black modes.
-- 🔒 **Secure Authentication:** Integrated with Better Auth for safe access management.
-- 🚀 **Lightning Fast:** Built on TanStack Start and React 19 for optimal performance.
-
----
+- 🔐 **Authentication System**: Local authentication (login, register, password reset) and Google OAuth integration.
+- 🖥️ **Server Management**: Manage, view, and route server instances.
+- 👤 **User & Account Management**: Complete user profile settings and account control endpoints[cite: 1].
+- 🖼️ **Media Uploads**: Built-in endpoints for managing and retrieving media assets[cite: 1].
+- 🗄️ **Database Integration**: Managed schema and migrations powered by Drizzle ORM[cite: 1].
+- 🚀 **Deployment Ready**: Pre-configured systemd service (`bt-panel.service`), Nginx setup, and Debian deployment scripts[cite: 1].
 
 ### 🛠️ Tech Stack
 
-![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![WebGL](https://img.shields.io/badge/WebGL-990000?style=for-the-badge&logo=webgl&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)
 
----
+## ⚡ Getting Started
 
-### 🚀 Getting Started
+### 📋 Prerequisites
 
-```bash
-# Clone the repository
-git clone https://github.com/BT-Studio-dev/BT-Panel.git
+- Node.js (v18 or higher recommended)
+- PostgreSQL or supported database driver
 
-# Navigate into the project directory
-cd BT-Panel
+### ⚙️ Installation
+
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/your-username/BT-Panel.git](https://github.com/your-username/BT-Panel.git)
+   cd BT-Panel
