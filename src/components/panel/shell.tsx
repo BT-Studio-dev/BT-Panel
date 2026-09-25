@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import {
-  BookOpen,
   ChevronDown,
   House,
   LogOut,
@@ -31,14 +30,13 @@ import { ServersView } from "./views/servers-view";
 import { SettingsView } from "./views/settings-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
-import { MusicView, TeamView, TutorialsView, UpdatesView } from "./views/misc-views";
+import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
 const NAV: NavItem[] = [
   { id: "home", label: "Home", icon: House, section: "dashboard" },
   { id: "servers", label: "Servers", icon: Server, section: "dashboard" },
-  { id: "tutorials", label: "Tutorials", icon: BookOpen, section: "dashboard" },
   { id: "team", label: "Team", icon: Users, section: "dashboard" },
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
   { id: "settings", label: "Admin Settings", icon: Settings, section: "admin" },
@@ -50,7 +48,6 @@ const NAV: NavItem[] = [
 const TITLES: Record<PanelView, string> = {
   home: "Home",
   servers: "Servers",
-  tutorials: "Tutorials",
   team: "Team",
   music: "Music",
   settings: "Admin Settings",
@@ -95,7 +92,6 @@ function ShellInner() {
             <div key={view} className="view-enter mx-auto w-full max-w-[1600px]">
               {view === "home" ? <HomeView /> : null}
               {view === "servers" ? <ServersView /> : null}
-              {view === "tutorials" ? <TutorialsView /> : null}
               {view === "team" ? <TeamView /> : null}
               {view === "music" ? <MusicView /> : null}
               {view === "settings" ? <SettingsView /> : null}
@@ -135,7 +131,6 @@ function Sidebar() {
 
   const visible = NAV.filter((item) => {
     if (item.id === "team" && !settings.showTeam && !isAdmin) return false;
-    if (item.id === "tutorials" && !settings.tutorialsEnabled) return false;
     if (item.section === "admin" && !isAdmin) return false;
     return true;
   });
@@ -300,7 +295,7 @@ function Header() {
   const darkBase = draft.mode === "light" ? "dark" : draft.mode;
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-3 px-4 md:px-6">
+    <header className="glass sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-4 md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -342,14 +337,14 @@ function Header() {
           <div className="relative" ref={ref}>
             <button
               type="button"
-              className="flex items-center gap-2 rounded-[12px] border border-line bg-sunken py-1.5 pr-2 pl-1.5"
+              className="flex items-center gap-2.5 rounded-[12px] border border-line bg-sunken py-1.5 pr-2.5 pl-1.5"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
             >
               <PresenceAvatar name={profile.username} src={profile.profilePic} size="sm" />
               <div className="hidden text-left sm:block">
-                <div className="text-[13px] leading-tight font-extrabold">{profile.username}</div>
-                <div className="text-[10px] font-bold tracking-[0.12em] text-steel uppercase">{profile.role}</div>
+                <div className="text-[13px] leading-tight font-extrabold text-ice">{profile.username}</div>
+                <div className="text-[10px] font-extrabold tracking-[0.12em] text-accent uppercase">{profile.role}</div>
               </div>
               <ChevronDown className={cn("size-3.5 text-steel transition-transform", open && "rotate-180")} />
             </button>
