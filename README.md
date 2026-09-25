@@ -30,5 +30,5 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/your-username/BT-Panel.git](https://github.com/your-username/BT-Panel.git)
+   git clone https://github.com/your-username/BT-Panel.git
    cd BT-Panel
