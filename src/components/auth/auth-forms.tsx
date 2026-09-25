@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Eye, EyeOff, LogIn, Sparkles, UserPlus } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LogIn, Mail, RotateCcw, Sparkles, UserPlus } from "lucide-react";
 import { applyTheme, getLocalModeOverride } from "@/lib/panel/theme";
-import type { BootstrapPayload, ThemeSettings } from "@/lib/panel/types";
+import type { BootstrapPayload, GoogleOauthSettings, ThemeSettings } from "@/lib/panel/types";
 import { api, storeToken } from "@/lib/utils";
 import { BrandMark, Spinner } from "@/components/panel/ui";
 import { WallpaperLayer } from "@/components/panel/wallpaper-layer";
@@ -35,7 +35,7 @@ export function AuthShell({
     <div className="relative min-h-dvh">
       <WallpaperLayer theme={theme} />
       <main className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-        <div className="glass view-enter w-full max-w-[380px] px-8 py-8 text-center">
+        <div className="glass glass-strong view-enter w-full max-w-[380px] px-8 py-8 text-center">
           <div className="mb-5 flex flex-col items-center gap-3">
             <BrandMark className="size-12 drop-shadow-[0_0_18px_var(--accent-glow)]" src={panelLogo || undefined} />
             <div>
@@ -123,16 +123,17 @@ export type AuthResponse = { ok: boolean; token?: string; panel?: BootstrapPaylo
 export function LoginForm({
   allowRegistration,
   demos,
+  google,
   onAuthenticated,
 }: {
   onAuthenticated: (panel: BootstrapPayload) => void;
   allowRegistration: boolean;
   demos: readonly { label: string; username: string; password: string }[];
+  google: GoogleOauthSettings;
 }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [hint, setHint] = useState("");
   const [busy, setBusy] = useState(false);
   const firstField = useTopLevelFocus<HTMLInputElement>();
 
@@ -148,24 +149,35 @@ export function LoginForm({
       // can never be left hanging between sign-in and home.
       onAuthenticated(res.panel ?? (await api<BootstrapPayload>("/api/bootstrap")));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid username or password.");
+      setError(err instanceof Error ? err.message : "Invalid email or password.");
       setBusy(false);
     }
   }
+
+  const googleReady = !!(google.googleOauthEnabled && google.googleClientId);
+  const googleError =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("google_error")
+      : null;
 
   return (
     <>
       <form onSubmit={onSubmit} className="text-left">
         <label className={`mt-1 ${labelCls}`} htmlFor="user">
-          Username or Email
+          Email
         </label>
         <input
           id="user"
           ref={firstField}
           className="panel-input"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
-          placeholder="admin or admin@example.com"
+          placeholder="you@gmail.com"
           autoComplete="username"
           required
         />
@@ -173,21 +185,33 @@ export function LoginForm({
           <label className="block text-[11px] font-bold tracking-wide text-steel" htmlFor="pass">
             Password
           </label>
-          <button
-            type="button"
-            className="text-[11px] font-bold text-accent hover:brightness-125"
-            onClick={() => setHint("Password resets are handled by your panel administrator (owner/admin).")}
-          >
+          <Link href="/forgot" className="text-[11px] font-bold text-accent hover:brightness-125">
             Forgot password?
-          </button>
+          </Link>
         </div>
         <PasswordInput id="pass" value={password} onChange={setPassword} autoComplete="current-password" />
-        {hint ? <p className="mt-2 text-[11.5px] font-semibold text-steel">{hint}</p> : null}
         <ErrorNote message={error} />
         <button type="submit" className="btn-accent mt-5 w-full" disabled={busy}>
           {busy ? <Spinner /> : <LogIn className="size-4" />} Sign In
         </button>
       </form>
+      {googleReady ? (
+        <>
+          <Divider>or</Divider>
+          <a
+            href="/api/auth/google/start"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-fill px-4 py-2.5 text-[13.5px] font-bold text-ice transition-colors hover:border-accent/55 hover:bg-fill-strong"
+          >
+            <GoogleG className="size-4" />
+            Continue with Google
+          </a>
+        </>
+      ) : null}
+      {googleError ? (
+        <p className="mt-3 rounded-[10px] border border-danger/35 bg-danger/10 px-3 py-2 text-[12px] font-bold text-danger" role="alert">
+          Google sign-in failed: {googleError}
+        </p>
+      ) : null}
       {demos.length ? (
         <div className="mt-4 rounded-[12px] border border-accent/35 bg-accent/10 px-3 py-3 text-left">
           <div className="flex items-center gap-1.5 text-[10.5px] font-extrabold tracking-[0.12em] text-accent uppercase">
@@ -226,6 +250,29 @@ export function LoginForm({
         </div>
       ) : null}
     </>
+  );
+}
+
+/** A tiny "or" separator used between the password form and the Google button. */
+function Divider({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-4 flex items-center gap-3 text-[10.5px] font-extrabold tracking-[0.14em] text-faint uppercase">
+      <span className="h-px flex-1 bg-line" />
+      {children}
+      <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
+
+/** Inline "G" Google logo — keeps the bundle free of an extra image asset. */
+function GoogleG({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.4l-6.5-5.5c-2 1.5-4.6 2.4-7.5 2.4-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.5 5.5c-.4.4 6.8-5 6.8-14.5 0-1.3-.1-2.3-.4-3.5z" />
+    </svg>
   );
 }
 
@@ -323,6 +370,180 @@ export function RegistrationClosed() {
       <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
         <Link href="/login" className={linkCls}>
           Back to Sign In
+        </Link>
+      </div>
+    </>
+  );
+}
+
+export function ForgotForm({ panelName, enabled }: { panelName: string; enabled: boolean }) {
+  const [identifier, setIdentifier] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const firstField = useTopLevelFocus<HTMLInputElement>();
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+    setInfo("");
+    setPreviewUrl("");
+    setBusy(true);
+    try {
+      const res = await api<{ ok: boolean; message: string; previewUrl?: string }>("/api/auth/forgot", {
+        body: { identifier },
+      });
+      setInfo(res.message);
+      if (res.previewUrl) setPreviewUrl(res.previewUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start the reset.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      {!enabled ? (
+        <p className="mb-4 rounded-[12px] border border-warn/35 bg-warn/10 px-3 py-2 text-left text-[12.5px] font-semibold text-warn">
+          Self-service password reset is currently disabled by the panel administrator. Ask an admin to reset your password.
+        </p>
+      ) : null}
+      <form onSubmit={onSubmit} className="text-left">
+        <label className={`mt-1 ${labelCls}`} htmlFor="forgot-id">
+          Email
+        </label>
+        <input
+          id="forgot-id"
+          ref={firstField}
+          className="panel-input"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="you@gmail.com"
+          autoComplete="email"
+          required
+        />
+        <ErrorNote message={error} />
+        <button type="submit" className="btn-accent mt-5 w-full" disabled={busy || !enabled}>
+          {busy ? <Spinner /> : <Mail className="size-4" />} Send reset link
+        </button>
+      </form>
+      {info ? (
+        <div className="mt-4 rounded-[12px] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12px] font-semibold text-ok">
+          {info}
+          {previewUrl ? (
+            <div className="mt-2 break-all rounded-[8px] border border-accent/30 bg-fill px-2 py-1.5 font-mono text-[11px] text-ice">
+              Dev preview:{" "}
+              <Link href={previewUrl} className="text-accent underline">
+                open reset link
+              </Link>
+            </div>
+          ) : null}
+          <p className="mt-2 text-[11px] font-semibold text-steel">
+            The link expires in 30 minutes. If you don&apos;t see the email, check your spam folder.
+          </p>
+        </div>
+      ) : null}
+      <p className="mt-4 text-[11.5px] font-semibold text-steel">
+        Resetting the password for <strong className="text-ice">{panelName}</strong> signs you out of every device.
+      </p>
+      <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
+        Remembered it?{" "}
+        <Link href="/login" className={linkCls}>
+          Back to Sign In
+        </Link>
+      </div>
+    </>
+  );
+}
+
+export function ResetForm({ panelName, token }: { panelName: string; token: string }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const firstField = useTopLevelFocus<HTMLInputElement>();
+
+  if (!token && !done) {
+    return (
+      <>
+        <p className="rounded-[12px] border border-danger/35 bg-danger/10 px-3 py-3 text-[12.5px] font-semibold text-danger">
+          This reset link is missing a token. Open the link from your email or request a new one.
+        </p>
+        <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
+          <Link href="/forgot" className={linkCls}>
+            Request a new link
+          </Link>
+        </div>
+      </>
+    );
+  }
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    if (password !== confirm) return setError("Passwords do not match.");
+    setBusy(true);
+    try {
+      await api("/api/auth/reset", { body: { token, password } });
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reset the password.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <>
+        <div className="rounded-[12px] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12.5px] font-semibold text-ok">
+          Your {panelName} password has been updated. Sign in with your new password below.
+        </div>
+        <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
+          <Link href="/login" className={linkCls}>
+            Go to Sign In
+          </Link>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <form onSubmit={onSubmit} className="text-left">
+        <label className={`mt-1 ${labelCls}`} htmlFor="reset-pass">
+          New password
+        </label>
+        <PasswordInput
+          id="reset-pass"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          placeholder="8+ characters"
+        />
+        <label className={`mt-3 ${labelCls}`} htmlFor="reset-confirm">
+          Confirm new password
+        </label>
+        <PasswordInput id="reset-confirm" value={confirm} onChange={setConfirm} autoComplete="new-password" />
+        <ErrorNote message={error} />
+        <button type="submit" className="btn-accent mt-5 w-full" disabled={busy}>
+          {busy ? <Spinner /> : <KeyRound className="size-4" />} Update password
+        </button>
+      </form>
+      <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
+        Wrong account?{" "}
+        <Link href="/forgot" className={linkCls}>
+          <RotateCcw className="mr-1 inline size-3 align-[-1px]" />
+          Start over
         </Link>
       </div>
     </>
