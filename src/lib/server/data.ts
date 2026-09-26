@@ -2,7 +2,7 @@ import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { db, pool } from "@/db";
-import { mediaFiles, panelSettings, passwordResetTokens, serverEvents, servers, sessions, users } from "@/db/schema";
+import { mediaFiles, panelSettings, passwordResetTokens, serverBackups, serverEvents, servers, sessions, users } from "@/db/schema";
 import {
   CPU_OPTIONS,
   DISK_OPTIONS,
@@ -18,6 +18,8 @@ import {
   DEFAULT_SETTINGS,
   DEMO_ACCOUNTS,
   isAdminRole,
+  type BackupDto,
+  type BackupStatus,
   type BootstrapPayload,
   type PanelProfile,
   type PanelRole,
@@ -143,6 +145,18 @@ create table if not exists server_events (
   constraint server_events_server_id_servers_id_fk foreign key (server_id) references servers(id) on delete cascade
 );
 create index if not exists server_events_server_idx on server_events (server_id, created_at);
+create table if not exists server_backups (
+  id text primary key,
+  server_id text not null,
+  name text not null,
+  size_mb integer not null,
+  status text not null default 'creating',
+  created_by text,
+  created_at timestamptz not null default now(),
+  constraint server_backups_server_id_servers_id_fk foreign key (server_id) references servers(id) on delete cascade,
+  constraint server_backups_created_by_users_id_fk foreign key (created_by) references users(id) on delete set null
+);
+create index if not exists server_backups_server_idx on server_backups (server_id, created_at);
 create table if not exists media_files (
   id text primary key,
   name text not null,
@@ -181,6 +195,8 @@ export function ensureDatabase(): Promise<void> {
 const BOOT_MS = 4200;
 const STOP_MS = 2600;
 const RESTART_GAP_MS = 1800;
+const BACKUP_MS = 5000;
+const MAX_BACKUPS_PER_SERVER = 5;
 const SYSTEM = "container@bt-panel~";
 const LINES = {
   running: `${SYSTEM} Server marked as running...`,
@@ -570,7 +586,7 @@ export async function listServers(viewer: UserRow): Promise<ServerDto[]> {
   return rows.map((r) => toServerDto(r.server, r.ownerName));
 }
 
-async function getManagedServer(viewer: UserRow, id: string) {
+export async function getManagedServer(viewer: UserRow, id: string) {
   const rows = await db
     .select({ server: servers, ownerName: users.username })
     .from(servers)
@@ -742,6 +758,117 @@ export async function renameServer(viewer: UserRow, id: string, name: unknown): 
 export async function deleteServer(viewer: UserRow, id: string) {
   await getManagedServer(viewer, id);
   await db.delete(servers).where(eq(servers.id, id));
+}
+
+// ── Backups ─────────────────────────────────────────────────────────────────
+// Same "lazy/pull" simulation as server power state: a backup lands as
+// `creating` and is derived as `ready` once BACKUP_MS has elapsed, purely
+// from the row's own createdAt — no queue or background job involved.
+type BackupRow = typeof serverBackups.$inferSelect;
+
+function effectiveBackupStatus(row: BackupRow, now = Date.now()): BackupStatus {
+  return now - row.createdAt.getTime() >= BACKUP_MS ? "ready" : "creating";
+}
+
+function toBackupDto(row: BackupRow, createdByName: string | null): BackupDto {
+  return {
+    id: row.id,
+    serverId: row.serverId,
+    name: row.name,
+    sizeMb: row.sizeMb,
+    status: effectiveBackupStatus(row),
+    createdBy: row.createdBy,
+    createdByName,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function listBackups(viewer: UserRow, serverId: string): Promise<BackupDto[]> {
+  await getManagedServer(viewer, serverId);
+  const rows = await db
+    .select({ backup: serverBackups, createdByName: users.username })
+    .from(serverBackups)
+    .leftJoin(users, eq(serverBackups.createdBy, users.id))
+    .where(eq(serverBackups.serverId, serverId))
+    .orderBy(desc(serverBackups.createdAt));
+  return rows.map((r) => toBackupDto(r.backup, r.createdByName));
+}
+
+export async function createBackup(viewer: UserRow, serverId: string, input: Record<string, unknown>): Promise<BackupDto> {
+  const { row } = await getManagedServer(viewer, serverId);
+  const existing = await db
+    .select({ id: serverBackups.id })
+    .from(serverBackups)
+    .where(eq(serverBackups.serverId, serverId));
+  if (existing.length >= MAX_BACKUPS_PER_SERVER) {
+    throw new HttpError(403, `A server can keep at most ${MAX_BACKUPS_PER_SERVER} backups — delete one first.`);
+  }
+  const requested = typeof input.name === "string" ? input.name.trim() : "";
+  const name = (requested || `Snapshot ${new Date().toLocaleString()}`).slice(0, 60);
+  // Simulated archive size: a plausible slice of the server's provisioned disk.
+  const sizeMb = Math.max(64, Math.round(row.diskMb * (0.35 + Math.random() * 0.35)));
+  const id = newId("bak");
+  const now = new Date();
+  const inserted = await db
+    .insert(serverBackups)
+    .values({ id, serverId, name, sizeMb, status: "creating", createdBy: viewer.id, createdAt: now })
+    .returning();
+  await db.insert(serverEvents).values({
+    serverId,
+    level: "system",
+    message: `${SYSTEM} Backup "${name}" started (~${sizeMb} MB)`,
+    createdAt: now,
+  });
+  return toBackupDto(inserted[0], viewer.username);
+}
+
+export async function deleteBackup(viewer: UserRow, serverId: string, backupId: string): Promise<void> {
+  await getManagedServer(viewer, serverId);
+  const deleted = await db
+    .delete(serverBackups)
+    .where(and(eq(serverBackups.id, backupId), eq(serverBackups.serverId, serverId)))
+    .returning({ id: serverBackups.id });
+  if (!deleted.length) throw new HttpError(404, "Backup not found.");
+}
+
+/**
+ * Restore a ready backup: the server must be fully offline (restoring a live
+ * server would race the very state we're about to overwrite), then it goes
+ * through the same boot-log simulation as a normal Start, prefixed with a
+ * restore line so the console clearly shows what happened and why.
+ */
+export async function restoreBackup(viewer: UserRow, serverId: string, backupId: string): Promise<ServerDto> {
+  const { row, ownerName } = await getManagedServer(viewer, serverId);
+  if (effectiveStatus(row) !== "offline") {
+    throw new HttpError(409, "Stop the server before restoring a backup.");
+  }
+  const backupRows = await db
+    .select()
+    .from(serverBackups)
+    .where(and(eq(serverBackups.id, backupId), eq(serverBackups.serverId, serverId)))
+    .limit(1);
+  const backup = backupRows[0];
+  if (!backup) throw new HttpError(404, "Backup not found.");
+  if (effectiveBackupStatus(backup) !== "ready") throw new HttpError(409, "That backup is still being created.");
+
+  const now = Date.now();
+  const t = getTemplate(row.template);
+  await db.delete(serverEvents).where(and(eq(serverEvents.serverId, serverId), gt(serverEvents.createdAt, new Date(now))));
+  const patch = { status: "starting" as const, statusChangedAt: new Date(now), startedAt: new Date(now + BOOT_MS) };
+  await schedule(
+    serverId,
+    [
+      { level: "system" as const, message: `${SYSTEM} Restoring snapshot "${backup.name}" (${backup.sizeMb} MB)...` },
+      ...asLines(t.bootLog),
+      { message: LINES.running },
+    ],
+    0,
+    BOOT_MS,
+    now,
+  );
+  const updated = await db.update(servers).set(patch).where(eq(servers.id, serverId)).returning();
+  await trimEvents(serverId);
+  return toServerDto(updated[0], ownerName);
 }
 
 // ── Media (uploaded wallpapers) ─────────────────────────────────────────────
