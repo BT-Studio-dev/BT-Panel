@@ -123,6 +123,19 @@ export type ServerEventDto = {
   createdAt: string;
 };
 
+export type BackupStatus = "creating" | "ready";
+
+export type BackupDto = {
+  id: string;
+  serverId: string;
+  name: string;
+  sizeMb: number;
+  status: BackupStatus;
+  createdBy: string | null;
+  createdByName: string | null;
+  createdAt: string;
+};
+
 export type BootstrapPayload = {
   profile: PanelProfile;
   settings: PanelSettings;
