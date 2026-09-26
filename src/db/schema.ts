@@ -11,7 +11,7 @@ import {
 /**
  * BT Panel schema — accounts, sessions, the singleton panel settings row
  * (theme / branding / bars / access), game & app servers with a console
- * event log, and uploaded wallpaper media.
+ * event log, on-demand backup snapshots, and uploaded wallpaper media.
  *
  * NOTE: `src/lib/server/data.ts` mirrors these tables with
  * `CREATE TABLE IF NOT EXISTS` so a fresh database self-heals at runtime.
@@ -120,6 +120,28 @@ export const serverEvents = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("server_events_server_idx").on(t.serverId, t.createdAt)],
+);
+
+/**
+ * On-demand backup snapshots for a server. Creation is simulated the same
+ * way power actions are: a row lands as `creating` and `effectiveBackupStatus`
+ * (src/lib/server/data.ts) derives `ready` once enough time has elapsed —
+ * no real archive is ever written to disk.
+ */
+export const serverBackups = pgTable(
+  "server_backups",
+  {
+    id: text("id").primaryKey(),
+    serverId: text("server_id")
+      .notNull()
+      .references(() => servers.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    sizeMb: integer("size_mb").notNull(),
+    status: text("status").notNull().default("creating"),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("server_backups_server_idx").on(t.serverId, t.createdAt)],
 );
 
 export const mediaFiles = pgTable("media_files", {
