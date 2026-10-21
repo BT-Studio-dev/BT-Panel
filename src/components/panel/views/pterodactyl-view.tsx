@@ -76,6 +76,8 @@ export function PterodactylView() {
     }
   }, []);
 
+  // Initial data load belongs to this effect; refresh is intentionally asynchronous.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
   const loadResources = async (identifier: string) => {
@@ -211,7 +213,7 @@ export function PterodactylView() {
           <div className="font-extrabold">Integration setup / API warning</div>
           {nodeError ? <p className="mt-1 text-steel">Nodes: {nodeError}</p> : null}
           {serverError ? <p className="mt-1 text-steel">Servers: {serverError}</p> : null}
-          <p className="mt-2 text-steel">Configure tokens in the BT Panel server's environment, restart the service, then refresh. Tokens are not entered into or exposed by this browser screen.</p>
+          <p className="mt-2 text-steel">Configure tokens in the BT Panel server environment, restart the service, then refresh. Tokens are not entered into or exposed by this browser screen.</p>
         </div>
       )}
 
