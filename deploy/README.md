@@ -60,10 +60,9 @@ journalctl -u bt-panel -f                 # live logs
 systemctl restart bt-panel                # restart
 nano /opt/bt-panel/.env                   # config
 
-# update to a newer version
-cd /opt/bt-panel && sudo -u btpanel git pull \
-  && sudo -u btpanel npm ci && sudo -u btpanel npm run build \
-  && sudo systemctl restart bt-panel
+# update from the original checkout directory (adjust if you cloned elsewhere)
+cd /opt/src && sudo git pull \
+  && sudo bash deploy/setup-debian.sh panel.yourdomain.com
 
 # nightly database backup (add to cron)
 sudo -u postgres pg_dump btpanel > /root/bt-panel-$(date +%F).sql

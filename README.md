@@ -23,12 +23,26 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
 
 ### 📋 Prerequisites
 
-- Node.js (v18 or higher recommended)
+- Node.js 22 (recommended for the current Next.js version)
 - PostgreSQL or supported database driver
 
 ### ⚙️ Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/BT-Panel.git
+   git clone https://github.com/BT-Studio-dev/BT-Panel.git
    cd BT-Panel
+
+
+## Documentation
+
+- [Ubuntu deployment guide](docs/UBUNTU-DEPLOYMENT.md)
+- [Pterodactyl 1.x integration](docs/PTERODACTYL-INTEGRATION.md)
+- [Frontend modules and customization](docs/BT-PANEL-MODULES.md)
+- [Environment variable example](.env.example)
+
+## Pterodactyl integration
+
+BT Panel now includes an optional server-side adapter for an existing Pterodactyl 1.x installation. Configure `PTERODACTYL_URL`, `PTERODACTYL_APPLICATION_TOKEN` and `PTERODACTYL_CLIENT_TOKEN` on the server to enable the Integrations screen. Never commit API keys or expose them to browser code.
+
+Important: the legacy BT Panel server fleet, power transitions, console output, telemetry and backup metadata are still simulated. The Pterodactyl integration has separate endpoints for upstream nodes, client-accessible servers, real resource lookups, power actions and provisioning. Read the integration documentation before using the provisioning form because it creates a real remote server.

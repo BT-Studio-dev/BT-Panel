@@ -38,6 +38,7 @@ echo "==> [3/7] System user and application files ($APP_DIR)"
 id -u "$APP_USER" >/dev/null 2>&1 || useradd --system --home "$APP_DIR" --shell /usr/sbin/nologin "$APP_USER"
 mkdir -p "$APP_DIR"
 rsync -a --delete --exclude node_modules --exclude .next --exclude .env --exclude .git "$SRC_DIR/" "$APP_DIR/"
+chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 echo "==> [4/7] PostgreSQL database"
 systemctl enable --now postgresql >/dev/null 2>&1 || service postgresql start
@@ -60,7 +61,7 @@ chown "$APP_USER" "$APP_DIR/.env" && chmod 600 "$APP_DIR/.env"
 echo "==> [5/7] Install and build (needs ~2 GB RAM; add swap on small VPS)"
 cd "$APP_DIR"
 if (( $(node -p 'process.memoryLimit < 2e9 ? 0 : 1') )); then :; fi
-sudo -u "$APP_USER" npm ci --no-audit --no-fund
+sudo -u "$APP_USER" npm install --no-audit --no-fund
 sudo -u "$APP_USER" NODE_OPTIONS=--max-old-space-size=1536 npm run build
 
 echo "==> [6/7] systemd service"
