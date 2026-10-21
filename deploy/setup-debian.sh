@@ -60,7 +60,7 @@ chown "$APP_USER" "$APP_DIR/.env" && chmod 600 "$APP_DIR/.env"
 echo "==> [5/7] Install and build (needs ~2 GB RAM; add swap on small VPS)"
 cd "$APP_DIR"
 if (( $(node -p 'process.memoryLimit < 2e9 ? 0 : 1') )); then :; fi
-sudo -u "$APP_USER" npm ci --no-audit --no-fund
+sudo -u "$APP_USER" npm install --no-audit --no-fund
 sudo -u "$APP_USER" NODE_OPTIONS=--max-old-space-size=1536 npm run build
 
 echo "==> [6/7] systemd service"
