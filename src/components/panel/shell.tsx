@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { BootstrapPayload, PanelView, ThemeMode } from "@/lib/panel/types";
+import { PANEL_MODULES } from "@/lib/panel/modules";
 import { cn } from "@/lib/utils";
 import { PanelProvider, usePanel } from "./context";
 import { BrandMark, PresenceAvatar } from "./ui";
@@ -31,6 +32,7 @@ import { SettingsView } from "./views/settings-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
 import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
+import { PterodactylView } from "./views/pterodactyl-view";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
@@ -42,6 +44,7 @@ const NAV: NavItem[] = [
   { id: "settings", label: "Admin Settings", icon: Settings, section: "admin" },
   { id: "users", label: "User Management", icon: ShieldCheck, section: "admin" },
   { id: "updates", label: "Updates", icon: RefreshCw, section: "admin" },
+  ...PANEL_MODULES.map((module) => ({ id: module.id, label: module.label, icon: module.icon, section: module.section })),
   { id: "account", label: "My Account", icon: UserRound, section: "account" },
 ];
 
@@ -54,6 +57,7 @@ const TITLES: Record<PanelView, string> = {
   users: "User Management",
   updates: "System Updates",
   account: "My Account",
+  integrations: "Integrations",
 };
 
 export function PanelShell({
@@ -98,6 +102,7 @@ function ShellInner() {
               {view === "users" ? <UsersView /> : null}
               {view === "updates" ? <UpdatesView /> : null}
               {view === "account" ? <AccountView /> : null}
+              {view === "integrations" ? <PterodactylView /> : null}
             </div>
           </main>
         </div>
