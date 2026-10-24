@@ -78,7 +78,7 @@ create index if not exists api_keys_hash_idx on api_keys (token_hash);
 create table if not exists panel_settings (
   id integer primary key,
   theme_mode text not null default 'dark',
-  wallpaper_url text not null default 'shader:waves',
+  wallpaper_url text not null default '',
   bg_blur integer not null default 0,
   bg_opacity integer not null default 100,
   accent_color text not null default '#d00000',
@@ -120,6 +120,7 @@ create table if not exists panel_settings (
   google_allowed_email text not null default '',
   updated_at timestamptz not null default now()
 );
+alter table panel_settings alter column wallpaper_url set default '';
 insert into panel_settings (id) values (1) on conflict (id) do nothing;
 -- Column backfill for upgrades from older versions where the table
 -- already exists from before the new columns were added.

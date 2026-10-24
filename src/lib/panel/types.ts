@@ -177,7 +177,7 @@ export type BootstrapPayload = {
 
 export const DEFAULT_THEME: ThemeSettings = {
   mode: "dark",
-  wallpaperUrl: "shader:waves",
+  wallpaperUrl: "",
   bgBlur: 0,
   bgOpacity: 100,
   accentColor: "#d00000",

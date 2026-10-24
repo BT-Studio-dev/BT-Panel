@@ -64,7 +64,7 @@ export const sessions = pgTable(
 export const panelSettings = pgTable("panel_settings", {
   id: integer("id").primaryKey(),
   themeMode: text("theme_mode").notNull().default("dark"),
-  wallpaperUrl: text("wallpaper_url").notNull().default("shader:waves"),
+  wallpaperUrl: text("wallpaper_url").notNull().default(""),
   bgBlur: integer("bg_blur").notNull().default(0),
   bgOpacity: integer("bg_opacity").notNull().default(100),
   accentColor: text("accent_color").notNull().default("#d00000"),
