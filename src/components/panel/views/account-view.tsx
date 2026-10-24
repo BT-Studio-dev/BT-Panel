@@ -90,7 +90,7 @@ export function AccountView() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <span className="mb-1.5 block text-[12px] font-bold text-steel">Profile Picture</span>
-              <div className="flex items-center gap-3 rounded-[12px] border border-line bg-fill p-2.5">
+              <div className="flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill p-2.5">
                 <PresenceAvatar name={profile.username} src={profile.profilePic} size="sm" />
                 <label className="btn-ghost min-h-9 cursor-pointer px-3 text-[12px]">
                   <CloudUpload className="size-3.5" /> Upload
@@ -200,7 +200,7 @@ function PasswordInput({
       />
       <button
         type="button"
-        className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-[8px] text-steel transition-colors hover:bg-fill hover:text-ice"
+        className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-[var(--control-radius)] text-steel transition-colors hover:bg-fill hover:text-ice"
         onClick={onToggle}
         aria-label={toggleLabel}
         aria-pressed={visible}
@@ -214,7 +214,7 @@ function PasswordInput({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[10px] border border-line bg-fill px-2 py-2">
+    <div className="rounded-[var(--control-radius)] border border-line bg-fill px-2 py-2">
       <div className="text-[9.5px] font-extrabold tracking-[0.12em] text-steel uppercase">{label}</div>
       <div className="mt-0.5 truncate text-[12px] font-extrabold">{value}</div>
     </div>

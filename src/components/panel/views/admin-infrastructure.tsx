@@ -46,15 +46,15 @@ export function AdminLocationsView() {
           <div key={location.id} className="glass p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="grid size-11 place-items-center rounded-xl border border-accent/25 bg-accent/10 text-accent"><MapPin className="size-5" /></span>
+                <span className="grid size-11 place-items-center rounded-[var(--control-radius)] border border-accent/25 bg-accent/10 text-accent"><MapPin className="size-5" /></span>
                 <div><h3 className="text-[15px] font-extrabold">{location.location}</h3><p className="mt-0.5 text-[11px] font-bold text-steel">{location.region} region</p></div>
               </div>
               <span className="rounded-full border border-line bg-fill px-2 py-1 text-[9px] font-extrabold tracking-wider text-steel uppercase">Catalog</span>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
-              <div className="rounded-lg bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">1</div><div className="text-[10px] font-bold text-steel">Node</div></div>
-              <div className="rounded-lg bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">{location.servers.length}</div><div className="text-[10px] font-bold text-steel">Servers</div></div>
-              <div className="rounded-lg bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">{location.servers.filter((server) => server.status === "running").length}</div><div className="text-[10px] font-bold text-steel">Running</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">1</div><div className="text-[10px] font-bold text-steel">Node</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">{location.servers.length}</div><div className="text-[10px] font-bold text-steel">Servers</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/60 p-2.5 text-center"><div className="text-[18px] font-extrabold">{location.servers.filter((server) => server.status === "running").length}</div><div className="text-[10px] font-bold text-steel">Running</div></div>
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-[11px] font-semibold text-steel"><span>Node identifier</span><code className="text-ice">{location.id}</code></div>
           </div>
@@ -88,10 +88,10 @@ export function AdminNodesView() {
               actions={<span className="rounded-full border border-line bg-fill px-2.5 py-1 text-[9px] font-extrabold tracking-wider text-steel uppercase">Configured</span>}
             >
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Cable className="size-3.5" /> Wings daemon</div><div className="mt-2 font-mono text-[14px] font-extrabold">0.0.0.0:{node.daemonPort}</div></div>
-                <div className="rounded-xl border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><FolderGit2 className="size-3.5" /> SFTP</div><div className="mt-2 font-mono text-[14px] font-extrabold">0.0.0.0:{node.sftpPort}</div></div>
-                <div className="rounded-xl border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Network className="size-3.5" /> Allocation subnet</div><div className="mt-2 font-mono text-[14px] font-extrabold">{node.subnet}0/24</div></div>
-                <div className="rounded-xl border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Gamepad2 className="size-3.5" /> Primary ports</div><div className="mt-2 font-mono text-[14px] font-extrabold">{nodeServers.length ? nodeServers.map((server) => server.port).join(", ") : "Unallocated"}</div></div>
+                <div className="rounded-[var(--control-radius)] border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Cable className="size-3.5" /> Wings daemon</div><div className="mt-2 font-mono text-[14px] font-extrabold">0.0.0.0:{node.daemonPort}</div></div>
+                <div className="rounded-[var(--control-radius)] border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><FolderGit2 className="size-3.5" /> SFTP</div><div className="mt-2 font-mono text-[14px] font-extrabold">0.0.0.0:{node.sftpPort}</div></div>
+                <div className="rounded-[var(--control-radius)] border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Network className="size-3.5" /> Allocation subnet</div><div className="mt-2 font-mono text-[14px] font-extrabold">{node.subnet}0/24</div></div>
+                <div className="rounded-[var(--control-radius)] border border-line bg-fill/40 p-3"><div className="flex items-center gap-2 text-[11px] font-bold text-steel"><Gamepad2 className="size-3.5" /> Primary ports</div><div className="mt-2 font-mono text-[14px] font-extrabold">{nodeServers.length ? nodeServers.map((server) => server.port).join(", ") : "Unallocated"}</div></div>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
                 <span className="text-[11.5px] font-bold text-steel">{nodeServers.length} servers · {formatMb(nodeServers.reduce((sum, server) => sum + server.memoryMb, 0))} memory</span>
@@ -156,10 +156,10 @@ export function AdminDatabaseHostsView() {
           {hosts.map((host) => (
             <SectionCard key={host.id} title={host.name} subtitle={host.primary ? "Primary panel datastore" : "Additional datastore"} icon={<Database className="size-4" />} actions={<span className="inline-flex items-center gap-1.5 rounded-full border border-ok/25 bg-ok/10 px-2.5 py-1 text-[10px] font-extrabold text-ok uppercase"><span className="size-1.5 rounded-full bg-ok" />{host.status}</span>}>
               <dl className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Host</dt><dd className="mt-1.5 font-mono text-[13px] font-bold break-all">{host.host}</dd></div>
-                <div className="rounded-xl bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Port</dt><dd className="mt-1.5 font-mono text-[13px] font-bold">{host.port}</dd></div>
-                <div className="rounded-xl bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Database</dt><dd className="mt-1.5 font-mono text-[13px] font-bold break-all">{host.database}</dd></div>
-                <div className="rounded-xl bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Driver</dt><dd className="mt-1.5 text-[13px] font-bold">{host.driver}</dd></div>
+                <div className="rounded-[var(--control-radius)] bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Host</dt><dd className="mt-1.5 font-mono text-[13px] font-bold break-all">{host.host}</dd></div>
+                <div className="rounded-[var(--control-radius)] bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Port</dt><dd className="mt-1.5 font-mono text-[13px] font-bold">{host.port}</dd></div>
+                <div className="rounded-[var(--control-radius)] bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Database</dt><dd className="mt-1.5 font-mono text-[13px] font-bold break-all">{host.database}</dd></div>
+                <div className="rounded-[var(--control-radius)] bg-fill/50 p-3"><dt className="text-[10px] font-bold tracking-wider text-steel uppercase">Driver</dt><dd className="mt-1.5 text-[13px] font-bold">{host.driver}</dd></div>
               </dl>
             </SectionCard>
           ))}
@@ -183,7 +183,7 @@ export function AdminMountsView() {
           return (
             <div key={template.id} className="glass p-4">
               <div className="flex items-center gap-3"><TemplateBadge templateId={template.id} /><div className="min-w-0"><h3 className="truncate text-[14px] font-extrabold">{template.name} storage</h3><p className="mt-0.5 text-[11px] font-semibold text-steel">{used} attached {used === 1 ? "server" : "servers"}</p></div></div>
-              <div className="mt-4 rounded-xl border border-line bg-black/20 p-3 font-mono text-[11.5px]">
+              <div className="mt-4 rounded-[var(--control-radius)] border border-line bg-black/20 p-3 font-mono text-[11.5px]">
                 <div className="flex items-center justify-between gap-3"><span className="text-steel">source</span><span>server-storage</span></div>
                 <div className="mt-2 flex items-center justify-between gap-3"><span className="text-steel">target</span><span className="break-all">{target}</span></div>
                 <div className="mt-2 flex items-center justify-between gap-3"><span className="text-steel">access</span><span>read / write</span></div>
@@ -208,12 +208,12 @@ export function AdminEggsView() {
       <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         {SERVER_TEMPLATES.map((template) => (
           <div key={template.id} className="glass flex flex-col p-4">
-            <div className="flex items-start gap-3"><TemplateBadge templateId={template.id} size="lg" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-[15px] font-extrabold">{template.name}</h3><span className="rounded-md border border-line bg-fill px-1.5 py-0.5 text-[9px] font-extrabold text-steel uppercase">{template.category}</span></div><p className="mt-1 text-[11px] font-semibold text-steel">{servers.filter((server) => server.template === template.id).length} deployed servers</p></div></div>
-            <div className="my-4 rounded-xl border border-line bg-fill/40 p-3"><div className="text-[10px] font-bold tracking-wider text-steel uppercase">Container image</div><code className="mt-1.5 block text-[11px] leading-relaxed break-all">{template.image}</code></div>
+            <div className="flex items-start gap-3"><TemplateBadge templateId={template.id} size="lg" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-[15px] font-extrabold">{template.name}</h3><span className="rounded-[var(--control-radius)] border border-line bg-fill px-1.5 py-0.5 text-[9px] font-extrabold text-steel uppercase">{template.category}</span></div><p className="mt-1 text-[11px] font-semibold text-steel">{servers.filter((server) => server.template === template.id).length} deployed servers</p></div></div>
+            <div className="my-4 rounded-[var(--control-radius)] border border-line bg-fill/40 p-3"><div className="text-[10px] font-bold tracking-wider text-steel uppercase">Container image</div><code className="mt-1.5 block text-[11px] leading-relaxed break-all">{template.image}</code></div>
             <div className="mt-auto grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.defaultPort}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Default port</div></div>
-              <div className="rounded-lg bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.maxPlayers || "—"}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Player slots</div></div>
-              <div className="rounded-lg bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.bootLog.length}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Boot stages</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.defaultPort}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Default port</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.maxPlayers || "—"}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Player slots</div></div>
+              <div className="rounded-[var(--control-radius)] bg-fill/50 p-2.5"><div className="text-[13px] font-extrabold">{template.bootLog.length}</div><div className="mt-0.5 text-[9px] font-bold text-steel uppercase">Boot stages</div></div>
             </div>
           </div>
         ))}
@@ -241,7 +241,7 @@ export function AdminTagsView() {
           return (
             <SectionCard key={tag.name} title={<span className="flex items-center gap-2"><span className="size-2 rounded-full" style={{ background: tag.color }} />#{tag.name}</span>} subtitle={tag.description} icon={<TagsIcon className="size-4" />}>
               <div className="flex items-end justify-between gap-3"><div><div className="text-[26px] font-extrabold">{count}</div><div className="text-[11px] font-bold text-steel">Matching servers</div></div><div className="text-right"><div className="text-[18px] font-extrabold">{tag.templates.length}</div><div className="text-[11px] font-bold text-steel">Templates</div></div></div>
-              <div className="mt-4 flex flex-wrap gap-1.5 border-t border-line pt-3">{tag.templates.map((template) => <span key={template.id} className="rounded-md border border-line bg-fill px-2 py-1 text-[10px] font-bold text-steel">{template.name}</span>)}</div>
+              <div className="mt-4 flex flex-wrap gap-1.5 border-t border-line pt-3">{tag.templates.map((template) => <span key={template.id} className="rounded-[var(--control-radius)] border border-line bg-fill px-2 py-1 text-[10px] font-bold text-steel">{template.name}</span>)}</div>
             </SectionCard>
           );
         })}
@@ -266,7 +266,7 @@ export function AdminExtensionsView() {
       <SectionCard title="Core capabilities" subtitle="Included with BT Panel Game" icon={<Layers3 className="size-4" />}>
         <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
           {CORE_FEATURES.map((feature) => (
-            <div key={feature.name} className="rounded-xl border border-line bg-fill/40 p-3.5">
+            <div key={feature.name} className="rounded-[var(--control-radius)] border border-line bg-fill/40 p-3.5">
               <div className="flex items-center justify-between gap-2"><feature.icon className="size-4 text-accent" /><span className="rounded-full border border-ok/20 bg-ok/10 px-2 py-0.5 text-[9px] font-extrabold text-ok uppercase">Built in</span></div>
               <h3 className="mt-3 text-[13px] font-extrabold">{feature.name}</h3><p className="mt-1 text-[11px] leading-relaxed font-semibold text-steel">{feature.description}</p>
             </div>

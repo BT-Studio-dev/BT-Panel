@@ -84,7 +84,7 @@ export function AdminView() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,var(--accent-glow),transparent_42%)] opacity-40" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3.5">
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-accent/35 bg-accent/15 text-accent shadow-[0_0_24px_var(--accent-glow)]"><ShieldCheck className="size-6" /></span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-[var(--panel-radius)] border border-accent/35 bg-accent/15 text-accent shadow-[0_0_24px_var(--accent-glow)]"><ShieldCheck className="size-6" /></span>
             <div><div className="text-[10px] font-extrabold tracking-[0.18em] text-accent uppercase">Admin Control Center</div><h1 className="mt-0.5 text-[26px] font-extrabold tracking-tight">BT Panel Game</h1><p className="mt-1 text-[13px] font-semibold text-steel">Servers, infrastructure, access and panel configuration.</p></div>
           </div>
           <div className="flex items-center gap-2 self-start rounded-full border border-line bg-fill px-3 py-2 sm:self-auto"><span className="size-2 rounded-full bg-ok shadow-[0_0_8px_var(--color-ok)]" /><span className="text-[11px] font-extrabold">{profile.username}</span><span className="text-[10px] font-bold text-steel uppercase">{profile.role}</span></div>
@@ -99,7 +99,7 @@ export function AdminView() {
               type="button"
               onClick={() => setAdminSection(section.id)}
               className={cn(
-                "flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg border border-transparent px-3 text-left text-[12.5px] font-bold whitespace-nowrap text-steel transition-colors hover:bg-fill hover:text-ice xl:w-full",
+                "flex min-h-11 shrink-0 items-center gap-2.5 rounded-[var(--control-radius)] border border-transparent px-3 text-left text-[12.5px] font-bold whitespace-nowrap text-steel transition-colors hover:bg-fill hover:text-ice xl:w-full",
                 adminSection === section.id && "border-accent/25 bg-accent/12 text-accent",
               )}
               aria-current={adminSection === section.id ? "page" : undefined}

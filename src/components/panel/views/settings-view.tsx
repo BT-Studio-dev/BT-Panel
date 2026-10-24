@@ -166,8 +166,8 @@ function LogoField({
   return (
     <div>
       <span className="mb-1.5 block text-[12px] font-bold text-steel">{label}</span>
-      <div className="flex items-center gap-3 rounded-[12px] border border-line bg-fill p-3">
-        <img src={value || fallback} alt="" className="size-12 rounded-[10px] object-contain" />
+      <div className="flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill p-3">
+        <img src={value || fallback} alt="" className="size-12 rounded-[var(--control-radius)] object-contain" />
         <div className="flex flex-1 flex-wrap gap-2">
           <label className="btn-ghost min-h-9 cursor-pointer px-3 text-[12px]">
             <CloudUpload className="size-3.5" /> Upload
@@ -395,7 +395,7 @@ function wallpaperLabel(url: string): string {
 function WallpaperPreview({ url }: { url: string }) {
   const shader = parseShaderWallpaper(url);
   return (
-    <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-line bg-fill p-2.5">
+    <div className="mt-3 flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill p-2.5">
       <div className="wallpaper-tile w-28 shrink-0 cursor-default">
         {shader ? (
           <ShaderCanvas variant={shader} maxDpr={1} className="size-full" />
@@ -438,7 +438,7 @@ function UploadBox({ onUploaded, compact }: { onUploaded: (url: string) => void;
   return (
     <label
       className={cn(
-        "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[14px] border border-dashed border-line-strong bg-sunken px-4 text-center transition-colors hover:border-accent/60",
+        "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[var(--control-radius)] border border-dashed border-line-strong bg-sunken px-4 text-center transition-colors hover:border-accent/60",
         compact ? "min-h-[110px]" : "min-h-[180px]",
       )}
       onDragOver={(e) => e.preventDefault()}
@@ -565,7 +565,7 @@ function WallpapersPanel() {
           </p>
         </div>
         {previewing ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn">
+          <div className="flex flex-wrap items-center gap-2 rounded-[var(--control-radius)] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn">
             <Eye className="size-4" /> Previewing {wallpaperLabel(draft.wallpaperUrl)}
             <button type="button" className="btn-ghost min-h-8 px-2.5 text-[11.5px]" onClick={() => setDraft({ wallpaperUrl: saved })}>
               Revert
@@ -669,7 +669,7 @@ function WallpapersPanel() {
             return (
               <div
                 key={v.id}
-                className={cn("overflow-hidden rounded-[14px] border border-line bg-fill", active && "outline-2 outline-offset-2 outline-accent")}
+                className={cn("overflow-hidden rounded-[var(--control-radius)] border border-line bg-fill", active && "outline-2 outline-offset-2 outline-accent")}
               >
                 <div className="relative aspect-[16/10]">
                   <ShaderCanvas variant={v.id} maxDpr={1} className="absolute inset-0 size-full" />
@@ -748,14 +748,14 @@ function WallpaperCard({
           <div className="flex w-full gap-1.5">
             <button
               type="button"
-              className="flex-1 rounded-[8px] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25"
+              className="flex-1 rounded-[var(--control-radius)] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25"
               onClick={onPreview}
             >
               Preview
             </button>
             <button
               type="button"
-              className="flex-1 rounded-[8px] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110"
+              className="flex-1 rounded-[var(--control-radius)] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110"
               onClick={onApply}
               disabled={busy}
             >
@@ -979,7 +979,7 @@ function AccessPanel() {
         {form.googleOauthEnabled ? (
           <p
             className={cn(
-              "mt-3 rounded-[10px] border px-3 py-2 text-[12px] font-semibold",
+              "mt-3 rounded-[var(--control-radius)] border px-3 py-2 text-[12px] font-semibold",
               googleReady
                 ? "border-ok/35 bg-ok/10 text-ok"
                 : "border-warn/35 bg-warn/10 text-warn",

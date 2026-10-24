@@ -115,7 +115,7 @@ export function ApiKeysView() {
                   return (
                     <tr key={key.id} className="transition-colors hover:bg-fill/40">
                       <td className="px-5 py-3.5"><div className="text-[12.5px] font-extrabold">{key.name}</div>{expired ? <div className="mt-1 text-[9px] font-extrabold tracking-wider text-danger uppercase">Expired</div> : null}</td>
-                      <td className="px-5 py-3.5"><code className="rounded-md border border-line bg-fill px-2 py-1 text-[11px] text-steel">{key.prefix}••••••••</code></td>
+                      <td className="px-5 py-3.5"><code className="rounded-[var(--control-radius)] border border-line bg-fill px-2 py-1 text-[11px] text-steel">{key.prefix}••••••••</code></td>
                       <td className="px-5 py-3.5 text-[12px] font-semibold text-steel">{key.ownerName ?? "Unknown"}</td>
                       <td className="px-5 py-3.5 text-[11.5px] font-semibold text-steel">{formatJoined(key.createdAt)}</td>
                       <td className="px-5 py-3.5 text-[11.5px] font-semibold text-steel">{now ? timeAgo(key.lastUsedAt, now) : key.lastUsedAt ? formatJoined(key.lastUsedAt) : "never"}</td>
@@ -141,7 +141,7 @@ export function ApiKeysView() {
       <div className="glass mt-4 p-5">
         <h3 className="flex items-center gap-2 text-[13px] font-extrabold"><ShieldAlert className="size-4 text-warn" /> Using a key safely</h3>
         <p className="mt-2 text-[12px] leading-relaxed font-semibold text-steel">Keep keys in server-side secret storage, never in browser code or Git. Send requests to this panel&apos;s HTTPS origin with the header below, and revoke a key immediately if it is exposed.</p>
-        <code className="mt-3 block overflow-x-auto rounded-xl border border-line bg-black/25 p-3 text-[11.5px] whitespace-nowrap">Authorization: Bearer btp_your_secret_key</code>
+        <code className="mt-3 block overflow-x-auto rounded-[var(--control-radius)] border border-line bg-black/25 p-3 text-[11.5px] whitespace-nowrap">Authorization: Bearer btp_your_secret_key</code>
       </div>
 
       <Modal open={createOpen} onClose={() => !busy && setCreateOpen(false)} title="Create API key" subtitle="The new credential will inherit your administrator permissions.">
@@ -161,7 +161,7 @@ export function ApiKeysView() {
       <Modal open={created !== null} onClose={() => setCreated(null)} title="Copy your new API key" subtitle={created ? `${created.key.name} was created successfully.` : undefined}>
         {created ? (
           <div>
-            <div className="rounded-xl border border-warn/25 bg-warn/10 p-3 text-[12px] leading-relaxed font-semibold text-warn">This is the only time the complete secret will be shown. Store it somewhere safe before closing this dialog.</div>
+            <div className="rounded-[var(--control-radius)] border border-warn/25 bg-warn/10 p-3 text-[12px] leading-relaxed font-semibold text-warn">This is the only time the complete secret will be shown. Store it somewhere safe before closing this dialog.</div>
             <div className="mt-4 flex gap-2">
               <input className="panel-input min-w-0 flex-1 font-mono text-[12px]" readOnly value={created.secret} onFocus={(event) => event.target.select()} aria-label="New API key secret" />
               <button type="button" className={cn("btn-accent shrink-0 px-3", copied && "bg-ok")} onClick={() => void copySecret()} aria-label="Copy API key">{copied ? <Check className="size-4" /> : <Copy className="size-4" />}</button>

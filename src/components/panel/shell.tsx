@@ -109,7 +109,7 @@ function ShellInner() {
             backdropFilter: "blur(16px)",
             fontFamily: "var(--font-sans)",
             fontWeight: 700,
-            borderRadius: "12px",
+            borderRadius: "var(--control-radius)",
           },
         }}
       />
@@ -173,7 +173,7 @@ function Sidebar() {
           </div>
           <button
             type="button"
-            className="hidden size-8 shrink-0 items-center justify-center rounded-[9px] border border-line-strong bg-sunken text-steel transition-colors hover:text-ice md:inline-flex"
+            className="hidden size-8 shrink-0 items-center justify-center rounded-[var(--control-radius)] border border-line-strong bg-sunken text-steel transition-colors hover:text-ice md:inline-flex"
             onClick={toggleCollapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -203,7 +203,7 @@ function Sidebar() {
           <button
             type="button"
             className={cn(
-              "mb-2 flex w-full items-center gap-2.5 rounded-[12px] p-1.5 text-left transition-colors hover:bg-fill",
+              "mb-2 flex w-full items-center gap-2.5 rounded-[var(--control-radius)] p-1.5 text-left transition-colors hover:bg-fill",
               collapsed && "justify-center",
             )}
             onClick={() => setView("account")}
@@ -293,7 +293,7 @@ function Header() {
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
-          className="inline-flex size-11 items-center justify-center rounded-[10px] border border-line bg-sunken md:hidden"
+          className="inline-flex size-11 items-center justify-center rounded-[var(--control-radius)] border border-line bg-sunken md:hidden"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
         >
@@ -312,7 +312,7 @@ function Header() {
         {music.playing ? (
           <button
             type="button"
-            className="hidden h-10 items-center gap-2 rounded-[10px] border border-line bg-sunken px-3 text-[12px] font-bold text-steel sm:inline-flex"
+            className="hidden h-10 items-center gap-2 rounded-[var(--control-radius)] border border-line bg-sunken px-3 text-[12px] font-bold text-steel sm:inline-flex"
             onClick={() => setView("music")}
             title="Now playing"
           >
@@ -342,7 +342,7 @@ function Header() {
         {settings.showThemeToggle !== false ? (
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-[10px] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
+            className="inline-flex size-10 items-center justify-center rounded-[var(--control-radius)] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
             onClick={toggleMode}
             aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
             title={mode === "light" ? `Switch to ${darkBase === "oled" ? "OLED black" : "dark"} theme` : "Switch to light theme"}
@@ -354,7 +354,7 @@ function Header() {
           <div className="relative" ref={ref}>
             <button
               type="button"
-              className="flex items-center gap-2.5 rounded-[12px] border border-line bg-sunken py-1.5 pr-2.5 pl-1.5"
+              className="flex items-center gap-2.5 rounded-[var(--control-radius)] border border-line bg-sunken py-1.5 pr-2.5 pl-1.5"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
             >
@@ -374,7 +374,7 @@ function Header() {
                 <div className="my-1 h-px bg-line" />
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
                   onClick={() => {
                     setView("account");
                     setOpen(false);
@@ -385,7 +385,7 @@ function Header() {
                 </button>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
                   onClick={() => {
                     setView("servers");
                     setOpen(false);
@@ -397,7 +397,7 @@ function Header() {
                 <div className="my-1 h-px bg-line" />
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold text-danger hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold text-danger hover:bg-fill-strong"
                   onClick={() => void signOut()}
                 >
                   <LogOut className="size-3.5" />

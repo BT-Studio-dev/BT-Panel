@@ -51,7 +51,7 @@ export function TeamView() {
           list.map((member) => {
             const online = isOnline(member);
             return (
-              <div key={member.userId} className="glass-soft flex items-center gap-3 rounded-[14px] border border-line p-3">
+              <div key={member.userId} className="glass-soft flex items-center gap-3 rounded-[var(--control-radius)] border border-line p-3">
                 <PresenceAvatar name={member.username} src={member.profilePic} online={online} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ function ProfileDetails({ member, now, isYou }: { member: PanelProfile; now: num
           </div>
           <div
             className={cn(
-              "mt-1 min-h-[64px] whitespace-pre-wrap rounded-[12px] border px-3 py-2.5 text-[13.5px] font-semibold leading-relaxed",
+              "mt-1 min-h-[64px] whitespace-pre-wrap rounded-[var(--control-radius)] border px-3 py-2.5 text-[13.5px] font-semibold leading-relaxed",
               member.bio?.trim()
                 ? "border-line bg-fill text-ice"
                 : "border-dashed border-line-strong bg-fill/40 italic text-faint",
@@ -154,13 +154,13 @@ function ProfileDetails({ member, now, isYou }: { member: PanelProfile; now: num
         </section>
 
         <section className="grid grid-cols-2 gap-2">
-          <div className="rounded-[12px] border border-line bg-fill px-3 py-2.5">
+          <div className="rounded-[var(--control-radius)] border border-line bg-fill px-3 py-2.5">
             <div className="text-[10px] font-extrabold tracking-[0.12em] text-steel uppercase">Last seen</div>
             <div className="mt-0.5 text-[13px] font-extrabold text-ice">
               {isOnline ? "Online now" : now ? timeAgo(member.lastSeen, now) : "—"}
             </div>
           </div>
-          <div className="rounded-[12px] border border-line bg-fill px-3 py-2.5">
+          <div className="rounded-[var(--control-radius)] border border-line bg-fill px-3 py-2.5">
             <div className="text-[10px] font-extrabold tracking-[0.12em] text-steel uppercase">Joined</div>
             <div className="mt-0.5 text-[13px] font-extrabold text-ice">{formatJoined(member.createdAt)}</div>
           </div>
@@ -210,7 +210,7 @@ export function MusicView() {
       <section className="glass overflow-hidden">
         <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
           <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden border-b border-line bg-[radial-gradient(circle_at_30%_20%,color-mix(in_srgb,var(--accent)_20%,transparent),transparent_65%)] p-8 lg:min-h-[320px] lg:border-r lg:border-b-0">
-            <div className="relative grid size-40 place-items-center rounded-[28px] border border-accent/25 bg-fill/60 shadow-[0_18px_50px_rgb(0_0_0/0.28)]">
+            <div className="relative grid size-40 place-items-center rounded-[var(--panel-radius)] border border-accent/25 bg-fill/60 shadow-[0_18px_50px_rgb(0_0_0/0.28)]">
               <BrandMark className={cn("size-20 transition-transform duration-700", music.playing && "scale-110")} />
               <div className={cn("eq absolute bottom-6 left-1/2 -translate-x-1/2", music.playing && "on")}>
                 <span />
@@ -257,7 +257,7 @@ export function MusicView() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="grid size-14 shrink-0 place-items-center rounded-[18px] bg-accent text-white shadow-[0_8px_26px_var(--accent-glow)] transition-[transform,filter] hover:-translate-y-0.5 hover:brightness-110"
+                  className="grid size-14 shrink-0 place-items-center rounded-[var(--panel-radius)] bg-accent text-white shadow-[0_8px_26px_var(--accent-glow)] transition-[transform,filter] hover:-translate-y-0.5 hover:brightness-110"
                   onClick={music.toggle}
                   aria-label={music.playing ? "Pause" : "Play"}
                 >
@@ -265,7 +265,7 @@ export function MusicView() {
                 </button>
                 <button
                   type="button"
-                  className={cn("icon-btn size-12 rounded-[14px]", music.loop && "border-accent/50 text-accent")}
+                  className={cn("icon-btn size-12 rounded-[var(--control-radius)]", music.loop && "border-accent/50 text-accent")}
                   onClick={() => music.setPrefs({ loop: !music.loop })}
                   aria-label="Toggle loop"
                   aria-pressed={music.loop}
@@ -296,7 +296,7 @@ export function MusicView() {
 
       <section className="glass p-5 sm:p-6">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[12px] border border-accent/25 bg-accent/10 text-accent">
+          <span className="grid size-10 shrink-0 place-items-center rounded-[var(--control-radius)] border border-accent/25 bg-accent/10 text-accent">
             <Music2 className="size-4" />
           </span>
           <div>

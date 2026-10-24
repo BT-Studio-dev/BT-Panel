@@ -45,7 +45,7 @@ export function AdminStat({
         </div>
         <div
           className={cn(
-            "grid size-9 shrink-0 place-items-center rounded-xl border",
+            "grid size-9 shrink-0 place-items-center rounded-[var(--control-radius)] border",
             tone === "ok" && "border-ok/25 bg-ok/10 text-ok",
             tone === "warn" && "border-warn/25 bg-warn/10 text-warn",
             tone === "accent" && "border-accent/25 bg-accent/10 text-accent",
@@ -61,7 +61,7 @@ export function AdminStat({
 
 export function CatalogNote({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-line bg-fill/60 px-3.5 py-3 text-[12px] font-semibold text-steel">
+    <div className="mb-4 flex items-start gap-2.5 rounded-[var(--control-radius)] border border-line bg-fill/60 px-3.5 py-3 text-[12px] font-semibold text-steel">
       <Info className="mt-0.5 size-4 shrink-0 text-accent" />
       <p>{children}</p>
     </div>

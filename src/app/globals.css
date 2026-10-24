@@ -37,6 +37,7 @@
   --glass-saturate: 160%;
   --glass-filter: blur(20px) saturate(160%);
   --panel-radius: 16px;
+  --control-radius: max(0px, calc(var(--panel-radius) - 6px));
   --accent: #d00000;
   --accent-glow: rgb(208 0 0 / 0.34);
   --nav-text: #9da3b4;
@@ -277,6 +278,7 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border: 1px solid var(--glass-border);
+    border-radius: var(--panel-radius);
     box-shadow:
       0 24px 64px rgb(0 0 0 / 0.6),
       inset 0 1px 0 var(--glass-shine);
@@ -286,7 +288,7 @@
   .panel-input {
     width: 100%;
     min-height: 44px;
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     border: 1px solid rgb(255 255 255 / 0.1);
     background: rgb(0 0 0 / 0.45);
     color: var(--text-primary);
@@ -322,7 +324,7 @@
     min-height: 44px;
     padding: 0 16px;
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     background: var(--accent);
     color: #fff;
     font-weight: 700;
@@ -350,7 +352,7 @@
     gap: 8px;
     min-height: 44px;
     padding: 0 14px;
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     border: 1px solid rgb(255 255 255 / 0.12);
     background: rgb(255 255 255 / 0.04);
     color: var(--text-primary);
@@ -373,7 +375,7 @@
     gap: 8px;
     min-height: 40px;
     padding: 0 12px;
-    border-radius: 9px;
+    border-radius: var(--control-radius);
     border: 1px solid rgb(240 80 90 / 0.35);
     background: rgb(240 80 90 / 0.12);
     color: #ff8b96;
@@ -396,7 +398,7 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     border: 1px solid var(--color-line);
     background: var(--color-sunken);
     color: var(--text-dim);
@@ -434,7 +436,7 @@
     width: 100%;
     min-height: 44px;
     padding: 10px 14px;
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     color: var(--nav-text);
     font-size: 13.5px;
     font-weight: 700;
@@ -592,7 +594,7 @@
   .console {
     background: var(--console-bg);
     border: 1px solid rgb(255 255 255 / 0.08);
-    border-radius: calc(var(--panel-radius) - 4px);
+    border-radius: var(--control-radius);
     font-family: var(--font-mono);
     font-size: 12.5px;
     line-height: 1.65;
@@ -624,7 +626,7 @@
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: var(--control-radius);
     border: 1px solid rgb(255 255 255 / 0.1);
     aspect-ratio: 16 / 10;
     background: #111;
@@ -652,7 +654,7 @@
   .select-tile {
     border: 1px solid var(--color-line);
     background: var(--color-fill);
-    border-radius: 12px;
+    border-radius: var(--control-radius);
     transition:
       border-color 150ms ease,
       background 150ms ease,
@@ -869,7 +871,7 @@
    * regular card a shared identity without changing dialogs or navigation.
    */
   .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
-    border-radius: calc(var(--panel-radius) + 2px);
+    border-radius: var(--panel-radius);
     border-color: color-mix(in srgb, var(--accent) 8%, var(--glass-border));
     background:
       radial-gradient(

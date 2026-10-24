@@ -47,15 +47,15 @@ export function AdminOverviewView() {
       <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
         <SectionCard title="Fleet allocation" subtitle="Resources assigned across all managed servers" icon={<MemoryStick className="size-4" />}>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-line bg-fill/50 p-3.5">
+            <div className="rounded-[var(--control-radius)] border border-line bg-fill/50 p-3.5">
               <div className="text-[11px] font-bold text-steel">Memory allocated</div>
               <div className="mt-1.5 text-[20px] font-extrabold">{formatMb(memory)}</div>
             </div>
-            <div className="rounded-xl border border-line bg-fill/50 p-3.5">
+            <div className="rounded-[var(--control-radius)] border border-line bg-fill/50 p-3.5">
               <div className="text-[11px] font-bold text-steel">Game templates</div>
               <div className="mt-1.5 text-[20px] font-extrabold">{SERVER_TEMPLATES.filter((template) => template.category === "game").length}</div>
             </div>
-            <div className="rounded-xl border border-line bg-fill/50 p-3.5">
+            <div className="rounded-[var(--control-radius)] border border-line bg-fill/50 p-3.5">
               <div className="text-[11px] font-bold text-steel">Minecraft servers</div>
               <div className="mt-1.5 text-[20px] font-extrabold">{minecraft}</div>
             </div>
@@ -70,7 +70,7 @@ export function AdminOverviewView() {
                     key={server.id}
                     type="button"
                     onClick={() => openServer(server.id)}
-                    className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-line bg-fill/40 p-3 text-left transition-colors hover:border-accent/40 hover:bg-fill"
+                    className="flex w-full min-w-0 items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill/40 p-3 text-left transition-colors hover:border-accent/40 hover:bg-fill"
                   >
                     <TemplateBadge templateId={server.template} size="sm" />
                     <span className="min-w-0 flex-1">
@@ -84,7 +84,7 @@ export function AdminOverviewView() {
                   </button>
                 ))
             ) : (
-              <div className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-[12px] font-semibold text-steel">
+              <div className="rounded-[var(--control-radius)] border border-dashed border-line px-4 py-6 text-center text-[12px] font-semibold text-steel">
                 No servers have been deployed yet.
               </div>
             )}
@@ -103,9 +103,9 @@ export function AdminOverviewView() {
                 key={item.section}
                 type="button"
                 onClick={() => setAdminSection(item.section)}
-                className="group flex items-center gap-3 rounded-xl border border-line bg-fill/40 p-3 text-left transition-colors hover:border-accent/40 hover:bg-fill"
+                className="group flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill/40 p-3 text-left transition-colors hover:border-accent/40 hover:bg-fill"
               >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-accent/20 bg-accent/10 text-accent">
+                <span className="grid size-9 shrink-0 place-items-center rounded-[var(--control-radius)] border border-accent/20 bg-accent/10 text-accent">
                   <item.icon className="size-4" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -231,7 +231,7 @@ export function AdminActivityView() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <button type="button" className="text-[12.5px] font-extrabold hover:text-accent" onClick={() => openServer(event.serverId)}>{event.serverName}</button>
-                    <span className="rounded-md border border-line bg-fill px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-steel uppercase">{event.level}</span>
+                    <span className="rounded-[var(--control-radius)] border border-line bg-fill px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-steel uppercase">{event.level}</span>
                   </div>
                   <p className="mt-1 font-mono text-[11.5px] leading-relaxed break-words text-steel">{event.message}</p>
                 </div>

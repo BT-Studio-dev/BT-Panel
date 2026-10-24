@@ -132,7 +132,7 @@ function ServerCard({ server, now }: { server: ServerDto; now: number | null }) 
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[11.5px] font-semibold text-steel">
         <CopyAddress value={`${server.ip}:${server.port}`} />
-        <span className="rounded-md border border-line bg-fill px-2 py-1">{node ? `${node.region} · ${node.name}` : server.node}</span>
+        <span className="rounded-[var(--control-radius)] border border-line bg-fill px-2 py-1">{node ? `${node.region} · ${node.name}` : server.node}</span>
         {server.ownerName ? <span className="truncate">@{server.ownerName}</span> : null}
       </div>
       <div className="mt-4 grid gap-2.5">
@@ -193,7 +193,7 @@ function CopyAddress({ value }: { value: string }) {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-md border border-line bg-sunken px-2 py-1 font-mono text-[11.5px] text-ice transition-colors hover:border-line-strong"
+      className="inline-flex items-center gap-1.5 rounded-[var(--control-radius)] border border-line bg-sunken px-2 py-1 font-mono text-[11.5px] text-ice transition-colors hover:border-line-strong"
       title="Copy address"
       onClick={() => {
         if (!navigator.clipboard) {
@@ -588,7 +588,7 @@ function StatTile({
     <div className="glass p-4">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-extrabold tracking-[0.12em] text-steel uppercase">{label}</span>
-        <span className="grid size-8 place-items-center rounded-[9px] border border-accent/35 bg-accent/12 text-accent">{icon}</span>
+        <span className="grid size-8 place-items-center rounded-[var(--control-radius)] border border-accent/35 bg-accent/12 text-accent">{icon}</span>
       </div>
       <div className="mt-2 font-mono text-[20px] font-semibold tracking-tight">{value}</div>
       <div className="text-[11.5px] font-semibold text-steel">{sub}</div>
@@ -791,7 +791,7 @@ function ServerSettingsCard({
           Rename
         </button>
       </form>
-      <div className="mt-4 rounded-[12px] border border-danger/30 bg-danger/8 p-3">
+      <div className="mt-4 rounded-[var(--control-radius)] border border-danger/30 bg-danger/8 p-3">
         <div className="text-[12.5px] font-extrabold text-danger">Danger zone</div>
         <p className="mt-0.5 text-[11.5px] font-semibold text-steel">Deleting a server wipes its files and console history.</p>
         <button type="button" className="btn-danger mt-2.5 w-full" disabled={busy} onClick={() => void remove()}>

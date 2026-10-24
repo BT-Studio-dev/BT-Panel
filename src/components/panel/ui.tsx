@@ -28,8 +28,8 @@ export function PresenceAvatar({
     <div className={cn("relative shrink-0 overflow-hidden", dim)} title={name}>
       <div
         className={cn(
-          "grid size-full place-items-center overflow-hidden rounded-[12px] bg-fill-strong",
-          size === "lg" && "rounded-[22px]",
+          "grid size-full place-items-center overflow-hidden rounded-[var(--control-radius)] bg-fill-strong",
+          size === "lg" && "rounded-[var(--panel-radius)]",
         )}
       >
         <img src={image} alt="" className="block size-full object-cover" aria-hidden="true" />
@@ -65,7 +65,7 @@ const ICONS: Record<TemplateIcon, typeof Pickaxe> = {
 export function TemplateBadge({ templateId, size = "md" }: { templateId: string; size?: "sm" | "md" | "lg" }) {
   const t = getTemplate(templateId);
   const Icon = ICONS[t.icon];
-  const dim = size === "lg" ? "size-14 rounded-[16px]" : size === "sm" ? "size-8 rounded-[9px]" : "size-11 rounded-[12px]";
+  const dim = size === "lg" ? "size-14 rounded-[var(--panel-radius)]" : size === "sm" ? "size-8 rounded-[var(--control-radius)]" : "size-11 rounded-[var(--control-radius)]";
   return (
     <div
       className={cn("grid shrink-0 place-items-center border", dim)}
@@ -131,7 +131,7 @@ export function Stat({
   hint?: ReactNode;
 }) {
   return (
-    <div className="glass-soft h-full rounded-[calc(var(--panel-radius)-6px)] border border-line px-4 py-4 transition-colors hover:border-line-strong">
+    <div className="glass-soft h-full rounded-[var(--control-radius)] border border-line px-4 py-4 transition-colors hover:border-line-strong">
       <div className="text-[11px] font-extrabold tracking-[0.12em] text-steel uppercase">{label}</div>
       <div
         className={cn(
@@ -185,7 +185,7 @@ export function ToggleRow({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[12px] border border-line bg-fill px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-[var(--control-radius)] border border-line bg-fill px-4 py-3">
       <div className="min-w-0">
         <div className="text-[13.5px] font-extrabold">{label}</div>
         {hint ? <div className="mt-0.5 text-[12px] font-semibold text-steel">{hint}</div> : null}
@@ -216,7 +216,7 @@ export function Slider({
     <label className="block">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12.5px] font-bold text-ice">{label}</span>
-        <span className="rounded-md border border-line bg-sunken px-2 py-0.5 font-mono text-[11.5px] font-semibold text-accent">
+        <span className="rounded-[var(--control-radius)] border border-line bg-sunken px-2 py-0.5 font-mono text-[11.5px] font-semibold text-accent">
           {value}
           {suffix}
         </span>
@@ -252,7 +252,7 @@ export function ColorField({
       <div className="text-[12.5px] font-bold text-ice">{label}</div>
       <div className="mt-1.5 flex items-center gap-2">
         <label
-          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-[10px] border border-line-strong"
+          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-[var(--control-radius)] border border-line-strong"
           style={{ background: value }}
         >
           <input
@@ -394,7 +394,7 @@ export function Modal({
 export function EmptyState({ icon, title, body, action }: { icon: ReactNode; title: string; body: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      <div className="grid size-12 place-items-center rounded-2xl border border-accent/40 bg-accent/15 text-accent shadow-[0_0_22px_var(--accent-glow)]">
+      <div className="grid size-12 place-items-center rounded-[var(--panel-radius)] border border-accent/40 bg-accent/15 text-accent shadow-[0_0_22px_var(--accent-glow)]">
         {icon}
       </div>
       <div className="mt-4 text-[15px] font-extrabold">{title}</div>
