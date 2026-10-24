@@ -29,8 +29,74 @@ All of these routes require a BT Panel owner/admin session; they are not a repla
 | GET | `/api/integrations/pterodactyl/client-servers` | Client | Servers visible to the Client API token |
 | GET | `/api/integrations/pterodactyl/servers/{identifier}/resources` | Client | Live resources for an authorized server |
 | POST | `/api/integrations/pterodactyl/servers/{identifier}/power` | Client | Send start/stop/restart/kill signal |
+| GET | `/api/integrations/pterodactyl/servers/{identifier}/allocations` | Client | List the server's real IP/port allocations |
+| POST | `/api/integrations/pterodactyl/servers/{identifier}/allocations` | Client | Assign a port, set the primary allocation, or update notes |
+| DELETE | `/api/integrations/pterodactyl/servers/{identifier}/allocations` | Client | Remove a non-primary allocation |
+| GET | `/api/integrations/pterodactyl/servers/{identifier}/files?directory=/` | Client | List a remote directory |
+| GET | `/api/integrations/pterodactyl/servers/{identifier}/files?file=/path` | Client | Read a remote text file (up to 1 MB) |
+| POST | `/api/integrations/pterodactyl/servers/{identifier}/files` | Client | Write, copy, rename, create a folder, or delete remote files |
 
 The adapter lives at `src/lib/server/pterodactyl.ts`. API route handlers are in `src/app/api/integrations/pterodactyl/`. Tokens are never returned by these routes.
+
+## Wings nodes and connection ports
+
+The **Nodes & Wings** workspace displays each node's FQDN, scheme, Wings daemon port, SFTP port, data directory, maintenance state, and allocated memory/disk. These values come from the Pterodactyl Application API; an **Active** badge means the node is not in maintenance mode, not that BT Panel has performed a separate Wings health check.
+
+BT Panel does not install Wings, change its `config.yml`, or open firewall ports. Configure and secure the Wings daemon and SFTP ports in Pterodactyl/Wings itself. Game and application connection ports are separate node allocations.
+
+The **Network & ports** tab for a client-accessible server can:
+
+- assign an available allocation from the server's node;
+- copy a connection address in `host:port` form;
+- make a non-primary allocation primary;
+- edit allocation notes; and
+- remove a non-primary allocation.
+
+Assigning a port can fail when the node has no free allocations or the Client API user lacks allocation permissions. Add free allocations in the Pterodactyl admin area first. These operations change the real remote server.
+
+Allocation requests use a small BT Panel action body:
+
+```json
+{ "action": "create" }
+```
+
+```json
+{ "action": "primary", "allocation": 17 }
+```
+
+```json
+{ "action": "notes", "allocation": 17, "notes": "Query port" }
+```
+
+To remove allocation `17`, send a DELETE request with `{ "allocation": 17 }`. All routes still require an admin session and the normal BT Panel CSRF header.
+
+## Remote file management
+
+The **Files** tab lists the live filesystem visible through Pterodactyl. It supports directory navigation, creating files/folders, editing UTF-8 text files up to 1 MB, copying a file within its current directory, renaming items, and confirmed deletion. Pterodactyl/Wings remains responsible for filesystem isolation and permissions.
+
+File mutations use `POST /api/integrations/pterodactyl/servers/{identifier}/files` with one of these action bodies:
+
+```json
+{ "action": "write", "file": "/config/example.yml", "content": "enabled: true\n" }
+```
+
+```json
+{ "action": "copy", "location": "/config/example.yml" }
+```
+
+```json
+{ "action": "create-folder", "root": "/config", "name": "archive" }
+```
+
+```json
+{ "action": "rename", "root": "/config", "files": [{ "from": "example.yml", "to": "production.yml" }] }
+```
+
+```json
+{ "action": "delete", "root": "/config", "files": ["production.yml"] }
+```
+
+Paths must be absolute, cannot contain parent-directory (`..`) segments, and are limited to 1024 characters. Individual filenames are limited to 255 characters. Write/content bodies are limited to 1 MB. Delete is permanent and may recursively remove a folder through Wings; the UI requires confirmation.
 
 ## Create a real server
 
@@ -140,7 +206,9 @@ These examples expect a valid BT Panel session token. The backend then uses its 
 ## Current limitations
 
 - The integration targets the Pterodactyl **1.x** API schema; it is not a Pterodactyl 2.0 API adapter.
-- The UI shows Application API node inventory and Client API-accessible server resource readings as separate lists.
+- Application API node inventory and Client API-accessible servers remain separate upstream collections. A server visible in the Application API is not necessarily controllable with the configured Client API token.
 - Existing local BT Panel server records, power states, telemetry and backup records are not automatically imported or converted into real Pterodactyl servers.
-- Real Pterodactyl resources and power actions require a functioning remote panel and an appropriately scoped Client API token.
+- Real resources, power, allocation, and file operations require a functioning remote panel and an appropriately scoped Client API token. BT Panel does not bypass Pterodactyl user permissions.
+- The built-in editor is intended for text files up to 1 MB; it is not a binary upload/download or archive manager.
+- The integration reads Wings node connection settings but does not change Wings configuration, verify daemon health, or manage host firewall rules.
 - Create-server requests allocate infrastructure on the remote panel. Use the UI only when you intend to create an actual server.

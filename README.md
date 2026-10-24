@@ -43,6 +43,6 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
 
 ## Pterodactyl integration
 
-BT Panel now includes an optional server-side adapter for an existing Pterodactyl 1.x installation. Configure `PTERODACTYL_URL`, `PTERODACTYL_APPLICATION_TOKEN` and `PTERODACTYL_CLIENT_TOKEN` on the server to enable the Integrations screen. Never commit API keys or expose them to browser code.
+BT Panel now includes an optional server-side adapter for an existing Pterodactyl 1.x installation. Configure `PTERODACTYL_URL`, `PTERODACTYL_APPLICATION_TOKEN` and `PTERODACTYL_CLIENT_TOKEN` on the server to enable the Integrations screen. The workspace provides live Wings resource readings and power actions, node daemon/SFTP port details, real network-allocation management, and a remote file manager with copy, rename, edit, create, and delete operations. Never commit API keys or expose them to browser code.
 
 Important: the legacy BT Panel server fleet, power transitions, console output, telemetry and backup metadata are still simulated. The Pterodactyl integration has separate endpoints for upstream nodes, client-accessible servers, real resource lookups, power actions and provisioning. Read the integration documentation before using the provisioning form because it creates a real remote server.

@@ -1,7 +1,16 @@
 import { HttpError } from "./core";
 
 const ACCEPT = "Application/vnd.pterodactyl.v1+json";
+const MAX_TEXT_FILE_BYTES = 1024 * 1024;
 type JsonObject = Record<string, unknown>;
+type ApiMethod = "GET" | "POST" | "DELETE";
+
+type ApiRequest = {
+  method?: ApiMethod;
+  body?: unknown;
+  rawBody?: string;
+  response?: "json" | "text";
+};
 
 export type CreatePterodactylServerInput = {
   name: string;
@@ -60,15 +69,16 @@ export function pterodactylConfigStatus() {
   };
 }
 
-async function callApi<T>(path: string, apiToken: string, init: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
+async function callApi<T>(path: string, apiToken: string, init: ApiRequest = {}): Promise<T> {
   const headers: Record<string, string> = { Authorization: "Bearer " + apiToken, Accept: ACCEPT };
   if (init.body !== undefined) headers["Content-Type"] = "application/json";
+  if (init.rawBody !== undefined) headers["Content-Type"] = "text/plain; charset=utf-8";
   let response: Response;
   try {
     response = await fetch(origin() + path, {
       method: init.method ?? "GET",
       headers,
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      body: init.rawBody ?? (init.body === undefined ? undefined : JSON.stringify(init.body)),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     });
@@ -81,6 +91,17 @@ async function callApi<T>(path: string, apiToken: string, init: { method?: "GET"
   if (response.status === 404) throw new HttpError(404, "The requested Pterodactyl resource was not found.");
   if (!response.ok) throw new HttpError(502, "Pterodactyl API request failed with HTTP " + response.status + ".");
   if (response.status === 204) return undefined as T;
+  if (init.response === "text") {
+    const declaredSize = Number(response.headers.get("content-length") ?? "0");
+    if (declaredSize > MAX_TEXT_FILE_BYTES) {
+      throw new HttpError(413, "This file is larger than the 1 MB text-editor limit.");
+    }
+    const text = await response.text();
+    if (new TextEncoder().encode(text).byteLength > MAX_TEXT_FILE_BYTES) {
+      throw new HttpError(413, "This file is larger than the 1 MB text-editor limit.");
+    }
+    return text as T;
+  }
   try {
     return await response.json() as T;
   } catch {
@@ -94,43 +115,53 @@ function pagination(page: number, perPage: number): string {
   return "?page=" + p + "&per_page=" + n;
 }
 
+function validateIdentifier(identifier: string) {
+  if (!/^[a-zA-Z0-9-]{1,64}$/.test(identifier)) throw new HttpError(400, "Invalid Pterodactyl server identifier.");
+}
+
+function clientPath(identifier: string, suffix: string): string {
+  validateIdentifier(identifier);
+  return "/api/client/servers/" + encodeURIComponent(identifier) + suffix;
+}
+
+function positiveInt(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function nonNegativeInt(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function validatePath(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value.startsWith("/") || value.length > 1024 || value.includes("\0")) {
+    throw new HttpError(400, label + " must be an absolute path of at most 1024 characters.");
+  }
+  if (value.split("/").some((part) => part === "..")) {
+    throw new HttpError(400, label + " cannot contain parent-directory segments.");
+  }
+  return value;
+}
+
+function validateFilename(value: unknown, label = "name"): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 255 || value === "." || value === ".." ||
+      value.includes("/") || value.includes("\\") || value.includes("\0")) {
+    throw new HttpError(400, label + " must be a valid filename of at most 255 characters.");
+  }
+  return value;
+}
+
+function validateAllocationId(value: unknown): number {
+  if (!positiveInt(value)) throw new HttpError(400, "allocation must be a positive numeric allocation ID.");
+  return value;
+}
+
+// ── Application API ─────────────────────────────────────────────────────────
 export function listPterodactylNodes(page = 1, perPage = 50) {
   return callApi<unknown>("/api/application/nodes" + pagination(page, perPage), token("PTERODACTYL_APPLICATION_TOKEN"));
 }
 
 export function listPterodactylServers(page = 1, perPage = 25) {
   return callApi<unknown>("/api/application/servers" + pagination(page, perPage), token("PTERODACTYL_APPLICATION_TOKEN"));
-}
-
-export function listPterodactylClientServers() {
-  return callApi<unknown>("/api/client", token("PTERODACTYL_CLIENT_TOKEN"));
-}
-
-function validateIdentifier(identifier: string) {
-  if (!/^[a-zA-Z0-9-]{1,64}$/.test(identifier)) throw new HttpError(400, "Invalid Pterodactyl server identifier.");
-}
-
-export function getPterodactylResources(identifier: string) {
-  validateIdentifier(identifier);
-  return callApi<unknown>("/api/client/servers/" + encodeURIComponent(identifier) + "/resources", token("PTERODACTYL_CLIENT_TOKEN"));
-}
-
-export async function powerPterodactylServer(identifier: string, action: unknown) {
-  validateIdentifier(identifier);
-  if (!["start", "stop", "restart", "kill"].includes(String(action))) {
-    throw new HttpError(400, "action must be start, stop, restart or kill.");
-  }
-  return callApi<unknown>("/api/client/servers/" + encodeURIComponent(identifier) + "/power", token("PTERODACTYL_CLIENT_TOKEN"), {
-    method: "POST",
-    body: { signal: action },
-  });
-}
-
-function positiveInt(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
-}
-function nonNegativeInt(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 export function validateCreatePterodactylServer(value: unknown): CreatePterodactylServerInput {
@@ -166,4 +197,124 @@ export function validateCreatePterodactylServer(value: unknown): CreatePterodact
 export function createPterodactylServer(value: unknown) {
   const payload = validateCreatePterodactylServer(value);
   return callApi<unknown>("/api/application/servers", token("PTERODACTYL_APPLICATION_TOKEN"), { method: "POST", body: payload });
+}
+
+// ── Client API: inventory, resources and power ─────────────────────────────
+export function listPterodactylClientServers() {
+  return callApi<unknown>("/api/client", token("PTERODACTYL_CLIENT_TOKEN"));
+}
+
+export function getPterodactylResources(identifier: string) {
+  return callApi<unknown>(clientPath(identifier, "/resources"), token("PTERODACTYL_CLIENT_TOKEN"));
+}
+
+export async function powerPterodactylServer(identifier: string, action: unknown) {
+  if (!["start", "stop", "restart", "kill"].includes(String(action))) {
+    throw new HttpError(400, "action must be start, stop, restart or kill.");
+  }
+  return callApi<unknown>(clientPath(identifier, "/power"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { signal: action },
+  });
+}
+
+// ── Client API: network allocations ────────────────────────────────────────
+export function listPterodactylAllocations(identifier: string) {
+  return callApi<unknown>(clientPath(identifier, "/network/allocations"), token("PTERODACTYL_CLIENT_TOKEN"));
+}
+
+export function createPterodactylAllocation(identifier: string) {
+  return callApi<unknown>(clientPath(identifier, "/network/allocations"), token("PTERODACTYL_CLIENT_TOKEN"), { method: "POST" });
+}
+
+export function setPterodactylPrimaryAllocation(identifier: string, allocation: unknown) {
+  const id = validateAllocationId(allocation);
+  return callApi<unknown>(clientPath(identifier, "/network/allocations/" + id + "/primary"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+  });
+}
+
+export function updatePterodactylAllocationNotes(identifier: string, allocation: unknown, notes: unknown) {
+  const id = validateAllocationId(allocation);
+  if (typeof notes !== "string" || notes.length > 191) throw new HttpError(400, "notes must be a string of at most 191 characters.");
+  return callApi<unknown>(clientPath(identifier, "/network/allocations/" + id), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { notes },
+  });
+}
+
+export function deletePterodactylAllocation(identifier: string, allocation: unknown) {
+  const id = validateAllocationId(allocation);
+  return callApi<unknown>(clientPath(identifier, "/network/allocations/" + id), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "DELETE",
+  });
+}
+
+// ── Client API: files ───────────────────────────────────────────────────────
+export function listPterodactylFiles(identifier: string, directory: unknown) {
+  const root = validatePath(directory, "directory");
+  return callApi<unknown>(clientPath(identifier, "/files/list?directory=" + encodeURIComponent(root)), token("PTERODACTYL_CLIENT_TOKEN"));
+}
+
+export function getPterodactylFileContents(identifier: string, file: unknown) {
+  const path = validatePath(file, "file");
+  return callApi<string>(clientPath(identifier, "/files/contents?file=" + encodeURIComponent(path)), token("PTERODACTYL_CLIENT_TOKEN"), {
+    response: "text",
+  });
+}
+
+export function writePterodactylFile(identifier: string, file: unknown, content: unknown) {
+  const path = validatePath(file, "file");
+  if (typeof content !== "string") throw new HttpError(400, "content must be a string.");
+  if (new TextEncoder().encode(content).byteLength > MAX_TEXT_FILE_BYTES) {
+    throw new HttpError(413, "Text files cannot exceed the 1 MB editor limit.");
+  }
+  return callApi<unknown>(clientPath(identifier, "/files/write?file=" + encodeURIComponent(path)), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    rawBody: content,
+  });
+}
+
+export function copyPterodactylFile(identifier: string, location: unknown) {
+  const path = validatePath(location, "location");
+  return callApi<unknown>(clientPath(identifier, "/files/copy"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { location: path },
+  });
+}
+
+export function createPterodactylFolder(identifier: string, root: unknown, name: unknown) {
+  const directory = validatePath(root, "root");
+  const folder = validateFilename(name);
+  return callApi<unknown>(clientPath(identifier, "/files/create-folder"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { root: directory, name: folder },
+  });
+}
+
+export function renamePterodactylFiles(identifier: string, root: unknown, files: unknown) {
+  const directory = validatePath(root, "root");
+  if (!Array.isArray(files) || files.length < 1 || files.length > 100) {
+    throw new HttpError(400, "files must contain between 1 and 100 rename operations.");
+  }
+  const operations = files.map((item) => {
+    if (!object(item)) throw new HttpError(400, "Each rename operation must be an object.");
+    return { from: validateFilename(item.from, "from"), to: validateFilename(item.to, "to") };
+  });
+  return callApi<unknown>(clientPath(identifier, "/files/rename"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { root: directory, files: operations },
+  });
+}
+
+export function deletePterodactylFiles(identifier: string, root: unknown, files: unknown) {
+  const directory = validatePath(root, "root");
+  if (!Array.isArray(files) || files.length < 1 || files.length > 100) {
+    throw new HttpError(400, "files must contain between 1 and 100 filenames.");
+  }
+  const names = files.map((name) => validateFilename(name, "Each filename"));
+  return callApi<unknown>(clientPath(identifier, "/files/delete"), token("PTERODACTYL_CLIENT_TOKEN"), {
+    method: "POST",
+    body: { root: directory, files: names },
+  });
 }

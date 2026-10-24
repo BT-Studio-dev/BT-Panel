@@ -25,6 +25,6 @@ jobs:
       - name: Type check
         run: npm run typecheck
       - name: Lint integration and module files
-        run: npx eslint src/components/panel/views/pterodactyl-view.tsx src/components/panel/shell.tsx src/lib/panel/modules.ts src/lib/panel/types.ts src/lib/server/pterodactyl.ts src/app/api/integrations/pterodactyl
+        run: npx eslint src/components/panel/views/pterodactyl-* src/components/panel/shell.tsx src/lib/panel/modules.ts src/lib/panel/types.ts src/lib/server/pterodactyl.ts src/app/api/integrations/pterodactyl
       - name: Build
         run: npm run build
