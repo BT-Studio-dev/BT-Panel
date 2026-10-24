@@ -37,14 +37,14 @@ export function AdminOverviewView() {
         actions={<span className="pill-tab active">Panel {PANEL_VERSION}</span>}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <AdminStat icon={ServerIcon} label="Servers" value={servers.length} detail={`${transitioning} currently transitioning`} />
         <AdminStat icon={ActivityIcon} label="Running" value={running} detail={`${servers.length - running} not running`} tone="ok" />
         <AdminStat icon={Network} label="Nodes" value={NODES.length} detail="Configured deployment catalog" />
         <AdminStat icon={Users} label="Users" value={userCount} detail="Registered panel accounts" />
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
         <SectionCard title="Fleet allocation" subtitle="Resources assigned across all managed servers" icon={<MemoryStick className="size-4" />}>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-line bg-fill/50 p-3.5">
@@ -120,7 +120,7 @@ export function AdminOverviewView() {
       </div>
 
       <SectionCard
-        className="mt-4"
+        className="mt-5"
         title="Port allocations"
         subtitle="Primary endpoints assigned by BT Panel"
         icon={<Network className="size-4" />}

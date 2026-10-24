@@ -12,10 +12,10 @@ export function AdminPageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <div className="mb-1 text-[10px] font-extrabold tracking-[0.16em] text-accent uppercase">BT Panel Game</div>
-        <h2 className="text-[22px] font-extrabold tracking-tight">{title}</h2>
+        <h2 className="text-[24px] font-extrabold tracking-tight">{title}</h2>
         <p className="mt-1 max-w-2xl text-[13px] font-semibold text-steel">{description}</p>
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -37,11 +37,11 @@ export function AdminStat({
   tone?: "accent" | "ok" | "warn";
 }) {
   return (
-    <div className="glass p-4">
+    <div className="glass p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-extrabold tracking-[0.08em] text-steel uppercase">{label}</div>
-          <div className="mt-2 text-[26px] leading-none font-extrabold tracking-tight">{value}</div>
+          <div className="mt-2 text-[28px] leading-none font-extrabold tracking-tight">{value}</div>
         </div>
         <div
           className={cn(
@@ -54,7 +54,7 @@ export function AdminStat({
           <Icon className="size-4" />
         </div>
       </div>
-      <div className="mt-2 text-[11.5px] font-semibold text-steel">{detail}</div>
+      <div className="mt-3 text-[12px] font-semibold text-steel">{detail}</div>
     </div>
   );
 }
