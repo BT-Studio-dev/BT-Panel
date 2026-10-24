@@ -11,7 +11,7 @@ BT Panel is a Next.js App Router + React + TypeScript application. Modules are c
 - `src/app/api/`: Next.js Route Handlers for API operations.
 - `src/lib/server/`: trusted server-only logic, upstream API adapters and data access.
 
-The initial registered module is **Integrations**, which contains the Pterodactyl integration UI. Its API routes live under `src/app/api/integrations/pterodactyl/`.
+No optional modules are registered by default. The registry is available for future admin modules.
 
 ## Add another module
 

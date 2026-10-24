@@ -92,5 +92,5 @@ ufw enable
 Accounts, roles, presence, settings, branding, wallpapers, music and the
 server fleet are all stored in PostgreSQL and survive restarts. The **game and
 app servers themselves are simulated** — power commands, console output and
-CPU/memory graphs stand in for a daemon such as Pterodactyl Wings. Point the
+CPU/memory graphs stand in for an external game-server daemon. Point the
 power/console endpoints at a real daemon to manage actual game servers.

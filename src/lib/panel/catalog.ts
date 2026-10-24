@@ -87,7 +87,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "pickaxe",
     color: "#5fb04a",
     defaultPort: 25565,
-    image: "ghcr.io/pterodactyl/yolks:java_21",
+    image: "docker.io/itzg/minecraft-server:java21",
     maxPlayers: 40,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -108,7 +108,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "flame",
     color: "#ce422b",
     defaultPort: 28015,
-    image: "ghcr.io/pterodactyl/games:rust",
+    image: "docker.io/cm2network/steamcmd:latest",
     maxPlayers: 100,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -128,7 +128,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "crosshair",
     color: "#f5a623",
     defaultPort: 27015,
-    image: "ghcr.io/pterodactyl/games:source",
+    image: "docker.io/cm2network/steamcmd:latest",
     maxPlayers: 12,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -147,7 +147,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "swords",
     color: "#4f8fba",
     defaultPort: 2456,
-    image: "ghcr.io/pterodactyl/games:valheim",
+    image: "docker.io/cm2network/steamcmd:latest",
     maxPlayers: 10,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -165,7 +165,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "hexagon",
     color: "#3fa037",
     defaultPort: 3000,
-    image: "ghcr.io/pterodactyl/yolks:nodejs_22",
+    image: "docker.io/library/node:22-bookworm-slim",
     maxPlayers: 0,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -183,7 +183,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "bot",
     color: "#5865f2",
     defaultPort: 8080,
-    image: "ghcr.io/pterodactyl/yolks:nodejs_22",
+    image: "docker.io/library/node:22-bookworm-slim",
     maxPlayers: 0,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -200,7 +200,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
     icon: "code",
     color: "#3776ab",
     defaultPort: 8000,
-    image: "ghcr.io/pterodactyl/yolks:python_3.12",
+    image: "docker.io/library/python:3.12-bookworm-slim",
     maxPlayers: 0,
     bootLog: [
       "container@bt-panel~ Server marked as starting...",
@@ -260,7 +260,7 @@ export function consoleReply(templateId: string, raw: string): { level: "info" |
         { level: "info", message: "Saved the game" },
       ];
     case "version":
-      return [{ level: "info", message: `${t.name} — BT Panel daemon wings v1.11.3` }];
+      return [{ level: "info", message: `${t.name} — BT Panel daemon v2.1.1` }];
     default:
       return [{ level: "warn", message: `Unknown command "${head}". Type "help" for help.` }];
   }

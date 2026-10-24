@@ -32,7 +32,6 @@ import { SettingsView } from "./views/settings-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
 import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
-import { PterodactylView } from "./views/pterodactyl-view";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
@@ -57,7 +56,6 @@ const TITLES: Record<PanelView, string> = {
   users: "User Management",
   updates: "System Updates",
   account: "My Account",
-  integrations: "Integrations",
 };
 
 export function PanelShell({
@@ -102,7 +100,6 @@ function ShellInner() {
               {view === "users" ? <UsersView /> : null}
               {view === "updates" ? <UpdatesView /> : null}
               {view === "account" ? <AccountView /> : null}
-              {view === "integrations" ? <PterodactylView /> : null}
             </div>
           </main>
         </div>

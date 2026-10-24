@@ -8,8 +8,7 @@ export type PanelView =
   | "settings"
   | "users"
   | "updates"
-  | "account"
-  | "integrations";
+  | "account";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "bars" | "access";
 
 /** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
@@ -239,9 +238,8 @@ export const PANEL_VIEWS: PanelView[] = [
   "users",
   "updates",
   "account",
-  "integrations",
 ];
-const ADMIN_VIEWS: PanelView[] = ["settings", "users", "updates", "integrations"];
+const ADMIN_VIEWS: PanelView[] = ["settings", "users", "updates"];
 
 /** Validate a ?view= value; members asking for admin pages land on Home. */
 export function resolveView(requested: unknown, role: PanelRole | string): PanelView {

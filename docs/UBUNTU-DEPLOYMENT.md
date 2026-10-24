@@ -1,6 +1,6 @@
 # Ubuntu deployment
 
-This guide deploys BT Panel as a Node.js/Next.js service with PostgreSQL and a reverse proxy. It does **not** install Pterodactyl/Wings. Use [PTERODACTYL-INTEGRATION.md](./PTERODACTYL-INTEGRATION.md) to connect an already-configured Pterodactyl 1.x installation.
+This guide deploys BT Panel as a Node.js/Next.js service with PostgreSQL and a reverse proxy.
 
 Example assumptions: Ubuntu 24.04 LTS, Node.js 22, application port 3000, domain `panel.example.com`. Run commands as an account with sudo access. Replace the example domain and passwords.
 
@@ -43,15 +43,12 @@ SEED_DEMO=false
 COOKIE_SECURE=true
 PORT=3000
 PUBLIC_BASE_URL=https://panel.example.com
-PTERODACTYL_URL=https://pterodactyl.example.com
-PTERODACTYL_APPLICATION_TOKEN=
-PTERODACTYL_CLIENT_TOKEN=
 EOF
 sudo chown btpanel:btpanel /opt/bt-panel/.env
 sudo chmod 600 /opt/bt-panel/.env
 ```
 
-The Pterodactyl variables are optional until you configure the integration. Never commit real secrets. See [.env.example](../.env.example).
+Never commit real secrets. See [.env.example](../.env.example).
 
 ## 4. Install and build
 

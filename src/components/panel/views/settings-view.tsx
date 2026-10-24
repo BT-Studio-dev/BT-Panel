@@ -49,7 +49,7 @@ export function SettingsView() {
       <div className="mb-4">
         <h2 className="text-[22px] font-extrabold tracking-tight">Settings Management</h2>
         <p className="mt-1 text-[13px] font-semibold text-steel">
-          Configure your panel, appearance, integrations, and runtime defaults.
+          Configure your panel, appearance, access, and runtime defaults.
         </p>
       </div>
       <div className="mb-4 flex flex-wrap gap-1.5">

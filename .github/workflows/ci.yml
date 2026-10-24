@@ -24,7 +24,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Type check
         run: npm run typecheck
-      - name: Lint integration and module files
-        run: npx eslint src/components/panel/views/pterodactyl-* src/components/panel/shell.tsx src/lib/panel/minecraft-properties.ts src/lib/panel/modules.ts src/lib/panel/types.ts src/lib/server/pterodactyl.ts src/app/api/integrations/pterodactyl
+      - name: Lint module files
+        run: npx eslint src/components/panel/shell.tsx src/lib/panel/modules.ts src/lib/panel/types.ts
       - name: Build
         run: npm run build
