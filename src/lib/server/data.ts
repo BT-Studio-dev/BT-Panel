@@ -103,6 +103,7 @@ create table if not exists panel_settings (
   show_version boolean not null default true,
   show_role boolean not null default true,
   show_header_user boolean not null default true,
+  show_theme_toggle boolean not null default true,
   allow_registration boolean not null default true,
   tutorials_enabled boolean not null default true,
   show_demo_login boolean not null default true,
@@ -124,6 +125,7 @@ insert into panel_settings (id) values (1) on conflict (id) do nothing;
 -- already exists from before the new columns were added.
 alter table panel_settings add column if not exists card_glass boolean not null default true;
 alter table panel_settings add column if not exists card_theme text not null default 'auto';
+alter table panel_settings add column if not exists show_theme_toggle boolean not null default true;
 alter table panel_settings add column if not exists password_reset_enabled boolean not null default true;
 alter table panel_settings add column if not exists smtp_host text not null default '';
 alter table panel_settings add column if not exists smtp_port integer not null default 587;
@@ -306,6 +308,7 @@ function rowToSettings(row: SettingsRow): PanelSettings {
     showVersion: row.showVersion,
     showRole: row.showRole,
     showHeaderUser: row.showHeaderUser,
+    showThemeToggle: row.showThemeToggle,
     allowRegistration: row.allowRegistration,
     showDemoLogin: row.showDemoLogin,
     passwordResetEnabled: row.passwordResetEnabled,
@@ -388,6 +391,7 @@ export async function updateSettings(input: Record<string, unknown>): Promise<Pa
   put("showVersion", bool(input.showVersion));
   put("showRole", bool(input.showRole));
   put("showHeaderUser", bool(input.showHeaderUser));
+  put("showThemeToggle", bool(input.showThemeToggle));
   put("allowRegistration", bool(input.allowRegistration));
   put("showDemoLogin", bool(input.showDemoLogin));
   put("passwordResetEnabled", bool(input.passwordResetEnabled));

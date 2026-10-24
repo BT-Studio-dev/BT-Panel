@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import {
   ChevronDown,
-  House,
   LogOut,
   Menu,
   Moon,
@@ -26,7 +25,6 @@ import { cn } from "@/lib/utils";
 import { PanelProvider, usePanel } from "./context";
 import { BrandMark, PresenceAvatar } from "./ui";
 import { WallpaperLayer } from "./wallpaper-layer";
-import { HomeView } from "./views/home-view";
 import { ServersView } from "./views/servers-view";
 import { AdminView } from "./views/admin-view";
 import { UsersView } from "./views/users-view";
@@ -36,7 +34,6 @@ import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
 const NAV: NavItem[] = [
-  { id: "home", label: "Home", icon: House, section: "dashboard" },
   { id: "servers", label: "Servers", icon: Server, section: "dashboard" },
   { id: "team", label: "Team", icon: Users, section: "dashboard" },
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
@@ -48,7 +45,6 @@ const NAV: NavItem[] = [
 ];
 
 const TITLES: Record<PanelView, string> = {
-  home: "Home",
   servers: "Servers",
   team: "Team",
   music: "Music",
@@ -92,7 +88,6 @@ function ShellInner() {
           <Header />
           <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
             <div key={view} className="view-enter mx-auto w-full max-w-[1600px]">
-              {view === "home" ? <HomeView /> : null}
               {view === "servers" ? <ServersView /> : null}
               {view === "team" ? <TeamView /> : null}
               {view === "music" ? <MusicView /> : null}
@@ -326,15 +321,17 @@ function Header() {
             Now playing
           </button>
         ) : null}
-        <button
-          type="button"
-          className="inline-flex size-10 items-center justify-center rounded-[10px] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
-          onClick={toggleMode}
-          aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
-          title={mode === "light" ? `Switch to ${darkBase === "oled" ? "OLED black" : "dark"} theme` : "Switch to light theme"}
-        >
-          {mode === "light" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-        </button>
+        {settings.showThemeToggle !== false ? (
+          <button
+            type="button"
+            className="inline-flex size-10 items-center justify-center rounded-[10px] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
+            onClick={toggleMode}
+            aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
+            title={mode === "light" ? `Switch to ${darkBase === "oled" ? "OLED black" : "dark"} theme` : "Switch to light theme"}
+          >
+            {mode === "light" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+          </button>
+        ) : null}
         {settings.showHeaderUser ? (
           <div className="relative" ref={ref}>
             <button

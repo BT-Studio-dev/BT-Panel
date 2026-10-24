@@ -86,7 +86,7 @@ const MUSIC_KEY = "btpanel.music";
 
 function syncUrl(view: PanelView, serverId: string | null) {
   const params = new URLSearchParams();
-  if (view !== "home") params.set("view", view);
+  if (view !== "servers") params.set("view", view);
   if (view === "servers" && serverId) params.set("server", serverId);
   const qs = params.toString();
   window.history.replaceState(null, "", qs ? `/?${qs}` : "/");

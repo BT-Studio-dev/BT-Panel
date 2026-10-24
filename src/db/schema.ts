@@ -89,6 +89,7 @@ export const panelSettings = pgTable("panel_settings", {
   showVersion: boolean("show_version").notNull().default(true),
   showRole: boolean("show_role").notNull().default(true),
   showHeaderUser: boolean("show_header_user").notNull().default(true),
+  showThemeToggle: boolean("show_theme_toggle").notNull().default(true),
   allowRegistration: boolean("allow_registration").notNull().default(true),
   tutorialsEnabled: boolean("tutorials_enabled").notNull().default(true),
   showDemoLogin: boolean("show_demo_login").notNull().default(true),

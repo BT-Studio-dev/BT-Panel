@@ -1,7 +1,6 @@
 export type PanelRole = "owner" | "admin" | "member";
 export type PanelStatus = "active" | "suspended";
 export type PanelView =
-  | "home"
   | "servers"
   | "team"
   | "music"
@@ -62,6 +61,7 @@ export type BarsSettings = {
   showVersion: boolean;
   showRole: boolean;
   showHeaderUser: boolean;
+  showThemeToggle: boolean;
 };
 
 export type AccessSettings = {
@@ -209,6 +209,7 @@ export const DEFAULT_BARS: BarsSettings = {
   showVersion: true,
   showRole: true,
   showHeaderUser: true,
+  showThemeToggle: true,
 };
 
 export const DEFAULT_ACCESS: AccessSettings = {
@@ -264,7 +265,6 @@ export function isAdminRole(role: PanelRole | string | undefined): boolean {
 }
 
 export const PANEL_VIEWS: PanelView[] = [
-  "home",
   "servers",
   "team",
   "music",
@@ -275,9 +275,9 @@ export const PANEL_VIEWS: PanelView[] = [
 ];
 const ADMIN_VIEWS: PanelView[] = ["settings", "users", "updates"];
 
-/** Validate a ?view= value; members asking for admin pages land on Home. */
+/** Validate a ?view= value; invalid or unauthorized destinations land on Servers. */
 export function resolveView(requested: unknown, role: PanelRole | string): PanelView {
   const view =
-    typeof requested === "string" && (PANEL_VIEWS as string[]).includes(requested) ? (requested as PanelView) : "home";
-  return ADMIN_VIEWS.includes(view) && !isAdminRole(role) ? "home" : view;
+    typeof requested === "string" && (PANEL_VIEWS as string[]).includes(requested) ? (requested as PanelView) : "servers";
+  return ADMIN_VIEWS.includes(view) && !isAdminRole(role) ? "servers" : view;
 }

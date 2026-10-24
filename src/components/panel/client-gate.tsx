@@ -34,7 +34,7 @@ function bail() {
  * are blocked in embedded previews, so the session lives in a Bearer token).
  *
  * There is deliberately NO loading screen here: the dashboard signed into
- * last is cached, so Home paints immediately and the network call only
+ * last is cached, so Servers paints immediately and the network call only
  * refreshes it in the background. Only a confirmed 401 removes the session;
  * slow or failed network requests preserve it and offer a retry instead.
  */

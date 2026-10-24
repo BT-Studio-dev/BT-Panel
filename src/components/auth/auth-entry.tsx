@@ -20,7 +20,7 @@ export type DemoAccount = { label: string; username: string; password: string };
  * Hosts the whole signed-out flow and, the moment sign-in (or sign-up)
  * succeeds, swaps the dashboard in **in the same document** — no navigation
  * and no loading screen in between. The payload is also cached so any later
- * load of "/" paints Home instantly instead of showing an opening screen.
+ * load of "/" paints Servers instantly instead of showing an opening screen.
  */
 export function AuthEntry({
   mode,
@@ -94,7 +94,7 @@ export function AuthEntry({
     return (
       <PanelShell
         initial={panel}
-        initialView="home"
+        initialView="servers"
         initialServerId={null}
         initialModeOverride={getLocalModeOverride()}
       />

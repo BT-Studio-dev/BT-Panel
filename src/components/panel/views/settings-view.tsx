@@ -7,12 +7,10 @@ import {
   Check,
   CloudUpload,
   Eye,
-  EyeOff,
   Globe,
   Image as ImageIcon,
   Link2,
   Mail,
-  MonitorCog,
   Moon,
   ShieldCheck,
   Sparkles,
@@ -27,7 +25,7 @@ import {
   shaderWallpaperValue,
   type WallpaperItem,
 } from "@/lib/panel/catalog";
-import { DEFAULT_THEME, type CardTheme, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
+import { DEFAULT_THEME, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
 import { api, cn, compressImageFile, isVideoUrl } from "@/lib/utils";
 import { usePanel } from "../context";
 import { ShaderCanvas } from "../wallpaper-layer";
@@ -83,8 +81,6 @@ function GeneralPanel() {
     panelName: settings.panelName,
     panelSubtitle: settings.panelSubtitle,
     faviconTitle: settings.faviconTitle,
-    welcomeTitle: settings.welcomeTitle,
-    welcomeMessage: settings.welcomeMessage,
     panelLogo: settings.panelLogo,
     faviconLogo: settings.faviconLogo,
   });
@@ -116,17 +112,6 @@ function GeneralPanel() {
         </Field>
         <Field label="Browser tab title" hint="Falls back to the panel name when empty.">
           <input className="panel-input" value={form.faviconTitle} maxLength={60} onChange={(e) => setForm({ ...form, faviconTitle: e.target.value })} />
-        </Field>
-        <Field label="Welcome title">
-          <input className="panel-input" value={form.welcomeTitle} maxLength={80} onChange={(e) => setForm({ ...form, welcomeTitle: e.target.value })} />
-        </Field>
-        <Field label="Welcome message" className="md:col-span-2">
-          <textarea
-            className="panel-input min-h-[88px] resize-y"
-            value={form.welcomeMessage}
-            maxLength={280}
-            onChange={(e) => setForm({ ...form, welcomeMessage: e.target.value })}
-          />
         </Field>
         <LogoField
           label="Panel logo"
@@ -208,19 +193,11 @@ function LogoField({
 // ── Appearance ──────────────────────────────────────────────────────────────
 const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[] = [
   { id: "dark", label: "Dark", hint: "classic night palette", icon: Moon },
-  { id: "oled", label: "OLED Black", hint: "pure #000000", icon: MonitorCog },
   { id: "light", label: "Light", hint: "bright day palette", icon: Sun },
 ];
 
-const CARD_THEMES: { id: CardTheme; label: string; hint: string; icon: typeof Moon }[] = [
-  { id: "auto", label: "Auto", hint: "follow base theme", icon: Sparkles },
-  { id: "hidden", label: "Hidden", hint: "no card surface", icon: EyeOff },
-  { id: "off-white", label: "Off White", hint: "soft light cards", icon: Sun },
-  { id: "dark", label: "Dark", hint: "solid dark cards", icon: Moon },
-];
-
 function AppearancePanel() {
-  const { draft, setDraft, persistTheme, clearModeOverride, setSettingsTab } = usePanel();
+  const { settings, draft, setDraft, persistTheme, persistSettings, clearModeOverride, setSettingsTab } = usePanel();
   const [saving, setSaving] = useState(false);
   const [url, setUrl] = useState("");
   const timer = useRef<number | null>(null);
@@ -253,7 +230,20 @@ function AppearancePanel() {
 
       <div className="mt-4">
         <div className="text-[13px] font-extrabold">Base Theme</div>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        <div className="mt-3">
+          <ToggleRow
+            label={`Base Theme: ${settings.showThemeToggle !== false ? "On" : "Off"}`}
+            hint="On = Show · Off = Hide the header sun/moon button."
+            checked={settings.showThemeToggle !== false}
+            onChange={(visible) => {
+              void persistSettings(
+                { showThemeToggle: visible },
+                visible ? "Header theme button shown" : "Header theme button hidden",
+              );
+            }}
+          />
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {MODES.map((option) => {
             const active = draft.mode === option.id;
             return (
@@ -277,33 +267,6 @@ function AppearancePanel() {
         </div>
         <p className="mt-1.5 text-[11px] font-semibold text-steel">
           Panel-wide palette for everyone. Any user can still flip themselves dark↔light with the header sun/moon button.
-        </p>
-      </div>
-
-      <div className="mt-6">
-        <div className="text-[13px] font-extrabold">Card Theme</div>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {CARD_THEMES.map((option) => {
-            const active = draft.cardTheme === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                className={cn("select-tile flex items-center gap-2.5 px-3 py-2.5 text-left", active && "active")}
-                aria-pressed={active}
-                onClick={() => onGlassChange({ cardTheme: option.id })}
-              >
-                <option.icon className={cn("size-[18px] shrink-0", active ? "text-accent" : "text-steel")} />
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold">{option.label}</span>
-                  <span className="block truncate text-[10.5px] font-semibold text-steel">{option.hint}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-1.5 text-[11px] font-semibold text-steel">
-          Hidden removes only the card background, border, and shadow — card content stays visible.
         </p>
       </div>
 
@@ -360,7 +323,12 @@ function AppearancePanel() {
           <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => onGlassChange({ bgBlur: v })} />
           <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => onGlassChange({ bgOpacity: v })} />
           <div>
-            <ColorField label="Accent Color" value={draft.accentColor} onChange={(v) => onGlassChange({ accentColor: v })} />
+            <ColorField
+              label="Theme Color"
+              value={draft.accentColor}
+              hint="Main panel color for buttons, active navigation, and highlights."
+              onChange={(v) => onGlassChange({ accentColor: v })}
+            />
             <div className="mt-2 flex flex-wrap gap-1.5">
               {ACCENT_PRESETS.map((c) => (
                 <button
@@ -372,7 +340,7 @@ function AppearancePanel() {
                   )}
                   style={{ background: c, boxShadow: `0 0 12px ${c}66` }}
                   onClick={() => onGlassChange({ accentColor: c })}
-                  aria-label={`Accent ${c}`}
+                  aria-label={`Theme color ${c}`}
                 />
               ))}
             </div>
@@ -710,20 +678,14 @@ function WallpaperCard({
 function BarsPanel() {
   const { settings, persistSettings } = usePanel();
   const [form, setForm] = useState({
-    showAdminStats: settings.showAdminStats,
-    showVersion: settings.showVersion,
-    showRole: settings.showRole,
     showHeaderUser: settings.showHeaderUser,
   });
   const [saving, setSaving] = useState(false);
   return (
     <div className="glass p-5">
-      <h3 className="text-[16px] font-extrabold">Home indicators</h3>
-      <p className="mt-1 text-[13px] font-semibold text-steel">Choose which bars and cards appear on Home and in the header.</p>
-      <div className="mt-4 grid gap-2 md:grid-cols-2">
-        <ToggleRow label="Admin statistics" hint="Total users & quick links on Home (admins only)" checked={form.showAdminStats} onChange={(v) => setForm({ ...form, showAdminStats: v })} />
-        <ToggleRow label="Panel version card" hint="Running version and access level" checked={form.showVersion} onChange={(v) => setForm({ ...form, showVersion: v })} />
-        <ToggleRow label="Signed-in role phrase" hint="“You are signed in as a …” on Home" checked={form.showRole} onChange={(v) => setForm({ ...form, showRole: v })} />
+      <h3 className="text-[16px] font-extrabold">Header controls</h3>
+      <p className="mt-1 text-[13px] font-semibold text-steel">Choose which account controls appear in the header.</p>
+      <div className="mt-4 grid gap-2">
         <ToggleRow label="Top-header account control" hint="Avatar menu in the top-right header" checked={form.showHeaderUser} onChange={(v) => setForm({ ...form, showHeaderUser: v })} />
       </div>
       <button

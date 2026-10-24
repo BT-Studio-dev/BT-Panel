@@ -142,7 +142,7 @@ export function clearStoredToken() {
 }
 
 // ── Dashboard cache ────────────────────────────────────────────────────────
-// The signed-in payload is cached so a page load can paint Home instantly —
+// The signed-in payload is cached so a page load can paint Servers instantly —
 // no "opening panel" loading screen and no round trip in front of the user.
 const CACHE_KEY = "btpanel.cache";
 
