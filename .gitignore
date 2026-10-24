@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Next.js build output and caches
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+!env.example.test
+
+# Logs and OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# PHP Minecraft panel runtime state (it has its own detailed .gitignore)
+minecraft-panel/config.php
+minecraft-panel/storage/*
+!minecraft-panel/storage/.gitkeep
+!minecraft-panel/storage/README.md
