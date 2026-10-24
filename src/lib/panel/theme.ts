@@ -1,5 +1,5 @@
 import { parseShaderWallpaper } from "./catalog";
-import { DEFAULT_THEME, type ThemeMode, type ThemeSettings } from "./types";
+import { DEFAULT_THEME, type CardTheme, type ThemeMode, type ThemeSettings } from "./types";
 import { clamp, hexToRgbTriplet, isVideoUrl, toHexColor } from "@/lib/utils";
 
 /**
@@ -11,6 +11,10 @@ const MODE_STORAGE_KEY = "btpanel.theme-mode-override";
 
 export function parseMode(value: unknown): ThemeMode | null {
   return value === "dark" || value === "light" || value === "oled" ? value : null;
+}
+
+export function parseCardTheme(value: unknown): CardTheme | null {
+  return value === "auto" || value === "hidden" || value === "off-white" || value === "dark" ? value : null;
 }
 
 // Light scheme replaces the admin-picked glass tint / nav colors.
@@ -76,6 +80,8 @@ export function applyTheme(theme: ThemeSettings, mode: ThemeMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.themeMode = mode;
+  root.dataset.cardGlass = theme.cardGlass ? "on" : "off";
+  root.dataset.cardTheme = parseCardTheme(theme.cardTheme) ?? "auto";
   const vars = themeVars(theme, mode);
   for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);
 }

@@ -13,7 +13,7 @@ import {
   getTemplate,
   parseShaderWallpaper,
 } from "@/lib/panel/catalog";
-import { parseMode } from "@/lib/panel/theme";
+import { parseCardTheme, parseMode } from "@/lib/panel/theme";
 import {
   DEFAULT_SETTINGS,
   DEMO_ACCOUNTS,
@@ -89,6 +89,8 @@ create table if not exists panel_settings (
   glass_saturate integer not null default 160,
   border_radius integer not null default 16,
   glass_opacity integer not null default 62,
+  card_glass boolean not null default true,
+  card_theme text not null default 'auto',
   show_team boolean not null default true,
   panel_name text not null default 'BT Panel',
   panel_subtitle text not null default 'Command center',
@@ -120,6 +122,8 @@ create table if not exists panel_settings (
 insert into panel_settings (id) values (1) on conflict (id) do nothing;
 -- Column backfill for upgrades from older versions where the table
 -- already exists from before the new columns were added.
+alter table panel_settings add column if not exists card_glass boolean not null default true;
+alter table panel_settings add column if not exists card_theme text not null default 'auto';
 alter table panel_settings add column if not exists password_reset_enabled boolean not null default true;
 alter table panel_settings add column if not exists smtp_host text not null default '';
 alter table panel_settings add column if not exists smtp_port integer not null default 587;
@@ -288,6 +292,8 @@ function rowToSettings(row: SettingsRow): PanelSettings {
     glassSaturate: row.glassSaturate,
     borderRadius: row.borderRadius,
     glassOpacity: row.glassOpacity,
+    cardGlass: row.cardGlass,
+    cardTheme: parseCardTheme(row.cardTheme) ?? "auto",
     showTeam: row.showTeam,
     panelName: row.panelName,
     panelSubtitle: row.panelSubtitle,
@@ -366,6 +372,8 @@ export async function updateSettings(input: Record<string, unknown>): Promise<Pa
   put("glassSaturate", intIn(input.glassSaturate, 100, 250));
   put("borderRadius", intIn(input.borderRadius, 0, 24));
   put("glassOpacity", intIn(input.glassOpacity, 0, 100));
+  put("cardGlass", bool(input.cardGlass));
+  put("cardTheme", parseCardTheme(input.cardTheme) ?? undefined);
   put("showTeam", bool(input.showTeam));
   const panelName = str(input.panelName, 40);
   if (panelName !== undefined && !panelName) throw new HttpError(400, "Panel name cannot be empty.");

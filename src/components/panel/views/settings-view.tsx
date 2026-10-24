@@ -7,6 +7,7 @@ import {
   Check,
   CloudUpload,
   Eye,
+  EyeOff,
   Globe,
   Image as ImageIcon,
   Link2,
@@ -26,7 +27,7 @@ import {
   shaderWallpaperValue,
   type WallpaperItem,
 } from "@/lib/panel/catalog";
-import { DEFAULT_THEME, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
+import { DEFAULT_THEME, type CardTheme, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
 import { api, cn, compressImageFile, isVideoUrl } from "@/lib/utils";
 import { usePanel } from "../context";
 import { ShaderCanvas } from "../wallpaper-layer";
@@ -211,6 +212,13 @@ const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[]
   { id: "light", label: "Light", hint: "bright day palette", icon: Sun },
 ];
 
+const CARD_THEMES: { id: CardTheme; label: string; hint: string; icon: typeof Moon }[] = [
+  { id: "auto", label: "Auto", hint: "follow base theme", icon: Sparkles },
+  { id: "hidden", label: "Hidden", hint: "no card surface", icon: EyeOff },
+  { id: "off-white", label: "Off White", hint: "soft light cards", icon: Sun },
+  { id: "dark", label: "Dark", hint: "solid dark cards", icon: Moon },
+];
+
 function AppearancePanel() {
   const { draft, setDraft, persistTheme, clearModeOverride, setSettingsTab } = usePanel();
   const [saving, setSaving] = useState(false);
@@ -272,6 +280,33 @@ function AppearancePanel() {
         </p>
       </div>
 
+      <div className="mt-6">
+        <div className="text-[13px] font-extrabold">Card Theme</div>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {CARD_THEMES.map((option) => {
+            const active = draft.cardTheme === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                className={cn("select-tile flex items-center gap-2.5 px-3 py-2.5 text-left", active && "active")}
+                aria-pressed={active}
+                onClick={() => onGlassChange({ cardTheme: option.id })}
+              >
+                <option.icon className={cn("size-[18px] shrink-0", active ? "text-accent" : "text-steel")} />
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-extrabold">{option.label}</span>
+                  <span className="block truncate text-[10.5px] font-semibold text-steel">{option.hint}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-1.5 text-[11px] font-semibold text-steel">
+          Hidden removes only the card background, border, and shadow — card content stays visible.
+        </p>
+      </div>
+
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(280px,1.05fr)]">
         <div>
           <div className="text-[13px] font-extrabold">Background Media</div>
@@ -316,6 +351,12 @@ function AppearancePanel() {
         </div>
 
         <div className="grid content-start gap-4">
+          <ToggleRow
+            label={`Card Glass: ${draft.cardGlass ? "On" : "Off"}`}
+            hint="Toggle backdrop blur for cards while preserving their surface color and content."
+            checked={draft.cardGlass}
+            onChange={(v) => onGlassChange({ cardGlass: v })}
+          />
           <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => onGlassChange({ bgBlur: v })} />
           <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => onGlassChange({ bgOpacity: v })} />
           <div>

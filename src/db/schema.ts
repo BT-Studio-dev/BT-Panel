@@ -75,6 +75,8 @@ export const panelSettings = pgTable("panel_settings", {
   glassSaturate: integer("glass_saturate").notNull().default(160),
   borderRadius: integer("border_radius").notNull().default(16),
   glassOpacity: integer("glass_opacity").notNull().default(62),
+  cardGlass: boolean("card_glass").notNull().default(true),
+  cardTheme: text("card_theme").notNull().default("auto"),
   showTeam: boolean("show_team").notNull().default(true),
   panelName: text("panel_name").notNull().default("BT Panel"),
   panelSubtitle: text("panel_subtitle").notNull().default("Command center"),

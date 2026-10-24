@@ -42,6 +42,21 @@
   --glass-border: rgb(255 255 255 / 0.16);
   --glass-shine: rgb(255 255 255 / 0.08);
   --console-bg: rgb(3 4 8 / 0.72);
+
+  /* Root values retained for portals/modals nested inside a themed card. */
+  --base-text-primary: var(--text-primary);
+  --base-text-dim: var(--text-dim);
+  --base-text-faint: var(--text-faint);
+  --base-color-ice: var(--color-ice);
+  --base-color-steel: var(--color-steel);
+  --base-color-faint: var(--color-faint);
+  --base-color-line: var(--color-line);
+  --base-color-line-strong: var(--color-line-strong);
+  --base-color-fill: var(--color-fill);
+  --base-color-fill-strong: var(--color-fill-strong);
+  --base-color-sunken: var(--color-sunken);
+  --base-glass-border: var(--glass-border);
+  --base-glass-shine: var(--glass-shine);
 }
 
 /* OLED pure-black: #000000 canvas, flat fallback wallpaper. */
@@ -227,6 +242,19 @@
    * drop the backdrop-filter so the dialog content is never see-through.
    */
   .glass-modal {
+    --text-primary: var(--base-text-primary);
+    --text-dim: var(--base-text-dim);
+    --text-faint: var(--base-text-faint);
+    --color-ice: var(--base-color-ice);
+    --color-steel: var(--base-color-steel);
+    --color-faint: var(--base-color-faint);
+    --color-line: var(--base-color-line);
+    --color-line-strong: var(--base-color-line-strong);
+    --color-fill: var(--base-color-fill);
+    --color-fill-strong: var(--base-color-fill-strong);
+    --color-sunken: var(--base-color-sunken);
+    --glass-border: var(--base-glass-border);
+    --glass-shine: var(--base-glass-shine);
     background-color: rgb(10 12 20 / 1);
     background: rgb(var(--glass-tint) / 1);
     -webkit-backdrop-filter: none;
@@ -808,5 +836,132 @@
 
   :root[data-theme-mode="light"] .meter {
     background: rgb(13 18 34 / 0.08);
+  }
+
+  /* ── Card glass and independent card surfaces ──────────────────────────
+   * Header, navigation, strong sidebar/popover surfaces, and modals are not
+   * cards. They retain the base panel theme; only content cards are scoped.
+   */
+  :root[data-card-glass="off"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :root[data-card-theme="hidden"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav),
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    --console-bg: rgb(3 4 8 / 0.9);
+    color: var(--text-primary);
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    --text-primary: #151826;
+    --text-dim: #4e5669;
+    --text-faint: rgb(13 18 34 / 0.55);
+    --color-ice: #151826;
+    --color-steel: #4e5669;
+    --color-faint: rgb(13 18 34 / 0.5);
+    --color-line: rgb(13 18 34 / 0.12);
+    --color-line-strong: rgb(13 18 34 / 0.2);
+    --color-fill: rgb(13 18 34 / 0.05);
+    --color-fill-strong: rgb(13 18 34 / 0.09);
+    --color-sunken: rgb(13 18 34 / 0.06);
+    --glass-border: rgb(13 18 34 / 0.12);
+    --glass-shine: rgb(255 255 255 / 0.65);
+    background: rgb(248 249 252 / 0.94);
+    border-color: rgb(13 18 34 / 0.12);
+    box-shadow:
+      0 8px 28px rgb(15 22 44 / 0.16),
+      inset 0 1px 0 rgb(255 255 255 / 0.65);
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    --text-primary: #e7e9f0;
+    --text-dim: #9da3b4;
+    --text-faint: rgb(255 255 255 / 0.55);
+    --color-ice: #e7e9f0;
+    --color-steel: #9da3b4;
+    --color-faint: rgb(255 255 255 / 0.45);
+    --color-line: rgb(255 255 255 / 0.1);
+    --color-line-strong: rgb(255 255 255 / 0.2);
+    --color-fill: rgb(255 255 255 / 0.05);
+    --color-fill-strong: rgb(255 255 255 / 0.09);
+    --color-sunken: rgb(0 0 0 / 0.3);
+    --glass-border: rgb(255 255 255 / 0.16);
+    --glass-shine: rgb(255 255 255 / 0.08);
+    background: rgb(10 12 20 / 0.94);
+    border-color: rgb(255 255 255 / 0.14);
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 0.36),
+      inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.panel-input, .btn-ghost) {
+    border-color: rgb(13 18 34 / 0.14);
+    background: rgb(255 255 255 / 0.68);
+    color: #151826;
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .panel-input::placeholder {
+    color: rgb(13 18 34 / 0.42);
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-ghost:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.92);
+    border-color: rgb(13 18 34 / 0.24);
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.panel-input, .btn-ghost) {
+    border-color: rgb(255 255 255 / 0.12);
+    background: rgb(0 0 0 / 0.38);
+    color: #e7e9f0;
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .panel-input::placeholder {
+    color: rgb(255 255 255 / 0.38);
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-ghost:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.08);
+    border-color: rgb(255 255 255 / 0.22);
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.glass-soft, .meter) {
+    background: rgb(13 18 34 / 0.06);
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.glass-soft, .meter) {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-danger {
+    color: #c62834;
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-danger {
+    color: #ff8b96;
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) select option {
+    background: #ffffff;
+    color: #151826;
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) select option {
+    background: #0d0f18;
+    color: #e7e9f0;
+  }
+
+  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .user-table tbody tr:hover {
+    background: rgb(13 18 34 / 0.04);
+  }
+
+  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .user-table tbody tr:hover {
+    background: rgb(255 255 255 / 0.05);
   }
 }

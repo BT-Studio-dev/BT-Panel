@@ -27,6 +27,7 @@ export type AdminSection =
 
 /** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
 export type ThemeMode = "dark" | "light" | "oled";
+export type CardTheme = "auto" | "hidden" | "off-white" | "dark";
 
 export type ThemeSettings = {
   mode: ThemeMode;
@@ -41,6 +42,8 @@ export type ThemeSettings = {
   glassSaturate: number;
   borderRadius: number;
   glassOpacity: number;
+  cardGlass: boolean;
+  cardTheme: CardTheme;
   showTeam: boolean;
 };
 
@@ -186,6 +189,8 @@ export const DEFAULT_THEME: ThemeSettings = {
   glassSaturate: 180,
   borderRadius: 18,
   glassOpacity: 88,
+  cardGlass: true,
+  cardTheme: "auto",
   showTeam: true,
 };
 
