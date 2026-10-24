@@ -45,9 +45,6 @@ export function AuthShell({
           </div>
           {children}
         </div>
-        <p className="mt-6 text-center text-[11px] font-bold tracking-[0.14em] text-faint uppercase">
-          Glassmorphism control panel for game &amp; app servers
-        </p>
       </main>
     </div>
   );
