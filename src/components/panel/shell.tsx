@@ -10,7 +10,6 @@ import {
   Music2,
   Pause,
   Play,
-  RefreshCw,
   Search,
   Server,
   Settings,
@@ -30,7 +29,7 @@ import { ServersView } from "./views/servers-view";
 import { AdminView } from "./views/admin-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
-import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
+import { MusicView, TeamView } from "./views/misc-views";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
@@ -40,7 +39,6 @@ const NAV: NavItem[] = [
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
   { id: "settings", label: "Admin Control Center", icon: Settings, section: "admin" },
   { id: "users", label: "User Management", icon: ShieldCheck, section: "admin" },
-  { id: "updates", label: "Updates", icon: RefreshCw, section: "admin" },
   ...PANEL_MODULES.map((module) => ({ id: module.id, label: module.label, icon: module.icon, section: module.section })),
   { id: "account", label: "My Account", icon: UserRound, section: "account" },
 ];
@@ -51,7 +49,6 @@ const TITLES: Record<PanelView, string> = {
   music: "Music",
   settings: "Admin Control Center",
   users: "User Management",
-  updates: "System Updates",
   account: "My Account",
 };
 
@@ -94,7 +91,6 @@ function ShellInner() {
               {view === "music" ? <MusicView /> : null}
               {view === "settings" ? <AdminView /> : null}
               {view === "users" ? <UsersView /> : null}
-              {view === "updates" ? <UpdatesView /> : null}
               {view === "account" ? <AccountView /> : null}
             </div>
           </main>

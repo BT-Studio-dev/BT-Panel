@@ -6,7 +6,6 @@ export type PanelView =
   | "music"
   | "settings"
   | "users"
-  | "updates"
   | "account";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "bars" | "access";
 export type AdminSection =
@@ -252,7 +251,6 @@ export function pickTheme(settings: PanelSettings): ThemeSettings {
 }
 
 export const PANEL_VERSION = "v2.1.1";
-export const REPO_URL = "https://github.com/BT-Studio-dev/BT-Panel";
 
 /** Demo accounts seeded on a fresh database (ids below match the seed). */
 export const DEMO_ACCOUNTS = [
@@ -270,10 +268,9 @@ export const PANEL_VIEWS: PanelView[] = [
   "music",
   "settings",
   "users",
-  "updates",
   "account",
 ];
-const ADMIN_VIEWS: PanelView[] = ["settings", "users", "updates"];
+const ADMIN_VIEWS: PanelView[] = ["settings", "users"];
 
 /** Validate a ?view= value; invalid or unauthorized destinations land on Servers. */
 export function resolveView(requested: unknown, role: PanelRole | string): PanelView {

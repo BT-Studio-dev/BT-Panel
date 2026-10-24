@@ -1,24 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ExternalLink,
-  GitBranch,
-  Mail,
-  Music2,
-  Pause,
-  Play,
-  RefreshCw,
-  Repeat,
-  Rocket,
-  Users,
-  Volume2,
-  type LucideIcon,
-} from "lucide-react";
-import { PANEL_VERSION, REPO_URL, type PanelProfile } from "@/lib/panel/types";
+import { Mail, Pause, Play, Repeat, Users, Volume2 } from "lucide-react";
+import type { PanelProfile } from "@/lib/panel/types";
 import { cn, formatJoined, timeAgo } from "@/lib/utils";
 import { usePanel } from "../context";
-import { BrandMark, EmptyState, Modal, PresenceAvatar, Slider, Spinner, ToggleRow, useNow } from "../ui";
+import { BrandMark, EmptyState, Modal, PresenceAvatar, Slider, ToggleRow, useNow } from "../ui";
 
 // ── Team ────────────────────────────────────────────────────────────────────
 type PresenceFilter = "all" | "online" | "offline";
@@ -179,128 +166,6 @@ function ProfileDetails({ member, now, isYou }: { member: PanelProfile; now: num
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-// ── Updates ─────────────────────────────────────────────────────────────────
-type Commit = {
-  sha: string;
-  html_url: string;
-  commit: { message: string; author: { name: string; date: string } | null };
-};
-
-const BUILD_NOTES = [
-  "Glassmorphism shell with collapsible sidebar and Dark / OLED / Light base themes",
-  "Panel Background Engine — live WebGL shaders, curated 4K wallpapers, uploads and custom URLs",
-  "Servers workspace — templates, power controls, live console and telemetry",
-  "Owner / admin / member roles, presence dots and user management",
-  "Branding controls, home indicator bars and the ambient music player",
-];
-
-export function UpdatesView() {
-  const [state, setState] = useState<{ status: "idle" | "loading" | "done" | "error"; commits: Commit[]; error?: string }>({
-    status: "idle",
-    commits: [],
-  });
-
-  async function check() {
-    setState((s) => ({ ...s, status: "loading" }));
-    try {
-      const res = await fetch("https://api.github.com/repos/BT-Studio-dev/BT-Panel/commits?per_page=6", {
-        headers: { Accept: "application/vnd.github+json" },
-      });
-      if (!res.ok) throw new Error(`GitHub responded with ${res.status}`);
-      setState({ status: "done", commits: (await res.json()) as Commit[] });
-    } catch (err) {
-      setState({ status: "error", commits: [], error: err instanceof Error ? err.message : "Network error" });
-    }
-  }
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <section className="glass p-5">
-        <div className="flex items-center gap-3">
-          <BrandMark className="size-12 drop-shadow-[0_0_18px_var(--accent-glow)]" />
-          <div>
-            <div className="text-[11px] font-extrabold tracking-[0.12em] text-steel uppercase">Installed version</div>
-            <div className="font-mono text-[24px] font-semibold">{PANEL_VERSION}</div>
-          </div>
-          <span className="ml-auto rounded-full border border-ok/30 bg-ok/10 px-2.5 py-1 text-[10.5px] font-extrabold tracking-wide text-ok uppercase">Stable</span>
-        </div>
-        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-          {[
-            ["Runtime", "Next.js 16"],
-            ["UI", "React 19"],
-            ["Database", "PostgreSQL"],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-[10px] border border-line bg-fill px-2 py-2.5">
-              <div className="text-[9.5px] font-extrabold tracking-[0.12em] text-steel uppercase">{k}</div>
-              <div className="mt-0.5 text-[12.5px] font-extrabold">{v}</div>
-            </div>
-          ))}
-        </div>
-        <h3 className="mt-6 flex items-center gap-2 text-[14px] font-extrabold">
-          <Rocket className="size-4 text-accent" /> What&apos;s in this build
-        </h3>
-        <ul className="mt-3 grid gap-2">
-          {BUILD_NOTES.map((note) => (
-            <li key={note} className="flex gap-2.5 text-[12.5px] font-semibold text-steel">
-              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_8px_var(--accent-glow)]" />
-              {note}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="glass p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
-              <GitBranch className="size-4 text-accent" /> Upstream repository
-            </h3>
-            <p className="mt-0.5 text-[12px] font-semibold text-steel">Latest commits on BT-Studio-dev/BT-Panel, fetched live from GitHub.</p>
-          </div>
-          <div className="flex gap-2">
-            <a className="btn-ghost min-h-10" href={REPO_URL} target="_blank" rel="noreferrer">
-              <ExternalLink className="size-4" /> GitHub
-            </a>
-            <button type="button" className="btn-accent min-h-10" onClick={() => void check()} disabled={state.status === "loading"}>
-              {state.status === "loading" ? <Spinner /> : <RefreshCw className="size-4" />} Check for updates
-            </button>
-          </div>
-        </div>
-        <div className="mt-4">
-          {state.status === "idle" ? (
-            <p className="rounded-[12px] border border-dashed border-line-strong px-4 py-8 text-center text-[12.5px] font-semibold text-steel">
-              Press “Check for updates” to load the most recent upstream activity.
-            </p>
-          ) : null}
-          {state.status === "error" ? (
-            <p className="rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-4 text-[12.5px] font-bold text-danger">
-              Could not reach GitHub ({state.error}). The API allows 60 unauthenticated requests per hour — try again later.
-            </p>
-          ) : null}
-          {state.status === "done" ? (
-            <ol className="grid gap-2">
-              {state.commits.map((c) => (
-                <li key={c.sha} className="flex items-start gap-3 rounded-[12px] border border-line bg-fill px-3 py-2.5">
-                  <GitBranch className="mt-0.5 size-4 shrink-0 text-accent" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-extrabold">{c.commit.message.split("\n")[0]}</div>
-                    <div className="text-[11px] font-semibold text-steel">
-                      {c.commit.author?.name ?? "unknown"} · {formatJoined(c.commit.author?.date)}
-                    </div>
-                  </div>
-                  <a href={c.html_url} target="_blank" rel="noreferrer" className="font-mono text-[11px] text-accent hover:underline">
-                    {c.sha.slice(0, 7)}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-        </div>
-      </section>
     </div>
   );
 }
