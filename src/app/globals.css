@@ -23,7 +23,12 @@
 :root {
   --bg-main: #080a12;
   --wallpaper-url: none;
-  --default-wallpaper: linear-gradient(135deg, #07080f 0%, #0b0e1a 50%, #07080f 100%);
+  --default-wallpaper: linear-gradient(
+    135deg,
+    #07080f 0%,
+    #0b0e1a 50%,
+    #07080f 100%
+  );
   --bg-blur: 0px;
   --bg-opacity: 1;
   --glass-tint: 10 12 20;
@@ -70,7 +75,12 @@
 :root[data-theme-mode="light"] {
   color-scheme: light;
   --bg-main: #e9edf4;
-  --default-wallpaper: linear-gradient(135deg, #e7ebf3 0%, #f5f7fc 50%, #e7ebf3 100%);
+  --default-wallpaper: linear-gradient(
+    135deg,
+    #e7ebf3 0%,
+    #f5f7fc 50%,
+    #e7ebf3 100%
+  );
   --color-ice: #151826;
   --color-steel: #4e5669;
   --color-line: rgb(13 18 34 / 0.1);
@@ -191,7 +201,12 @@
     inset: 0;
     background:
       linear-gradient(90deg, rgb(8 10 18 / 0.55) 0%, transparent 28%),
-      linear-gradient(180deg, rgb(8 10 18 / 0.28) 0%, transparent 22%, rgb(8 10 18 / 0.45) 100%);
+      linear-gradient(
+        180deg,
+        rgb(8 10 18 / 0.28) 0%,
+        transparent 22%,
+        rgb(8 10 18 / 0.45) 100%
+      );
   }
 
   /* ── Glass ─────────────────────────────────────────────────────────────── */
@@ -220,7 +235,9 @@
   }
 
   /* No backdrop-filter support: use a more solid panel instead of glass. */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
     .glass {
       background: rgb(var(--glass-tint) / calc(0.95 * var(--glass-opacity)));
     }
@@ -553,7 +570,11 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, #ffffff 0%), var(--accent));
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 70%, #ffffff 0%),
+      var(--accent)
+    );
     box-shadow: 0 0 10px var(--accent-glow);
     transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -786,7 +807,12 @@
   :root[data-theme-mode="light"] .bg-vignette {
     background:
       linear-gradient(90deg, rgb(233 237 244 / 0.75) 0%, transparent 28%),
-      linear-gradient(180deg, rgb(233 237 244 / 0.45) 0%, transparent 22%, rgb(233 237 244 / 0.58) 100%);
+      linear-gradient(
+        180deg,
+        rgb(233 237 244 / 0.45) 0%,
+        transparent 22%,
+        rgb(233 237 244 / 0.58) 100%
+      );
   }
 
   :root[data-theme-mode="light"] .glass {
@@ -838,28 +864,93 @@
     background: rgb(13 18 34 / 0.08);
   }
 
+  /* ── Redesigned content cards ────────────────────────────────────────────
+   * A restrained accent wash, crisper edge, and layered elevation give every
+   * regular card a shared identity without changing dialogs or navigation.
+   */
+  .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    border-radius: calc(var(--panel-radius) + 2px);
+    border-color: color-mix(in srgb, var(--accent) 16%, var(--glass-border));
+    background:
+      radial-gradient(
+        120% 100% at 0% 0%,
+        color-mix(in srgb, var(--accent) 10%, transparent) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        145deg,
+        rgb(var(--glass-tint) / calc(0.84 * var(--glass-opacity))),
+        rgb(var(--glass-tint) / calc(0.66 * var(--glass-opacity)))
+      );
+    box-shadow:
+      0 14px 38px rgb(0 0 0 / 0.3),
+      inset 0 1px 0 rgb(255 255 255 / 0.07);
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  :root[data-theme-mode="light"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    background:
+      radial-gradient(
+        120% 100% at 0% 0%,
+        color-mix(in srgb, var(--accent) 7%, transparent) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        145deg,
+        rgb(var(--glass-tint) / calc(0.98 * var(--glass-opacity))),
+        rgb(var(--glass-tint) / calc(0.88 * var(--glass-opacity)))
+      );
+    box-shadow:
+      0 14px 34px rgb(15 22 44 / 0.12),
+      inset 0 1px 0 rgb(255 255 255 / 0.72);
+  }
+
+  @media (hover: hover) {
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav):hover {
+      border-color: color-mix(in srgb, var(--accent) 32%, var(--glass-border));
+      box-shadow:
+        0 18px 44px rgb(0 0 0 / 0.34),
+        inset 0 1px 0 color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+
+    :root[data-theme-mode="light"]
+      .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav):hover {
+      box-shadow:
+        0 18px 40px rgb(15 22 44 / 0.16),
+        inset 0 1px 0 rgb(255 255 255 / 0.82);
+    }
+  }
+
   /* ── Card glass and independent card surfaces ──────────────────────────
    * Header, navigation, strong sidebar/popover surfaces, and modals are not
    * cards. They retain the base panel theme; only content cards are scoped.
    */
-  :root[data-card-glass="off"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+  :root[data-card-glass="off"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 
-  :root[data-card-theme="hidden"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+  :root[data-card-theme="hidden"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     background: transparent;
     border-color: transparent;
     box-shadow: none;
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav),
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav),
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     --console-bg: rgb(3 4 8 / 0.9);
     color: var(--text-primary);
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     --text-primary: #151826;
     --text-dim: #4e5669;
     --text-faint: rgb(13 18 34 / 0.55);
@@ -880,7 +971,8 @@
       inset 0 1px 0 rgb(255 255 255 / 0.65);
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     --text-primary: #e7e9f0;
     --text-dim: #9da3b4;
     --text-faint: rgb(255 255 255 / 0.55);
@@ -901,67 +993,101 @@
       inset 0 1px 0 rgb(255 255 255 / 0.06);
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.panel-input, .btn-ghost) {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    :is(.panel-input, .btn-ghost) {
     border-color: rgb(13 18 34 / 0.14);
     background: rgb(255 255 255 / 0.68);
     color: #151826;
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .panel-input::placeholder {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .panel-input::placeholder {
     color: rgb(13 18 34 / 0.42);
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-ghost:hover:not(:disabled) {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .btn-ghost:hover:not(:disabled) {
     background: rgb(255 255 255 / 0.92);
     border-color: rgb(13 18 34 / 0.24);
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.panel-input, .btn-ghost) {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    :is(.panel-input, .btn-ghost) {
     border-color: rgb(255 255 255 / 0.12);
     background: rgb(0 0 0 / 0.38);
     color: #e7e9f0;
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .panel-input::placeholder {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .panel-input::placeholder {
     color: rgb(255 255 255 / 0.38);
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-ghost:hover:not(:disabled) {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .btn-ghost:hover:not(:disabled) {
     background: rgb(255 255 255 / 0.08);
     border-color: rgb(255 255 255 / 0.22);
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.glass-soft, .meter) {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    :is(.glass-soft, .meter) {
     background: rgb(13 18 34 / 0.06);
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) :is(.glass-soft, .meter) {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    :is(.glass-soft, .meter) {
     background: rgb(255 255 255 / 0.06);
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-danger {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .btn-danger {
     color: #c62834;
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .btn-danger {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .btn-danger {
     color: #ff8b96;
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) select option {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    select
+    option {
     background: #ffffff;
     color: #151826;
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) select option {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    select
+    option {
     background: #0d0f18;
     color: #e7e9f0;
   }
 
-  :root[data-card-theme="off-white"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .user-table tbody tr:hover {
+  :root[data-card-theme="off-white"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .user-table
+    tbody
+    tr:hover {
     background: rgb(13 18 34 / 0.04);
   }
 
-  :root[data-card-theme="dark"] .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) .user-table tbody tr:hover {
+  :root[data-card-theme="dark"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav)
+    .user-table
+    tbody
+    tr:hover {
     background: rgb(255 255 255 / 0.05);
   }
 }
