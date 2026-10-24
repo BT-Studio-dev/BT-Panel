@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity · BT Minecraft Panel</title>
+<meta name="csrf-token" content="demo-token">
+<meta name="app-base" content="/">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/app.css">
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('btp-theme');
+      if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-mark"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7z"/>
+            <path d="M3.5 7 12 11.5 20.5 7"/>
+            <path d="M12 11.5v10"/>
+            <path d="M7.8 9.3v5.2L12 17l4.2-2.5V9.3"/>
+        </svg></span>
+      <span class="brand-text">
+        <strong>BT Minecraft Panel</strong>
+        <span>Minecraft control</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <span class="nav-label">Manage</span>
+              <a href="dashboard.html" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span>
+        </a>
+              <a href="servers.html" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg><span>Servers</span>
+        </a>
+      
+              <span class="nav-label">Administration</span>
+                  <a href="users.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.5"/><path d="M22 20v-1.5a4 4 0 0 0-3-3.87M16.5 3.6a3.5 3.5 0 0 1 0 6.8"/></svg><span>Users</span>
+          </a>
+                  <a href="activity.html" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg><span>Activity</span>
+          </a>
+                  <a href="settings.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span>
+          </a>
+                  </nav>
+
+    <div class="sidebar-foot">
+              <div class="user-chip">
+          <span class="avatar">AA</span>
+          <span class="who">
+            <strong>Ada Admin</strong>
+            <span>admin</span>
+          </span>
+        </div>
+        <form method="post" action="login.html">
+          <input type="hidden" name="_csrf" value="demo-token">
+          <button class="ghost-btn" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg> Sign out</button>
+        </form>
+          </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>Activity</h1>
+        <div class="crumbs">BT Minecraft Panel / Activity</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="topbar-actions">
+        <button class="ghost-btn icon" type="button" data-theme-toggle title="Toggle light/dark theme" aria-label="Toggle theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>        </button>
+              </div>
+    </header>
+    <div class="content"><div class="card demo-banner" style="border-color:rgba(208,0,0,.4);background:linear-gradient(120deg,rgba(208,0,0,.16),rgba(255,255,255,.03))"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 18px"><span class="badge accent">Static design preview</span><span class="small muted" style="flex:1;min-width:200px">Buttons are inert here. Run the PHP panel to manage real servers — see README and docs/BT-PANEL-DEPLOY.md.</span><a class="ghost-btn sm" href="login.html">Login</a><a class="ghost-btn sm" href="register.html">Register</a><a class="ghost-btn sm" href="forgot.html">Reset</a><a class="ghost-btn sm" href="server.html">Server detail</a></div></div>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Audit log</h2>
+    <div class="spacer"></div>
+    <span class="badge">8 entries</span>
+  </div>
+  <div class="card-body tight">
+          <table class="data">
+        <thead><tr><th>When</th><th>Action</th><th>Server</th><th>Detail</th><th>User</th><th>IP</th></tr></thead>
+        <tbody>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-24 12:11</td>
+            <td><span class="badge">server.stop</span></td>
+            <td>
+                              <span class="faint">—</span>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">system</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-24 12:12</td>
+            <td><span class="badge">backup.create</span></td>
+            <td>
+                              <a href="server.html" style="color:var(--info)">Survival SMP</a>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">ada@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-24 12:13</td>
+            <td><span class="badge">server.start</span></td>
+            <td>
+                              <a href="server.html" style="color:var(--info)">Survival SMP</a>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">ada@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-24 12:56</td>
+            <td><span class="badge">server.command</span></td>
+            <td>
+                              <a href="server.html" style="color:var(--info)">Survival SMP</a>
+                          </td>
+            <td class="small">say Back in 5 minutes</td>
+            <td class="faint small">mo@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-23 13:11</td>
+            <td><span class="badge">server.install</span></td>
+            <td>
+                              <span class="faint">—</span>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">ada@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-22 13:11</td>
+            <td><span class="badge">user.create</span></td>
+            <td>
+                              <span class="faint">—</span>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">ada@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-21 13:11</td>
+            <td><span class="badge">server.create</span></td>
+            <td>
+                              <span class="faint">—</span>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">mo@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                  <tr>
+            <td class="mono small" style="white-space:nowrap">2026-10-24 13:06</td>
+            <td><span class="badge">auth.login</span></td>
+            <td>
+                              <span class="faint">—</span>
+                          </td>
+            <td class="small"></td>
+            <td class="faint small">ada@example.com</td>
+            <td class="mono small faint">203.0.113.24</td>
+          </tr>
+                </tbody>
+      </table>
+      </div>
+</section>
+
+      </div><!-- /.content -->
+    </div><!-- /.main -->
+  </div><!-- /.shell -->
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="modal-root">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header>
+        <h3 id="modal-title">Dialog</h3>
+        <button type="button" data-close-modal aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body" id="modal-body"></div>
+      <footer id="modal-footer"></footer>
+    </div>
+  </div>
+
+  
+<script>
+  // Demo only: switch tabs without the panel backend.
+  document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t === tab); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    });
+  });
+  document.querySelectorAll('[data-tab-jump]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.tabJump;
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === target); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    });
+  });
+</script><script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    if (p.get("embed") === "1") document.documentElement.dataset.embed = "1";
+  })();
+</script>
+</body>
+</html>

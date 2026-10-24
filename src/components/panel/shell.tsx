@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import {
   ChevronDown,
+  Gamepad2,
   House,
   LogOut,
   Menu,
@@ -32,6 +33,7 @@ import { SettingsView } from "./views/settings-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
 import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
+import { MinecraftView } from "./views/minecraft-view";
 import { PterodactylView } from "./views/pterodactyl-view";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
@@ -40,6 +42,7 @@ const NAV: NavItem[] = [
   { id: "home", label: "Home", icon: House, section: "dashboard" },
   { id: "servers", label: "Servers", icon: Server, section: "dashboard" },
   { id: "team", label: "Team", icon: Users, section: "dashboard" },
+  { id: "minecraft", label: "Minecraft", icon: Gamepad2, section: "dashboard" },
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
   { id: "settings", label: "Admin Settings", icon: Settings, section: "admin" },
   { id: "users", label: "User Management", icon: ShieldCheck, section: "admin" },
@@ -52,6 +55,7 @@ const TITLES: Record<PanelView, string> = {
   home: "Home",
   servers: "Servers",
   team: "Team",
+  minecraft: "Minecraft Panel",
   music: "Music",
   settings: "Admin Settings",
   users: "User Management",
@@ -97,6 +101,7 @@ function ShellInner() {
               {view === "home" ? <HomeView /> : null}
               {view === "servers" ? <ServersView /> : null}
               {view === "team" ? <TeamView /> : null}
+              {view === "minecraft" ? <MinecraftView /> : null}
               {view === "music" ? <MusicView /> : null}
               {view === "settings" ? <SettingsView /> : null}
               {view === "users" ? <UsersView /> : null}

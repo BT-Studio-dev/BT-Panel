@@ -6,7 +6,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sync:minecraft-preview": "node scripts/sync-minecraft-preview.mjs"
   },
   "dependencies": {
     "dotenv": "17.3.1",

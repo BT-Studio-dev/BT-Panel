@@ -34,6 +34,17 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
    cd BT-Panel
 
 
+### Minecraft module in the web panel
+
+The Next.js panel embeds the Minecraft manager as its own nav entry
+(**Minecraft**, or the shortcut `/minecraft` → `/?view=minecraft`):
+
+* The static design preview is copied into `public/minecraft-panel/`, so it is
+  served by the same deployment — no second web server. Regenerate it after
+  changing `minecraft-panel/demo/` with `npm run sync:minecraft-preview`.
+* Set `NEXT_PUBLIC_MINECRAFT_PANEL_URL=https://mc.example.com` to embed the live
+  PHP panel instead; the module then loads the real panel in the frame.
+
 ## 🎮 Minecraft panel (PHP + HTML/CSS/JS)
 
 `minecraft-panel/` is a self-contained Minecraft server manager you can drop
