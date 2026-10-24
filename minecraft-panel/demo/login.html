@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · BT Minecraft Panel</title>
+<meta name="csrf-token" content="demo-token">
+<link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../public/assets/app.css">
+<script>
+  (function () { try { var t = localStorage.getItem('btp-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {} })();
+</script>
+</head>
+<body>
+<div class="auth-shell">
+  <aside class="auth-aside">
+    <div class="brand" style="padding:0">
+      <span class="brand-mark"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7z"/>
+            <path d="M3.5 7 12 11.5 20.5 7"/>
+            <path d="M12 11.5v10"/>
+            <path d="M7.8 9.3v5.2L12 17l4.2-2.5V9.3"/>
+        </svg></span>
+      <span class="brand-text"><strong>BT Minecraft Panel</strong><span>BT Panel module</span></span>
+    </div>
+    <div class="pitch">
+      <h2>Your Minecraft servers, one clean console.</h2>
+      <p>Start, stop and watch every world from the panel you already run. Built on plain PHP so it drops straight into a BT Panel site.</p>
+      <div class="auth-features">
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> Live console over RCON with command history</div>
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> One-click Vanilla, Paper and Purpur installs</div>
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> File manager, scheduled-friendly backups, audit log</div>
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> Per-server access for your moderators</div>
+      </div>
+    </div>
+    <div class="faint small">PHP 8.3.33 · SQLite · emscripten</div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-box">
+      <div>
+        <h1>Welcome back</h1>
+        <div class="sub">Sign in to manage your fleet.</div>
+      </div>
+
+      <form method="post" action="dashboard.html" data-ajax-form data-endpoint="/login" novalidate>
+        <input type="hidden" name="_csrf" value="demo-token">
+        <div class="form-error" data-form-error role="alert"></div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username" required autofocus placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••••">
+        </div>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+
+      <div class="auth-foot">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg> Sessions are HttpOnly and revocable from the panel.
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+  // Demo only: switch tabs without the panel backend.
+  document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t === tab); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    });
+  });
+  document.querySelectorAll('[data-tab-jump]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.tabJump;
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === target); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    });
+  });
+</script></body>
+</html>

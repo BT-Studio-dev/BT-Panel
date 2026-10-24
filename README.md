@@ -34,6 +34,31 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
    cd BT-Panel
 
 
+## 🎮 Minecraft panel (PHP + HTML/CSS/JS)
+
+`minecraft-panel/` is a self-contained Minecraft server manager you can drop
+into a **BT Panel / aaPanel** site. It is plain PHP 8 with vanilla JavaScript —
+no Node.js, no Composer, no build step — and it runs Minecraft servers directly
+on the panel host (Java + `screen`/`tmux`, console over RCON).
+
+- Server lifecycle: start / stop / restart / kill, live uptime and heap usage
+- Live console with command history over RCON, offset-based log streaming
+- One-click Vanilla, Paper and Purpur installs; custom jar upload
+- Per-server file manager, `.tar.gz` backups with restore, audit log
+- Admin/member roles, CSRF-protected JSON API, CLI (`bin/btp`) for cron backups
+
+Static design preview (no PHP needed): [`minecraft-panel/demo/index.html`](minecraft-panel/demo/index.html)
+
+Read [`minecraft-panel/README.md`](minecraft-panel/README.md) for the feature
+list and API reference, and
+[`minecraft-panel/docs/BT-PANEL-DEPLOY.md`](minecraft-panel/docs/BT-PANEL-DEPLOY.md)
+for the BT Panel deployment steps (document root, `disable_functions`, ports,
+firewall, HTTPS, troubleshooting).
+
+> The Next.js application above and the PHP panel are independent. The panel
+> does not use Wings/Pterodactyl: game ports and loopback RCON are the only
+> ports involved.
+
 ## Documentation
 
 - [Ubuntu deployment guide](docs/UBUNTU-DEPLOYMENT.md)

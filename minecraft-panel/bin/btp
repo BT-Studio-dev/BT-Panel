@@ -1,0 +1,258 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * BT Minecraft Panel — operations CLI.
+ *
+ * Run as the same system user as PHP-FPM (usually `www` on BT Panel):
+ *
+ *   sudo -u www php bin/btp doctor
+ *   sudo -u www php bin/btp user:create admin@example.com --name "Ada" --role admin
+ *   sudo -u www php bin/btp servers
+ *   sudo -u www php bin/btp backup --all
+ *
+ * Add it to a BT Panel cron task for scheduled backups.
+ */
+
+if (PHP_SAPI !== 'cli') {
+    fwrite(STDERR, "This script must be run from the command line.\n");
+    exit(1);
+}
+
+require dirname(__DIR__) . '/bootstrap.php';
+
+use Btp\Minecraft\BackupManager;
+use Btp\Minecraft\JarInstaller;
+use Btp\Minecraft\ProcessRunner;
+use Btp\Minecraft\ServerManager;
+use Btp\Support\Auth;
+use Btp\Support\Db;
+use Btp\Support\Installer;
+
+function out(string $message): void
+{
+    fwrite(STDOUT, $message . "\n");
+}
+
+function fail(string $message): never
+{
+    fwrite(STDERR, "error: {$message}\n");
+    exit(1);
+}
+
+function ask(string $question, bool $secret = false): string
+{
+    fwrite(STDOUT, $question);
+    if ($secret && ProcessRunner::commandExists('stty')) {
+        @shell_exec('stty -echo 2>/dev/null');
+        $answer = (string) fgets(STDIN);
+        @shell_exec('stty echo 2>/dev/null');
+        fwrite(STDOUT, "\n");
+    } else {
+        $answer = (string) fgets(STDIN);
+    }
+    return trim($answer);
+}
+
+/**
+ * @param list<string> $args
+ * @return array{flags:array<string,mixed>,positional:list<string>}
+ */
+function parseArgs(array $args): array
+{
+    $flags = [];
+    $positional = [];
+    foreach ($args as $arg) {
+        if (str_starts_with($arg, '--')) {
+            $parts = explode('=', substr($arg, 2), 2);
+            $flags[$parts[0]] = $parts[1] ?? true;
+        } else {
+            $positional[] = $arg;
+        }
+    }
+    return ['flags' => $flags, 'positional' => $positional];
+}
+
+if (getenv('BTP_TEST_CONFIG_ONLY') !== '1' && !btp_config()['installed'] && !is_file(BTP_CONFIG_FILE)) {
+    fail('The panel is not installed yet. Open the site in a browser and complete /setup first.');
+}
+Db::connection();
+Db::install();
+
+$cmd = $argv[1] ?? 'help';
+$parsed = parseArgs(array_slice($argv, 2));
+$flags = $parsed['flags'];
+$args = $parsed['positional'];
+$manager = new ServerManager();
+
+switch ($cmd) {
+    case 'doctor':
+        out('BT Minecraft Panel doctor');
+        out('=========================');
+        foreach (Installer::requirements() as $requirement) {
+            $mark = $requirement['ok'] ? 'ok  ' : ($requirement['required'] ? 'FAIL' : 'warn');
+            out(sprintf('[%s] %-26s %s', $mark, $requirement['label'], $requirement['detail']));
+        }
+        out('');
+        out('Data directory : ' . btp_config()['data_dir'] . (is_writable((string) btp_config()['data_dir']) ? ' (writable)' : ' (NOT writable)'));
+        out('Database       : ' . btp_config()['db_path'] . (is_file((string) btp_config()['db_path']) ? ' (' . btp_bytes((int) filesize((string) btp_config()['db_path'])) . ')' : ' (missing)'));
+        out('Java version   : ' . ($manager->javaVersion() ?? 'not found'));
+        out('Users          : ' . Auth::countUsers());
+        out('Servers        : ' . (int) Db::scalar('SELECT COUNT(*) FROM servers'));
+        break;
+
+    case 'servers':
+        $rows = Db::all('SELECT id, name, directory, type, version, port, memory_mb, status FROM servers ORDER BY name');
+        if ($rows === []) {
+            out('No servers.');
+            break;
+        }
+        foreach ($rows as $row) {
+            $pid = $manager->pid($manager->find((string) $row['id']));
+            out(sprintf(
+                '%-24s %-8s %-10s port %-6d %5d MB  %s',
+                mb_substr((string) $row['name'], 0, 24),
+                (string) $row['type'],
+                (string) $row['version'],
+                (int) $row['port'],
+                (int) $row['memory_mb'],
+                $pid !== null ? 'running (pid ' . $pid . ')' : 'stopped',
+            ));
+        }
+        break;
+
+    case 'user:create':
+        $email = $args[0] ?? '';
+        if ($email === '') {
+            fail('usage: btp user:create <email> [--name "Name"] [--role admin|member] [--password pass]');
+        }
+        $password = is_string($flags['password'] ?? null) ? (string) $flags['password'] : ask('Password (min 10 chars): ', true);
+        $user = Auth::createUser(
+            $email,
+            $password,
+            is_string($flags['name'] ?? null) ? (string) $flags['name'] : $email,
+            is_string($flags['role'] ?? null) ? (string) $flags['role'] : 'admin',
+        );
+        out('Created ' . $user['role'] . ' ' . $user['email']);
+        break;
+
+    case 'user:passwd':
+        $email = mb_strtolower($args[0] ?? '');
+        if ($email === '') {
+            fail('usage: btp user:passwd <email> [--password pass]');
+        }
+        $target = Db::one('SELECT id FROM users WHERE email = :email', ['email' => $email]);
+        if ($target === null) {
+            fail('No such user: ' . $email);
+        }
+        $password = is_string($flags['password'] ?? null) ? (string) $flags['password'] : ask('New password: ', true);
+        if (mb_strlen($password) < 10) {
+            fail('Password must be at least 10 characters.');
+        }
+        Db::run('UPDATE users SET password_hash = :hash WHERE id = :id', [
+            'hash' => password_hash($password, PASSWORD_DEFAULT),
+            'id' => (int) $target['id'],
+        ]);
+        Db::run('DELETE FROM sessions WHERE user_id = :id', ['id' => (int) $target['id']]);
+        out('Password updated for ' . $email . '; sessions revoked.');
+        break;
+
+    case 'user:list':
+        foreach (Db::all('SELECT id, email, name, role, last_login_at FROM users ORDER BY id') as $row) {
+            out(sprintf('%-4d %-32s %-10s %s', (int) $row['id'], (string) $row['email'], (string) $row['role'], btp_ago($row['last_login_at'])));
+        }
+        break;
+
+    case 'install':
+        $server = $args[0] ?? '';
+        if ($server === '') {
+            fail('usage: btp install <server-id|directory>');
+        }
+        $row = Db::one('SELECT id FROM servers WHERE id = :v OR directory = :v', ['v' => $server]);
+        if ($row === null) {
+            fail('No such server: ' . $server);
+        }
+        $record = $manager->find((string) $row['id']);
+        if ($manager->pid($record) !== null) {
+            fail('Stop the server before installing files.');
+        }
+        $result = (new JarInstaller())->install($record, $manager->dir($record));
+        $manager->ensureConfigFiles($manager->find((string) $record['id']));
+        out(sprintf('Installed %s %s (%s)', $record['type'], $result['version'], btp_bytes($result['bytes'])));
+        break;
+
+    case 'backup':
+        $targets = [];
+        if (isset($flags['all'])) {
+            $targets = Db::all('SELECT id FROM servers ORDER BY name');
+        } else {
+            $server = $args[0] ?? '';
+            if ($server === '') {
+                fail('usage: btp backup <server-id|directory> | btp backup --all');
+            }
+            $row = Db::one('SELECT id FROM servers WHERE id = :v OR directory = :v', ['v' => $server]);
+            if ($row === null) {
+                fail('No such server: ' . $server);
+            }
+            $targets = [$row];
+        }
+        $backups = new BackupManager($manager);
+        $failed = 0;
+        foreach ($targets as $target) {
+            $record = $manager->find((string) $target['id']);
+            try {
+                $backup = $backups->create($record, 'CLI ' . gmdate('Y-m-d H:i'));
+                out(sprintf('Backed up %-24s → %s (%s)', (string) $record['name'], (string) $backup['file'], btp_bytes($backup['size'])));
+            } catch (Throwable $error) {
+                $failed++;
+                fwrite(STDERR, sprintf("backup failed for %s: %s\n", (string) $record['name'], $error->getMessage()));
+            }
+        }
+        if ($failed > 0) {
+            exit(1);
+        }
+        break;
+
+    case 'start':
+    case 'stop':
+    case 'restart':
+        $server = $args[0] ?? '';
+        $row = Db::one('SELECT id FROM servers WHERE id = :v OR directory = :v', ['v' => $server]);
+        if ($row === null) {
+            fail('No such server: ' . $server);
+        }
+        $record = $manager->find((string) $row['id']);
+        $status = match ($cmd) {
+            'start' => $manager->start($record),
+            'stop' => $manager->stop($record),
+            'restart' => $manager->restart($record),
+        };
+        out($cmd . ': ' . $status['state']);
+        break;
+
+    case 'version':
+        out('BT Minecraft Panel 1.0.0');
+        break;
+
+    case 'help':
+    default:
+        out(<<<'TXT'
+        BT Minecraft Panel CLI
+
+          php bin/btp doctor                       Check the host environment
+          php bin/btp servers                      List servers and process state
+          php bin/btp start|stop|restart <server>  Control a server (id or directory)
+          php bin/btp install <server>             Download/replace server software
+          php bin/btp backup <server>              Create one backup archive
+          php bin/btp backup --all                 Create a backup for every server
+          php bin/btp user:list                    List panel users
+          php bin/btp user:create <email> [--name "Name"] [--role admin] [--password pass]
+          php bin/btp user:passwd <email> [--password pass]
+          php bin/btp version
+
+        Servers must be stopped for backups and installs (the panel refuses otherwise).
+        TXT);
+        break;
+}
