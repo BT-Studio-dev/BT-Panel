@@ -183,6 +183,22 @@ export function clearCachedPanel() {
   }
 }
 
+/** JSON fetch error with the HTTP status retained for auth/session decisions. */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+/** Only a confirmed authentication failure may remove a saved session. */
+export function isSessionExpiredError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
 /** JSON fetch helper — throws an Error carrying the server's message. */
 export async function api<T>(url: string, init?: { method?: string; body?: unknown }): Promise<T> {
   // x-btp-csrf + JSON content type: either one satisfies the server's CSRF
@@ -209,7 +225,7 @@ export async function api<T>(url: string, init?: { method?: string; body?: unkno
       data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
         ? (data as { error: string }).error
         : `Request failed (${res.status})`;
-    throw new Error(message);
+    throw new ApiError(message, res.status);
   }
   return data as T;
 }

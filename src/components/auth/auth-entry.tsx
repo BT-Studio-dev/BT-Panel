@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getLocalModeOverride } from "@/lib/panel/theme";
 import type { BootstrapPayload, GoogleOauthSettings, ThemeSettings } from "@/lib/panel/types";
-import { api, cachePanel, clearCachedPanel, clearStoredToken, getCachedPanel, getStoredToken } from "@/lib/utils";
+import { api, cachePanel, clearCachedPanel, clearStoredToken, getCachedPanel, getStoredToken, isSessionExpiredError } from "@/lib/utils";
 import { PanelShell } from "@/components/panel/shell";
 import {
   AuthShell,
@@ -52,8 +52,12 @@ export function AuthEntry({
   passwordResetEnabled?: boolean;
 }) {
   const [panel, setPanel] = useState<BootstrapPayload | null>(null);
+  const authenticatedRef = useRef(false);
 
   const open = useCallback((data: BootstrapPayload) => {
+    // A bootstrap request started before this login must never overwrite or
+    // clear the newly authenticated session when it settles later.
+    authenticatedRef.current = true;
     cachePanel(data);
     // Reflect "/" without asking the server for a new document.
     window.history.replaceState(null, "", "/");
@@ -65,16 +69,18 @@ export function AuthEntry({
   useEffect(() => {
     if (!getStoredToken()) return;
     const cached = getCachedPanel<BootstrapPayload>();
+    // Cached panel restoration is intentionally synchronized with this mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (cached) setPanel(cached);
     let cancelled = false;
     api<BootstrapPayload>("/api/bootstrap")
       .then((data) => {
-        if (cancelled) return;
+        if (cancelled || authenticatedRef.current) return;
         cachePanel(data);
         setPanel(data);
       })
-      .catch(() => {
-        if (cancelled) return;
+      .catch((error: unknown) => {
+        if (cancelled || authenticatedRef.current || !isSessionExpiredError(error)) return;
         clearStoredToken();
         clearCachedPanel();
         setPanel(null);
