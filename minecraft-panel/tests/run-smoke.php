@@ -58,7 +58,11 @@ use Btp\Minecraft\JarInstaller;
 use Btp\Minecraft\ServerManager;
 use Btp\Support\Auth;
 use Btp\Support\Db;
+use Btp\Support\PasswordReset;
 use Btp\Support\Path;
+use Btp\Support\RateLimiter;
+use Btp\Support\GoogleAuth;
+use Btp\Support\Mailer;
 
 $failures = [];
 $checks = 0;
@@ -222,6 +226,179 @@ $list = $backups->listForServer($server);
 check('backup listing is empty', $list === []);
 check('invalid backup id rejected', expectHttpError(static fn () => $backups->path($server, 'nope')) === 404);
 
+/* ------------------------------------------------- registration / roles */
+Db::setSetting('mail_transport', 'log');
+Db::setSetting('allow_registration', '1');
+
+check('registration is open by default', Auth::registrationOpen() === true);
+$newcomer = Auth::register([
+    'email' => 'Newcomer@Example.com',
+    'password' => 'newcomer-password',
+    'password_confirm' => 'newcomer-password',
+    'name' => 'New Comer',
+]);
+check('registration normalises the email', ($newcomer['email'] ?? '') === 'newcomer@example.com');
+check('self-registration always creates a member', ($newcomer['role'] ?? '') === 'member');
+check('new account can sign in', password_verify(
+    'newcomer-password',
+    (string) Db::scalar('SELECT password_hash FROM users WHERE id = :id', ['id' => $newcomer['id']]),
+));
+check('mismatched passwords rejected', expectHttpError(static fn () => Auth::register([
+    'email' => 'mismatch@example.com',
+    'password' => 'a-long-password',
+    'password_confirm' => 'a-different-password',
+])) === 422);
+check('duplicate registration rejected', expectHttpError(static fn () => Auth::register([
+    'email' => 'admin@example.com',
+    'password' => 'another-long-password',
+    'password_confirm' => 'another-long-password',
+])) === 409);
+Db::setSetting('allow_registration', '0');
+check('registration can be switched off', Auth::registrationOpen() === false);
+check('registration blocked when disabled', expectHttpError(static fn () => Auth::register([
+    'email' => 'blocked@example.com',
+    'password' => 'blocked-password-1',
+    'password_confirm' => 'blocked-password-1',
+])) === 403);
+Db::setSetting('allow_registration', '1');
+
+/* -------------------------------------------------------- password resets */
+$mailLog = (string) btp_config()['log_dir'] . '/mail.log';
+@unlink($mailLog);
+PasswordReset::request('admin@example.com');
+check('reset email is written to the mail log', is_file($mailLog) && str_contains((string) file_get_contents($mailLog), 'admin@example.com'));
+$logContents = (string) file_get_contents($mailLog);
+check('reset email contains a token link', (bool) preg_match('#reset\?token=([a-f0-9]{64})#', $logContents, $tokenMatch));
+$resetToken = $tokenMatch[1] ?? '';
+check('token resolves to the account', (PasswordReset::verify($resetToken)['email'] ?? null) === 'admin@example.com');
+
+$before = (string) Db::scalar('SELECT password_hash FROM users WHERE id = :id', ['id' => $admin['id']]);
+$resetUser = PasswordReset::consume($resetToken, 'brand-new-password', 'brand-new-password');
+check('reset returns the account', ($resetUser['email'] ?? '') === 'admin@example.com');
+check('password actually changed', $before !== (string) Db::scalar('SELECT password_hash FROM users WHERE id = :id', ['id' => $admin['id']]));
+check('new password verifies', password_verify(
+    'brand-new-password',
+    (string) Db::scalar('SELECT password_hash FROM users WHERE id = :id', ['id' => $admin['id']]),
+));
+check('used token cannot be replayed', PasswordReset::verify($resetToken) === null);
+check('replayed token is rejected', expectHttpError(static fn () => PasswordReset::consume($resetToken, 'another-password-1', 'another-password-1')) === 422);
+check('unknown token is rejected', expectHttpError(static fn () => PasswordReset::consume(str_repeat('ab', 32), 'another-password-1', 'another-password-1')) === 422);
+check('malformed token is rejected', PasswordReset::verify('not-a-token') === null);
+check('reset email for unknown address is silent', expectHttpError(static function (): void {
+    PasswordReset::request('nobody@example.com');
+}) === null);
+check('reset password length enforced', expectHttpError(static function (): void {
+    PasswordReset::request('admin@example.com');
+    $log = (string) @file_get_contents((string) btp_config()['log_dir'] . '/mail.log');
+    preg_match('#reset\?token=([a-f0-9]{64})#', strrev($log), $m);
+    $fresh = strrev($m[1] ?? '');
+    PasswordReset::consume($fresh, 'short', 'short');
+}) === 422);
+
+/* ---------------------------------------------------------- login attempts */
+check('login succeeds with the right password', (int) Auth::attempt('admin@example.com', 'brand-new-password', true)['id'] === (int) $admin['id']);
+check('wrong password is rejected', expectHttpError(static fn () => Auth::attempt('admin@example.com', 'wrong-password')) === 401);
+check('unknown account is rejected', expectHttpError(static fn () => Auth::attempt('ghost@example.com', 'whatever-password')) === 401);
+check('login writes a server-side session', (int) Db::scalar('SELECT COUNT(*) FROM sessions WHERE user_id = :id', ['id' => $admin['id']]) >= 1);
+$sessionCountBefore = (int) Db::scalar('SELECT COUNT(*) FROM sessions WHERE user_id = :id', ['id' => $admin['id']]);
+Auth::attempt('admin@example.com', 'brand-new-password', false);
+check('each login adds exactly one session', (int) Db::scalar('SELECT COUNT(*) FROM sessions WHERE user_id = :id', ['id' => $admin['id']]) === $sessionCountBefore + 1);
+check('failed logins are recorded', (int) Db::scalar('SELECT COUNT(*) FROM login_attempts') >= 1);
+
+/* ------------------------------------------------------------- google auth */
+check('google sign-in is off without credentials', GoogleAuth::enabled() === false);
+check('google start URL refuses when unconfigured', expectHttpError(static fn () => GoogleAuth::startUrl()) === 503);
+
+Db::setSetting('google_client_id', '1234-abc.apps.googleusercontent.com');
+Db::setSetting('google_client_secret', 'test-secret');
+Db::setSetting('google_redirect_uri', 'https://panel.test/auth/google/callback');
+check('google configured after saving credentials', GoogleAuth::settings()['configured'] === true);
+check('google enabled by default once configured', GoogleAuth::enabled() === true);
+$startUrl = GoogleAuth::startUrl();
+check('start URL points at Google', str_starts_with($startUrl, 'https://accounts.google.com/o/oauth2/v2/auth?'));
+check('start URL requests the right scope', str_contains($startUrl, 'scope=openid%20email%20profile'));
+check('start URL carries a state token', (bool) preg_match('/state=[a-f0-9]{48}/', $startUrl));
+check('start URL uses the configured redirect', str_contains($startUrl, urlencode('https://panel.test/auth/google/callback')));
+
+$profile = [
+    'google_id' => 'google-sub-1',
+    'email' => 'mod@example.com',
+    'name' => 'Mo Moderator',
+    'avatar' => 'https://lh3.googleusercontent.com/a/demo',
+    'email_verified' => true,
+    'domain' => 'example.com',
+];
+$googleUser = Auth::signInWithGoogle($profile);
+check('google sign-in links an existing email account', (int) $googleUser['id'] === (int) $member['id']);
+check('linked google id is stored', Db::scalar('SELECT google_id FROM users WHERE id = :id', ['id' => $member['id']]) === 'google-sub-1');
+check('avatar is stored', Db::scalar('SELECT avatar_url FROM users WHERE id = :id', ['id' => $member['id']]) === (string) $profile['avatar']);
+check('returning google user resolves by google id', (int) Auth::signInWithGoogle($profile)['id'] === (int) $member['id']);
+
+$googleNew = Auth::signInWithGoogle([
+    'google_id' => 'google-sub-2',
+    'email' => 'gmail.user@gmail.com',
+    'name' => 'Gmail User',
+    'avatar' => '',
+    'email_verified' => true,
+    'domain' => 'gmail.com',
+]);
+check('google creates an account when registration is open', ($googleNew['email'] ?? '') === 'gmail.user@gmail.com');
+check('google-created accounts are members', ($googleNew['role'] ?? '') === 'member');
+check('google-created accounts get a random unusable password', !password_verify('', (string) Db::scalar('SELECT password_hash FROM users WHERE id = :id', ['id' => $googleNew['id']])));
+
+Db::setSetting('allow_registration', '0');
+check('google signup blocked when registration is closed', expectHttpError(static fn () => Auth::signInWithGoogle([
+    'google_id' => 'google-sub-3',
+    'email' => 'closed@example.com',
+    'name' => 'Closed',
+    'avatar' => '',
+    'email_verified' => true,
+    'domain' => 'example.com',
+])) === 403);
+Db::setSetting('allow_registration', '1');
+
+check('unverified google email rejected', expectHttpError(static fn () => Auth::signInWithGoogle([
+    'google_id' => 'google-sub-4',
+    'email' => 'unverified@example.com',
+    'name' => 'Unverified',
+    'avatar' => '',
+    'email_verified' => false,
+    'domain' => 'example.com',
+])) === 403);
+check('domain allowlist accepts listed domain', expectHttpError(static function (): void {
+    GoogleAuth::assertDomainAllowed('someone@gmail.com', ['gmail.com', 'example.com']);
+}) === null);
+check('domain allowlist rejects other domains', expectHttpError(static function (): void {
+    GoogleAuth::assertDomainAllowed('someone@hotmail.com', ['gmail.com']);
+}) === 403);
+check('empty domain allowlist accepts everything', expectHttpError(static function (): void {
+    GoogleAuth::assertDomainAllowed('anyone@anywhere.test', []);
+}) === null);
+
+/* ------------------------------------------------------------ rate limiter */
+RateLimiter::clear('unit', 'unit@example.com');
+for ($i = 0; $i < 3; $i++) {
+    RateLimiter::hit('unit', 'unit@example.com', 3, 900);
+}
+check('rate limiter allows up to the limit', true);
+check('rate limiter blocks beyond the limit', expectHttpError(static function (): void {
+    RateLimiter::hit('unit', 'unit@example.com', 3, 900);
+}) === 429);
+RateLimiter::clear('unit', 'unit@example.com');
+check('rate limiter clears', expectHttpError(static function (): void {
+    RateLimiter::hit('unit', 'unit@example.com', 3, 900);
+}) === null);
+
+/* --------------------------------------------------------------- mailer */
+Db::setSetting('mail_transport', 'log');
+check('mailer sends through the log transport', Mailer::send('someone@example.com', 'Subject', '<p>Body</p>') === true);
+check('mailer rejects invalid recipients', Mailer::send('not-an-email', 'Subject', 'Body') === false);
+Db::setSetting('mail_transport', 'smtp');
+Db::setSetting('mail_host', '');
+check('mailer reports a missing SMTP host', Mailer::send('someone@example.com', 'S', 'B') === false);
+check('mailer surfaces the failure reason', str_contains((string) Mailer::lastError(), 'SMTP host'));
+Db::setSetting('mail_transport', 'log');
+
 /* ------------------------------------------------------------------ views */
 $status = $manager->status($server, false);
 $pageVars = [
@@ -233,7 +410,10 @@ $pageVars = [
     'flash' => null,
 ];
 $views = [
-    'login' => $pageVars + ['csrf' => 'token'],
+    'login' => $pageVars + ['csrf' => 'token', 'googleEnabled' => true, 'registrationOpen' => true],
+    'register' => $pageVars + ['csrf' => 'token', 'googleEnabled' => true, 'registrationOpen' => true],
+    'forgot' => $pageVars + ['csrf' => 'token', 'mailConfigured' => true],
+    'reset' => $pageVars + ['csrf' => 'token', 'valid' => true, 'token' => str_repeat('a', 64), 'email' => 'a@b.co'],
     'setup' => $pageVars + ['requirements' => \Btp\Support\Installer::requirements()],
     'dashboard' => $pageVars + ['stats' => $manager->stats($admin), 'rows' => [['server' => $server, 'status' => $status]], 'activity' => []],
     'servers' => $pageVars + ['rows' => [['server' => $server, 'status' => $status]], 'types' => JarInstaller::TYPES, 'defaultMemory' => 2048],
@@ -251,7 +431,14 @@ $views = [
     ],
     'users' => $pageVars + ['rows' => Db::all('SELECT id, email, name, role, created_at, last_login_at, 0 AS server_count FROM users'), 'me' => 1],
     'settings' => $pageVars + [
-        'settings' => ['panel_name' => 'Smoke Panel', 'default_memory_mb' => 2048],
+        'settings' => ['panel_name' => 'Smoke Panel', 'default_memory_mb' => 2048, 'allow_registration' => true],
+        'auth' => [
+            'google_enabled' => false, 'google_configured' => false, 'google_client_id' => '',
+            'google_redirect_uri' => 'https://panel.test/auth/google/callback', 'google_allowed_domains' => '',
+            'google_has_secret' => false, 'mail_transport' => 'log', 'mail_host' => '', 'mail_port' => 587,
+            'mail_username' => '', 'mail_encryption' => 'tls', 'mail_from' => 'panel@test', 'mail_from_name' => 'Test',
+            'mail_has_password' => false,
+        ],
         'environment' => [
             'php' => PHP_VERSION, 'java' => null, 'java_bin' => 'java', 'backend' => 'nohup',
             'data_dir' => $tmp . '/servers', 'backup_dir' => $tmp . '/backups', 'log_dir' => $tmp . '/logs',
@@ -275,6 +462,12 @@ foreach ($views as $view => $data) {
 
 check('dashboard shows the server name', str_contains(renderView('dashboard', $views['dashboard']), 'Survival SMP 2'));
 check('login escapes untrusted input', str_contains(renderView('login', $views['login']), 'csrf-token'));
+check('login shows the Google button when enabled', str_contains(renderView('login', $views['login']), 'Continue with Google'));
+check('login hides the Google button when disabled', !str_contains(renderView('login', array_replace($views['login'], ['googleEnabled' => false])), 'Continue with Google'));
+check('login links to registration', str_contains(renderView('login', $views['login']), 'register'));
+check('login links to password reset', str_contains(renderView('login', $views['login']), 'forgot'));
+check('register hides the form when closed', str_contains(renderView('register', array_replace($views['register'], ['registrationOpen' => false])), 'Self-registration is disabled'));
+check('reset page shows the expired state', str_contains(renderView('reset', array_replace($views['reset'], ['valid' => false])), 'Link expired'));
 check('html escaping helper', btp_e('<script>alert(1)</script>') === '&lt;script&gt;alert(1)&lt;/script&gt;');
 check('invalid ids are rejected before SQL', expectHttpError(static fn () => $manager->find("1' OR 1=1 --")) === 404);
 

@@ -198,6 +198,23 @@ final class Db
             created_at TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_hash TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            used_at    TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS rate_events (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            bucket     TEXT NOT NULL,
+            key        TEXT NOT NULL,
+            ip         TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS settings (
             key   TEXT PRIMARY KEY,
             value TEXT NOT NULL
@@ -207,7 +224,29 @@ final class Db
         CREATE INDEX IF NOT EXISTS idx_backups_server ON backups(server_id);
         CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
         CREATE INDEX IF NOT EXISTS idx_attempts_email ON login_attempts(email, created_at);
+        CREATE INDEX IF NOT EXISTS idx_resets_user ON password_resets(user_id);
+        CREATE INDEX IF NOT EXISTS idx_rate_lookup ON rate_events(bucket, key, created_at);
         SQL);
+
+        // Lightweight forward migrations for databases created by older releases.
+        self::ensureColumn($pdo, 'users', 'google_id', 'TEXT');
+        self::ensureColumn($pdo, 'users', 'avatar_url', 'TEXT');
+    }
+
+    /**
+     * Add a column when it does not exist yet. SQLite has no `ADD COLUMN IF NOT
+     * EXISTS`, and we intentionally avoid a migration runner for a single-file
+     * database.
+     */
+    public static function ensureColumn(\PDO $pdo, string $table, string $column, string $definition): void
+    {
+        $columns = $pdo->query('PRAGMA table_info(' . $table . ')')->fetchAll();
+        foreach ($columns as $existing) {
+            if (strcasecmp((string) $existing['name'], $column) === 0) {
+                return;
+            }
+        }
+        $pdo->exec(sprintf('ALTER TABLE %s ADD COLUMN %s %s', $table, $column, $definition));
     }
 
     public static function setting(string $key, string $default = ''): string

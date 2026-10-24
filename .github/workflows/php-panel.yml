@@ -48,5 +48,18 @@ jobs:
           php tests/run-http.php GET /api/servers --guest | grep -q 'Sign in to continue'
           php tests/run-http.php POST /api/servers | grep -q 'session token expired'
 
+      - name: Authentication routes
+        working-directory: minecraft-panel
+        run: |
+          php tests/run-http.php GET /register --guest | grep -q "Create your account"
+          php tests/run-http.php GET /forgot --guest | grep -q "Reset your password"
+          php tests/run-http.php GET "/reset?token=deadbeef" --guest | grep -q "Link expired"
+          php tests/run-http.php GET /auth/google/start --guest | grep -q 'not configured'
+          php tests/run-http.php GET "/auth/google/callback?state=x&code=y" --guest | grep -q 'expired'
+          php tests/run-http.php POST /register --post='{"email":"a@b.co"}' | grep -q 'session token expired'
+          php tests/run-http.php POST /register --csrf --post='{"email":"a@b.co","password":"long-password-1","password_confirm":"long-password-1"}' | grep -q 'Minecraft EULA'
+          php tests/run-http.php POST /forgot --csrf --post='{"email":"nope"}' | grep -q 'valid email address'
+          php tests/run-http.php POST /reset --csrf --post='{"token":"deadbeef"}' | grep -q 'invalid or has expired'
+
       - name: JavaScript syntax
         run: node --check minecraft-panel/public/assets/app.js

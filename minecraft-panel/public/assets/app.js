@@ -1090,6 +1090,7 @@
     new FormData(form).forEach((value, key) => {
       payload[key] = key === "default_memory_mb" ? Number(value) : value;
     });
+    payload.allow_registration = !!(form.querySelector('[name="allow_registration"]')?.checked);
     try {
       await api(url("api/settings"), { method: "PATCH", body: payload });
       toast("Settings saved. Reload to see the panel name everywhere.");
@@ -1118,6 +1119,63 @@
       } else {
         toast(error.message, "err");
       }
+    }
+  });
+
+  /* ------------------------------------------------- sign-in & mail config */
+
+  $("[data-auth-form]")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const errorBox = $("[data-form-error]", form);
+    const button = form.querySelector('button[type="submit"]');
+    if (errorBox) errorBox.classList.remove("show");
+
+    const payload = {};
+    new FormData(form).forEach((value, key) => {
+      // Never overwrite a stored secret with an empty string.
+      if ((key === "google_client_secret" || key === "mail_password") && value === "") return;
+      payload[key] = value;
+    });
+    payload.google_enabled = !!(form.querySelector('[name="google_enabled"]')?.checked);
+
+    if (button) button.disabled = true;
+    try {
+      const result = await api(url("api/settings/auth"), { method: "PATCH", body: payload });
+      toast(result.google_enabled
+        ? "Saved. Google sign-in is enabled."
+        : (result.google_configured ? "Saved. Google sign-in is configured but switched off." : "Saved."));
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (error) {
+      if (errorBox) {
+        errorBox.textContent = error.message;
+        errorBox.classList.add("show");
+      } else {
+        toast(error.message, "err");
+      }
+      if (button) button.disabled = false;
+    }
+  });
+
+  $("[data-mail-test]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const recipient = await textPrompt({
+      title: "Send a test email",
+      label: "Recipient address",
+      message: "Save your mail settings first. The result is reported here and logged in the audit log.",
+      confirmLabel: "Send test",
+    });
+    if (!recipient) return;
+    button.disabled = true;
+    button.textContent = "Sending…";
+    try {
+      const result = await api(url("api/settings/mail-test"), { method: "POST", body: { to: recipient } });
+      toast(`Test email sent to ${result.to} via ${result.transport}.`);
+    } catch (error) {
+      toast(error.message, "err", 9000);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Send test email";
     }
   });
 

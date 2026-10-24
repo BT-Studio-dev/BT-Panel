@@ -11,6 +11,8 @@ use Btp\Http\Api\ServerApi;
 use Btp\Http\Web\Pages;
 use Btp\Support\Audit;
 use Btp\Support\Auth;
+use Btp\Support\GoogleAuth;
+use Btp\Support\PasswordReset;
 use Btp\Support\Db;
 use Btp\Support\Installer;
 use Btp\Support\Logger;
@@ -90,8 +92,45 @@ final class Kernel
 
         /* ----------------------------------------------------------- auth */
         $router->post('/login', static function (): never {
-            $user = Auth::attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
+            Auth::attempt(
+                (string) ($_POST['email'] ?? ''),
+                (string) ($_POST['password'] ?? ''),
+                isset($_POST['remember']),
+            );
             Session::regenerate();
+            btp_redirect(btp_url('dashboard'));
+        });
+
+        $router->get('/register', [$pages, 'register']);
+        $router->post('/register', static function (): never {
+            if (($_POST['terms'] ?? '') !== '1') {
+                throw new HttpError(422, 'Please accept the Minecraft EULA to continue.');
+            }
+            $user = Auth::register($_POST);
+            Session::regenerate();
+            btp_flash('Welcome aboard — create your first server to get started.', 'ok');
+            btp_redirect(btp_url('servers'));
+        });
+
+        $router->get('/forgot', [$pages, 'forgot']);
+        $router->post('/forgot', static function (): never {
+            $email = (string) ($_POST['email'] ?? '');
+            PasswordReset::request($email);
+            // Same response for unknown addresses: no account enumeration.
+            btp_flash('If that address has an account, a reset link is on its way. It expires in 60 minutes.');
+            btp_redirect(btp_url('forgot'));
+        });
+
+        $router->get('/reset', [$pages, 'reset']);
+        $router->post('/reset', static function (): never {
+            $token = (string) ($_POST['token'] ?? '');
+            $user = PasswordReset::consume(
+                $token,
+                (string) ($_POST['password'] ?? ''),
+                (string) ($_POST['password_confirm'] ?? ''),
+            );
+            Session::regenerate();
+            btp_flash('Password updated. You are signed in.', 'ok');
             btp_redirect(btp_url('dashboard'));
         });
 
@@ -99,6 +138,25 @@ final class Kernel
             Audit::log('auth.logout', null, (string) (Auth::user()['email'] ?? ''));
             Auth::logout();
             btp_redirect(btp_url('login'));
+        });
+
+        $router->get('/auth/google/start', static function (): never {
+            btp_redirect(GoogleAuth::startUrl());
+        });
+
+        $router->get('/auth/google/callback', static function (): never {
+            if (isset($_GET['error'])) {
+                btp_flash('Google sign-in was cancelled.', 'err');
+                btp_redirect(btp_url('login'));
+            }
+            GoogleAuth::verifyState((string) ($_GET['state'] ?? ''));
+            $settings = GoogleAuth::settings();
+            $profile = GoogleAuth::profileFromCode((string) ($_GET['code'] ?? ''));
+            GoogleAuth::assertDomainAllowed($profile['email'], $settings['domains']);
+            $user = Auth::signInWithGoogle($profile);
+            Session::regenerate();
+            btp_flash('Signed in as ' . $user['email'] . '.', 'ok');
+            btp_redirect(btp_url('dashboard'));
         });
 
         $router->post('/setup', static function (): never {
@@ -153,6 +211,8 @@ final class Kernel
         $router->patch('/api/settings', [$admin, 'updateSettings']);
         $router->get('/api/activity', [$admin, 'activity']);
         $router->post('/api/account/password', [$admin, 'changePassword']);
+        $router->patch('/api/settings/auth', [$admin, 'updateAuth']);
+        $router->post('/api/settings/mail-test', [$admin, 'testMail']);
 
         /* -------------------------------------------------------- dispatch */
         $match = $router->match($method, $path);

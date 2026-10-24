@@ -24,7 +24,12 @@ require __DIR__ . '/partials/head.php';
         <tr data-user-row data-user-id="<?= (int) $row['id'] ?>">
           <td>
             <div style="font-weight:700"><?= btp_e($row['name'] ?: $row['email']) ?><?= (int) $row['id'] === $me ? ' <span class="faint small">(you)</span>' : '' ?></div>
-            <div class="faint small"><?= btp_e($row['email']) ?></div>
+            <div class="faint small">
+              <?= btp_e($row['email']) ?>
+              <?php if (!empty($row['google_id'])): ?>
+                <span class="badge" style="margin-left:6px;padding:0 6px;font-size:10px">Google</span>
+              <?php endif; ?>
+            </div>
           </td>
           <td>
             <span class="badge <?= $row['role'] === 'admin' ? 'accent' : '' ?>"><?= btp_e($row['role']) ?></span>

@@ -39,6 +39,29 @@ function btp_url(string $path = ''): string
 }
 
 /**
+ * Absolute URL including scheme and host, used in emails and OAuth callbacks.
+ * Honours a reverse proxy via X-Forwarded-Proto only when explicitly trusted.
+ */
+function btp_absolute_url(string $path = ''): string
+{
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+    if (btp_env('BTP_TRUST_PROXY') === '1' && ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        $https = true;
+    }
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    return ($https ? 'https://' : 'http://') . $host . btp_url($path);
+}
+
+/**
+ * Send a one-shot flash message to the next page load.
+ */
+function btp_flash(string $message, string $type = 'ok'): void
+{
+    \Btp\Support\Session::flash(['type' => $type, 'message' => $message]);
+}
+
+/**
  * Human readable byte size.
  */
 function btp_bytes(int|float|null $bytes, int $precision = 1): string

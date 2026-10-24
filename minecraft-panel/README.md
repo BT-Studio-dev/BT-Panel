@@ -21,6 +21,7 @@ browser — it needs no PHP).
 | 🧾 **Audit log** | Every start, stop, install, file write, backup and user change with user, IP and timestamp. |
 | 🌗 **UI** | Dark/light theme, responsive, zero external assets — no CDN, no fonts to fetch, works offline. |
 | 🔐 **Hardening** | CSRF tokens, origin checks, HttpOnly sessions, path-traversal guards, no secrets in the browser. |
+| 🪪 **Accounts** | Email sign-in, self-registration (toggleable), “Continue with Google” (OAuth), and password reset by email with single-use expiring links. |
 
 ## Requirements
 
@@ -29,6 +30,20 @@ browser — it needs no PHP).
 * `screen` or `tmux` (falls back to `setsid`)
 * `tar` for backups
 * Java 17+ (21+ for Minecraft 1.20.5+)
+
+## Accounts: login, registration, Google, reset
+
+| Flow | Route | Notes |
+|---|---|---|
+| Sign in | `/login` | Email + password, optional “keep me signed in” |
+| Register | `/register` | Members only; can be switched off in Settings |
+| Forgot password | `/forgot` → `/reset?token=…` | 60-minute single-use links, sent by SMTP / `mail()` / log file |
+| Continue with Google | `/auth/google/start` | Links by verified email or creates a member account |
+
+Configure both in **Settings → Sign-in & email** (Google OAuth client ID/secret,
+allowed email domains, SMTP credentials, registration toggle, test email).
+Full walkthrough, including the Google Cloud Console steps:
+[docs/AUTH-SETUP.md](docs/AUTH-SETUP.md).
 
 ## Quick start
 
@@ -92,6 +107,8 @@ sudo -u www php bin/btp start survival-smp
 sudo -u www php bin/btp backup --all
 sudo -u www php bin/btp user:create admin@example.com --name "Ada" --role admin
 sudo -u www php bin/btp user:passwd admin@example.com
+sudo -u www php bin/btp user:reset-link admin@example.com   # print a one-time reset URL
+sudo -u www php bin/btp mail:test you@example.com           # verify SMTP
 ```
 
 ## HTTP API
@@ -122,6 +139,8 @@ All endpoints return JSON, require an authenticated session and (for writes) the
 | GET/PATCH | `/api/settings` | Admin: panel settings + runtime info |
 | GET | `/api/activity` | Admin: audit log |
 | POST | `/api/account/password` | Change your own password |
+| PATCH | `/api/settings/auth` | Admin: Google OAuth + mail credentials |
+| POST | `/api/settings/mail-test` | Admin: send a test email |
 
 ## Tests
 
@@ -129,10 +148,12 @@ The smoke suite creates a throwaway SQLite database and needs no Java, network
 or web server:
 
 ```bash
-php tests/run-smoke.php        # 86 checks: db, auth, provisioning, paths, views
-php tests/run-http.php get /login          # one front-controller request
-php tests/run-http.php get /api/health
-php tests/run-http.php post /api/servers   # expect a 419 CSRF rejection
+php tests/run-smoke.php        # 145 checks: db, auth, registration, reset, Google
+php tests/run-http.php GET /login               # one front-controller request
+php tests/run-http.php GET /api/health
+php tests/run-http.php POST /api/servers        # expect a 419 CSRF rejection
+php tests/run-http.php GET /register --guest
+php tests/run-http.php POST /forgot --csrf --post='{"email":"a@b.co"}'
 ```
 
 `tests/fakes/ProcessRunner.php` is a test double used when the host forbids
@@ -150,6 +171,10 @@ real implementation.
 * No plugin/mod browser: upload jars via the file manager.
 * The panel intentionally manages **local** servers; it is not a Pterodactyl
   replacement and does not talk to Wings.
+* Google sign-in is create-or-link by verified email (no Google Workspace group
+  sync); use the domain allowlist to limit it to your organisation.
+* Password reset needs a working mail transport. Without one, admins can set
+  passwords or print a reset link from `bin/btp`.
 
 ## License
 

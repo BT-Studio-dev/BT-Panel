@@ -8,6 +8,10 @@ declare(strict_types=1);
  *   php tests/run-http.php GET /login
  *   php tests/run-http.php GET /api/servers --guest          → 401 JSON
  *   php tests/run-http.php POST /api/servers --json '{"name":"Test","accept_eula":true}'
+ *   php tests/run-http.php POST /register --post '{"email":"a@b.co","password":"long-password"}'
+ *
+ * `--json` feeds the raw request body (API handlers), `--post` fills $_POST
+ * (HTML form handlers).
  *
  * Authenticated requests get a seeded session; `--csrf` adds the token so
  * write endpoints can be exercised. Output is the raw response body (CLI
@@ -38,6 +42,7 @@ $method = strtoupper($positional[0] ?? 'GET');
 $path = $positional[1] ?? '/';
 $guest = isset($flags['guest']);
 $jsonBody = is_string($flags['json'] ?? null) ? (string) $flags['json'] : null;
+$postBody = is_string($flags['post'] ?? null) ? (string) $flags['post'] : null;
 
 $tmp = sys_get_temp_dir() . '/btp-http-' . bin2hex(random_bytes(4));
 foreach (['servers', 'backups', 'logs'] as $dir) {
@@ -97,7 +102,19 @@ $_SERVER = array_merge($_SERVER, [
 ]);
 $_COOKIE = $guest ? [] : ['btp_mc_session' => $token];
 $_GET = [];
+$queryString = (string) parse_url($path, PHP_URL_QUERY);
+if ($queryString !== '') {
+    parse_str($queryString, $_GET);
+}
 $_POST = [];
+if ($postBody !== null) {
+    $decodedPost = json_decode($postBody, true);
+    if (!is_array($decodedPost)) {
+        fwrite(STDERR, "--post must be a JSON object\n");
+        exit(2);
+    }
+    $_POST = $decodedPost;
+}
 if (isset($flags['csrf'])) {
     $_SERVER['HTTP_X_CSRF_TOKEN'] = $csrf;
 }

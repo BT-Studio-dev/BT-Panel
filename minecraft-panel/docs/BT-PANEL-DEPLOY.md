@@ -105,6 +105,25 @@ over loopback.
 > Wings untouched; it keeps its own ports and allocations. The two systems do not
 > manage each other's servers.
 
+## 3b. Accounts and email
+
+Sign-in, registration and Google OAuth are configured in the panel
+(**Settings → Sign-in & email**), not in files. For Google, the authorized
+redirect URI must be exactly:
+
+```
+https://<your panel domain>/auth/google/callback
+```
+
+For password reset mail either install a local MTA (`apt install sendmail` or use
+BT Panel's mail server) or — better — add SMTP credentials for Gmail/SES/Mailgun
+and press **Send test email**. Step-by-step instructions, including Google Cloud
+Console setup and Gmail app passwords: [AUTH-SETUP.md](AUTH-SETUP.md).
+
+If the site is behind a reverse proxy/CDN, set `BTP_TRUST_PROXY=1` in the
+PHP-FPM environment so `X-Forwarded-Proto` is honoured when building reset links
+and OAuth redirect URIs.
+
 ## 4. HTTPS
 
 Enable **SSL → Let's Encrypt** in BT Panel for the site, then set
@@ -167,6 +186,9 @@ BT Panel site backup.
   file extensions are rejected.
 * `config.php`, `storage/`, `app/` are outside the document root.
 * Audit log records every mutating action with user, IP and timestamp.
+* Self-registration is switchable; self-service and Google accounts are always
+  members. Password reset tokens are stored hashed, single-use and expire in
+  60 minutes. Rate limiting covers login, registration, Google and reset.
 
 Run the panel behind HTTPS, keep PHP and Java patched, and give only trusted
 people an administrator account.

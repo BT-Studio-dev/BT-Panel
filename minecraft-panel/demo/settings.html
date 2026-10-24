@@ -82,7 +82,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>        </button>
               </div>
     </header>
-    <div class="content"><div class="card" style="border-color:rgba(208,0,0,.4);background:linear-gradient(120deg,rgba(208,0,0,.16),rgba(255,255,255,.03))"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 18px"><span class="badge accent">Static design preview</span><span class="small muted" style="flex:1;min-width:200px">Buttons are inert here. Run the PHP panel to manage real servers — see README and docs/BT-PANEL-DEPLOY.md.</span><a class="ghost-btn sm" href="servers.html">Servers</a><a class="ghost-btn sm" href="server.html">Server detail</a></div></div>
+    <div class="content"><div class="card" style="border-color:rgba(208,0,0,.4);background:linear-gradient(120deg,rgba(208,0,0,.16),rgba(255,255,255,.03))"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 18px"><span class="badge accent">Static design preview</span><span class="small muted" style="flex:1;min-width:200px">Buttons are inert here. Run the PHP panel to manage real servers — see README and docs/BT-PANEL-DEPLOY.md.</span><a class="ghost-btn sm" href="login.html">Login</a><a class="ghost-btn sm" href="register.html">Register</a><a class="ghost-btn sm" href="forgot.html">Reset</a><a class="ghost-btn sm" href="server.html">Server detail</a></div></div>
 
 <div class="grid cols-2">
   <section class="card">
@@ -98,6 +98,12 @@
         <div class="field">
           <label for="default-memory">Default heap for new servers (MB)</label>
           <input id="default-memory" name="default_memory_mb" type="number" min="512" max="65536" step="256" value="4096">
+        </div>
+        <div class="check" style="margin-bottom:16px">
+          <input type="checkbox" id="allow-registration" name="allow_registration" value="1" checked>
+          <label for="allow-registration">
+            Allow self-registration. New accounts are <strong>members</strong>; only admins can create other admins.
+          </label>
         </div>
         <button class="btn" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> Save settings</button>
       </form>
@@ -123,6 +129,103 @@
     </div>
   </section>
 </div>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Sign-in &amp; email</h2>
+    <div class="spacer"></div>
+    <span class="badge ok">
+      Google enabled    </span>
+  </div>
+  <div class="card-body">
+    <form data-auth-form>
+      <div class="form-error" data-form-error role="alert"></div>
+
+      <h3 style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 12px">Google / Gmail sign-in</h3>
+      <div class="field">
+        <label for="google-client-id">Client ID</label>
+        <input id="google-client-id" name="google_client_id" type="text" value="1234567890-demo.apps.googleusercontent.com" placeholder="1234567890-abc123.apps.googleusercontent.com" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="google-client-secret">Client secret</label>
+        <input id="google-client-secret" name="google_client_secret" type="password" value="" placeholder="Stored — leave empty to keep it" autocomplete="new-password">
+        <span class="hint">Stored in the panel database, never sent to the browser.</span>
+      </div>
+      <div class="field">
+        <label for="google-redirect">Authorized redirect URI</label>
+        <input id="google-redirect" name="google_redirect_uri" type="text" value="https://mc.example.com/auth/google/callback" placeholder="https://mc.example.com/auth/google/callback">
+        <span class="hint">Add exactly this URI to the OAuth client in Google Cloud Console (APIs &amp; Services → Credentials).</span>
+      </div>
+      <div class="field">
+        <label for="google-domains">Allowed email domains <span class="faint">(optional)</span></label>
+        <input id="google-domains" name="google_allowed_domains" type="text" value="gmail.com, example.com" placeholder="gmail.com, yourcompany.com">
+        <span class="hint">Comma separated. Empty accepts any Google account.</span>
+      </div>
+      <div class="check" style="margin-bottom:16px">
+        <input type="checkbox" id="google-enabled" name="google_enabled" value="1" checked>
+        <label for="google-enabled">Show “Continue with Google” on the sign-in and registration pages.</label>
+      </div>
+
+      <h3 style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:22px 0 12px">Password reset email</h3>
+      <div class="field-row">
+        <div class="field">
+          <label for="mail-transport">Transport</label>
+          <select id="mail-transport" name="mail_transport">
+                          <option value="mail" >PHP mail() / sendmail</option>
+                          <option value="smtp" selected>SMTP</option>
+                          <option value="log" >Log to file (testing)</option>
+                      </select>
+        </div>
+        <div class="field">
+          <label for="mail-from">Sender address</label>
+          <input id="mail-from" name="mail_from" type="email" value="panel@example.com" placeholder="no-reply@example.com">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="mail-host">SMTP host</label>
+          <input id="mail-host" name="mail_host" type="text" value="smtp.gmail.com" placeholder="smtp.gmail.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="mail-port">Port</label>
+          <input id="mail-port" name="mail_port" type="number" min="1" max="65535" value="587">
+        </div>
+        <div class="field">
+          <label for="mail-encryption">Encryption</label>
+          <select id="mail-encryption" name="mail_encryption">
+                          <option value="tls" selected>STARTTLS (587)</option>
+                          <option value="ssl" >SSL (465)</option>
+                          <option value="none" >None</option>
+                      </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="mail-username">SMTP username</label>
+          <input id="mail-username" name="mail_username" type="text" value="panel@example.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="mail-password">SMTP password</label>
+          <input id="mail-password" name="mail_password" type="password" value="" placeholder="Stored — leave empty to keep it" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="field">
+        <label for="mail-from-name">Sender name</label>
+        <input id="mail-from-name" name="mail_from_name" type="text" value="BT Minecraft Panel" maxlength="120">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg> Save sign-in settings</button>
+        <button class="ghost-btn" type="button" data-mail-test><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg> Send test email</button>
+        <a class="ghost-btn" href="forgot.html" target="_blank" rel="noopener">Preview reset page</a>
+      </div>
+      <p class="faint small" style="margin-top:12px">
+        Gmail SMTP needs an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" style="color:var(--info)">app password</a>
+        with 2-step verification on. Google OAuth redirect URIs must use HTTPS and match exactly.
+      </p>
+    </form>
+  </div>
+</section>
 
 <section class="card">
   <div class="card-head"><h2>Runtime</h2><div class="spacer"></div><span class="badge accent">screen</span></div>

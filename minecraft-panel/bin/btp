@@ -159,6 +159,40 @@ switch ($cmd) {
         out('Password updated for ' . $email . '; sessions revoked.');
         break;
 
+    case 'mail:test':
+        $to = $args[0] ?? (string) (Db::one('SELECT email FROM users WHERE role = :r ORDER BY id LIMIT 1', ['r' => 'admin'])['email'] ?? '');
+        if ($to === '') {
+            fail('usage: btp mail:test <email>');
+        }
+        $ok = \Btp\Support\Mailer::send($to, 'BT Minecraft Panel test', '<p>Test message from the panel CLI.</p>', 'Test message from the panel CLI.');
+        if (!$ok) {
+            fail('Mail failed: ' . (\Btp\Support\Mailer::lastError() ?? 'unknown'));
+        }
+        out('Sent a test message to ' . $to . ' via ' . \Btp\Support\Mailer::config()['transport']);
+        break;
+
+    case 'user:reset-link':
+        $email = mb_strtolower($args[0] ?? '');
+        if ($email === '') {
+            fail('usage: btp user:reset-link <email>');
+        }
+        $user = Db::one('SELECT id FROM users WHERE email = :email', ['email' => $email]);
+        if ($user === null) {
+            fail('No such user: ' . $email);
+        }
+        Db::setSetting('mail_transport', 'log');
+        \Btp\Support\PasswordReset::request($email);
+        $log = (string) @file_get_contents((string) btp_config()['log_dir'] . '/mail.log');
+        if (preg_match('#(https?://\S*reset\?token=[a-f0-9]{64})#', $log, $match) !== 1) {
+            fail('Could not generate a reset link. Check storage/logs/mail.log');
+        }
+        out('Single-use reset link (valid 60 minutes):');
+        out('  ' . $match[1]);
+        out('');
+        out('Mail transport is set to "log" for this command; configure SMTP in the panel settings');
+        out('if you want users to receive reset emails themselves.');
+        break;
+
     case 'user:list':
         foreach (Db::all('SELECT id, email, name, role, last_login_at FROM users ORDER BY id') as $row) {
             out(sprintf('%-4d %-32s %-10s %s', (int) $row['id'], (string) $row['email'], (string) $row['role'], btp_ago($row['last_login_at'])));
@@ -250,6 +284,8 @@ switch ($cmd) {
           php bin/btp user:list                    List panel users
           php bin/btp user:create <email> [--name "Name"] [--role admin] [--password pass]
           php bin/btp user:passwd <email> [--password pass]
+          php bin/btp user:reset-link <email>      Print a one-time reset URL (no mail needed)
+          php bin/btp mail:test <email>            Send a test email through the configured transport
           php bin/btp version
 
         Servers must be stopped for backups and installs (the panel refuses otherwise).

@@ -53,6 +53,30 @@ final class Session
         unset($_SESSION[$key]);
     }
 
+    /**
+     * Store a one-shot message for the next page load.
+     *
+     * @param array{type:string,message:string}|null $flash
+     */
+    public static function flash(array $flash): void
+    {
+        self::put('flash', $flash);
+    }
+
+    /**
+     * Read and clear the one-shot message.
+     *
+     * @return array{type:string,message:string}|null
+     */
+    public static function pullFlash(): ?array
+    {
+        $flash = self::get('flash');
+        if ($flash !== null) {
+            self::forget('flash');
+        }
+        return is_array($flash) ? $flash : null;
+    }
+
     public static function regenerate(): void
     {
         self::start();

@@ -28,6 +28,124 @@ final class Http
         return $decoded;
     }
 
+    /**
+     * POST an application/x-www-form-urlencoded body and decode the JSON reply.
+     * Used for the Google OAuth token exchange.
+     *
+     * @param array<string,string> $fields
+     * @return array<string,mixed>
+     */
+    public static function postForm(string $url, array $fields, int $timeout = 20): array
+    {
+        self::assertHttps($url);
+        $payload = http_build_query($fields, '', '&', PHP_QUERY_RFC3986);
+        $headers = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Accept: application/json',
+            'User-Agent: BT-Minecraft-Panel/1.0',
+        ];
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
+            ]);
+            $body = curl_exec($ch);
+            $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+            if ($body === false) {
+                throw new HttpError(502, 'Upstream request failed' . ($error !== '' ? ': ' . $error : ''));
+            }
+        } else {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => implode("\r\n", $headers),
+                    'content' => $payload,
+                    'timeout' => $timeout,
+                    'ignore_errors' => true,
+                ],
+                'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+            ]);
+            $body = @file_get_contents($url, false, $context);
+            $status = 0;
+            foreach ($http_response_header ?? [] as $line) {
+                if (preg_match('#^HTTP/\S+\s+(\d{3})#', $line, $m)) {
+                    $status = (int) $m[1];
+                }
+            }
+            if ($body === false) {
+                throw new HttpError(502, 'Upstream request failed.');
+            }
+        }
+
+        $decoded = json_decode((string) $body, true);
+        if (!is_array($decoded)) {
+            throw new HttpError(502, 'Upstream returned an unexpected response.');
+        }
+        if ($status >= 400) {
+            $message = (string) ($decoded['error_description'] ?? $decoded['error'] ?? ('HTTP ' . $status));
+            throw new HttpError(502, 'Upstream rejected the request: ' . mb_substr($message, 0, 200));
+        }
+        return $decoded;
+    }
+
+    /**
+     * GET a JSON document with a bearer token (Google userinfo).
+     *
+     * @return array<string,mixed>
+     */
+    public static function getJsonWithToken(string $url, string $token, int $timeout = 20): array
+    {
+        self::assertHttps($url);
+        $headers = ['Accept: application/json', 'Authorization: Bearer ' . $token];
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_USERAGENT => 'BT-Minecraft-Panel/1.0',
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+            ]);
+            $body = curl_exec($ch);
+            $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            curl_close($ch);
+            if ($body === false || $status >= 400) {
+                throw new HttpError(502, 'Unable to read your Google profile (HTTP ' . $status . ').');
+            }
+        } else {
+            $context = stream_context_create([
+                'http' => [
+                    'header' => implode("\r\n", $headers),
+                    'timeout' => $timeout,
+                    'ignore_errors' => true,
+                ],
+                'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+            ]);
+            $body = @file_get_contents($url, false, $context);
+            if ($body === false) {
+                throw new HttpError(502, 'Unable to read your Google profile.');
+            }
+        }
+
+        $decoded = json_decode((string) $body, true);
+        if (!is_array($decoded)) {
+            throw new HttpError(502, 'Google returned an unexpected response.');
+        }
+        return $decoded;
+    }
+
     public static function get(string $url, int $timeout = 20, int $maxBytes = self::MAX_JSON_BYTES): string
     {
         self::assertHttps($url);

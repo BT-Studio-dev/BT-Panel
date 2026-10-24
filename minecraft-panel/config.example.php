@@ -42,4 +42,32 @@ return [
 
     // UI accent color, matching the BT Panel palette.
     'accent' => '#d00000',
+
+    /**
+     * Optional Google (Gmail) sign-in. These values act as defaults only: once an
+     * administrator saves credentials under Settings → Sign-in & email, the
+     * database values win, so you can leave this block empty.
+     *
+     * Authorized redirect URI: {your panel origin}/auth/google/callback
+     */
+    'google' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'allowed_domains' => '', // e.g. 'gmail.com,yourcompany.com'
+    ],
+
+    /**
+     * Optional mail defaults for password reset emails. Also editable in
+     * Settings. transport: smtp | mail | log.
+     */
+    'mail' => [
+        'transport' => 'mail',
+        'host' => '',
+        'port' => 587,
+        'username' => '',
+        'password' => '',
+        'encryption' => 'tls', // tls | ssl | none
+        'from' => '',
+        'from_name' => '',
+    ],
 ];

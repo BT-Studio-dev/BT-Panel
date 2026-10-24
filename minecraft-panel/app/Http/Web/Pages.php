@@ -32,7 +32,7 @@ final class Pages
             'csrf' => \Btp\Http\Csrf::token(),
             'active' => '',
             'title' => '',
-            'flash' => \Btp\Support\Session::get('flash'),
+            'flash' => \Btp\Support\Session::pullFlash(),
         ], $data), $status);
     }
 
@@ -46,7 +46,51 @@ final class Pages
         if (Auth::user() !== null) {
             btp_redirect(btp_url('dashboard'));
         }
-        $this->render('login', ['title' => 'Sign in', 'active' => 'login']);
+        $this->render('login', [
+            'title' => 'Sign in',
+            'active' => 'login',
+            'googleEnabled' => \Btp\Support\GoogleAuth::enabled(),
+            'registrationOpen' => Auth::registrationOpen(),
+        ]);
+    }
+
+    public function register(): never
+    {
+        if (Auth::user() !== null) {
+            btp_redirect(btp_url('dashboard'));
+        }
+        $this->render('register', [
+            'title' => 'Create account',
+            'active' => 'register',
+            'googleEnabled' => \Btp\Support\GoogleAuth::enabled(),
+            'registrationOpen' => Auth::registrationOpen(),
+        ]);
+    }
+
+    public function forgot(): never
+    {
+        if (Auth::user() !== null) {
+            btp_redirect(btp_url('dashboard'));
+        }
+        $mail = \Btp\Support\Mailer::config();
+        $this->render('forgot', [
+            'title' => 'Reset password',
+            'active' => 'forgot',
+            'mailConfigured' => $mail['transport'] !== 'log',
+        ]);
+    }
+
+    public function reset(): never
+    {
+        $token = (string) ($_GET['token'] ?? '');
+        $row = ($token !== '' && !Auth::user()) ? \Btp\Support\PasswordReset::verify($token) : null;
+        $this->render('reset', [
+            'title' => 'New password',
+            'active' => 'reset',
+            'valid' => $row !== null,
+            'token' => $token,
+            'email' => (string) ($row['email'] ?? ''),
+        ]);
     }
 
     public function dashboard(): never
@@ -126,7 +170,7 @@ final class Pages
     {
         $user = Auth::requireAdmin();
         $rows = Db::all(
-            'SELECT u.id, u.email, u.name, u.role, u.created_at, u.last_login_at,
+            'SELECT u.id, u.email, u.name, u.role, u.created_at, u.last_login_at, u.google_id, u.avatar_url,
                     (SELECT COUNT(*) FROM servers s WHERE s.owner_id = u.id) AS server_count
              FROM users u ORDER BY u.id',
         );
@@ -143,12 +187,31 @@ final class Pages
         Auth::requireAdmin();
         $config = btp_config();
         $manager = new ServerManager();
+        $google = \Btp\Support\GoogleAuth::settings();
+        $mail = \Btp\Support\Mailer::config();
         $this->render('settings', [
             'title' => 'Settings',
             'active' => 'settings',
             'settings' => [
                 'panel_name' => Db::setting('panel_name', (string) $config['panel_name']),
                 'default_memory_mb' => (int) Db::setting('default_memory_mb', (string) $config['default_memory_mb']),
+                'allow_registration' => Auth::registrationOpen(),
+            ],
+            'auth' => [
+                'google_enabled' => $google['enabled'],
+                'google_configured' => $google['configured'],
+                'google_client_id' => $google['client_id'],
+                'google_redirect_uri' => $google['redirect_uri'],
+                'google_allowed_domains' => implode(', ', $google['domains']),
+                'google_has_secret' => $google['client_secret'] !== '',
+                'mail_transport' => $mail['transport'],
+                'mail_host' => $mail['host'],
+                'mail_port' => $mail['port'],
+                'mail_username' => $mail['username'],
+                'mail_encryption' => $mail['encryption'],
+                'mail_from' => $mail['from'],
+                'mail_from_name' => $mail['from_name'],
+                'mail_has_password' => $mail['password'] !== '',
             ],
             'environment' => [
                 'php' => PHP_VERSION,

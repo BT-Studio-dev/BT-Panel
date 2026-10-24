@@ -106,7 +106,7 @@ final class Auth
     /**
      * @return array<string,mixed> the signed-in user
      */
-    public static function attempt(string $email, string $password): array
+    public static function attempt(string $email, string $password, bool $remember = true): array
     {
         $email = mb_strtolower(trim($email));
         if ($email === '' || $password === '') {
@@ -138,12 +138,12 @@ final class Auth
             'now' => gmdate('c'),
             'id' => $user['id'],
         ]);
-        self::startSession((int) $user['id']);
+        self::startSession((int) $user['id'], $remember);
         Audit::log('auth.login', null, $email, (int) $user['id']);
         return $user;
     }
 
-    public static function startSession(int $userId): void
+    public static function startSession(int $userId, bool $remember = true): void
     {
         $token = bin2hex(random_bytes(32));
         $expires = gmdate('c', time() + self::TOKEN_TTL_DAYS * 86400);
@@ -155,13 +155,17 @@ final class Auth
             'ip' => btp_client_ip(),
             'user_agent' => mb_substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
         ]);
-        setcookie(self::COOKIE, $token, [
-            'expires' => time() + self::TOKEN_TTL_DAYS * 86400,
-            'path' => '/',
-            'httponly' => true,
-            'secure' => (bool) btp_config()['secure_cookies'],
-            'samesite' => 'Lax',
-        ]);
+        if (!headers_sent()) {
+            setcookie(self::COOKIE, $token, [
+                // Without "remember", the cookie dies with the browser session but
+                // the server-side token still expires on schedule.
+                'expires' => $remember ? time() + self::TOKEN_TTL_DAYS * 86400 : 0,
+                'path' => '/',
+                'httponly' => true,
+                'secure' => (bool) btp_config()['secure_cookies'],
+                'samesite' => 'Lax',
+            ]);
+        }
         self::$cachedUser = null;
         self::$resolved = false;
     }
@@ -172,13 +176,15 @@ final class Auth
         if (is_string($token) && $token !== '') {
             Db::run('DELETE FROM sessions WHERE token_hash = :hash', ['hash' => hash('sha256', $token)]);
         }
-        setcookie(self::COOKIE, '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'httponly' => true,
-            'secure' => (bool) btp_config()['secure_cookies'],
-            'samesite' => 'Lax',
-        ]);
+        if (!headers_sent()) {
+            setcookie(self::COOKIE, '', [
+                'expires' => time() - 3600,
+                'path' => '/',
+                'httponly' => true,
+                'secure' => (bool) btp_config()['secure_cookies'],
+                'samesite' => 'Lax',
+            ]);
+        }
         self::$cachedUser = null;
         self::$resolved = false;
     }
@@ -228,6 +234,139 @@ final class Auth
              WHERE s.id = :sid AND (s.owner_id = :uid OR su.user_id IS NOT NULL)',
             ['uid' => (int) $user['id'], 'sid' => $serverId],
         ) !== null;
+    }
+
+
+    /* ------------------------------------------------------------------ */
+    /* Self-service registration                                           */
+    /* ------------------------------------------------------------------ */
+
+    public static function registrationOpen(): bool
+    {
+        return Db::setting('allow_registration', '1') === '1';
+    }
+
+    /**
+     * Create a self-service account. Always gets the member role: only an
+     * administrator can create another administrator.
+     *
+     * @param array<string,mixed> $input
+     * @return array<string,mixed>
+     */
+    public static function register(array $input): array
+    {
+        if (!self::registrationOpen()) {
+            throw new HttpError(403, 'Self-registration is disabled. Ask an administrator for an account.');
+        }
+        RateLimiter::hit('register', '', 5, 900);
+
+        $email = btp_str($input, 'email', '', 190) ?? '';
+        $password = (string) ($input['password'] ?? '');
+        $confirmation = (string) ($input['password_confirm'] ?? '');
+        $name = btp_str($input, 'name', '', 120) ?? '';
+
+        if ($password !== $confirmation) {
+            throw new HttpError(422, 'The two passwords do not match.');
+        }
+        if (Db::one('SELECT id FROM users WHERE email = :email', ['email' => mb_strtolower(trim($email))]) !== null) {
+            throw new HttpError(409, 'An account with that email already exists. Sign in instead.');
+        }
+
+        $user = self::createUser($email, $password, $name, 'member');
+        Audit::log('auth.register', null, (string) $user['email'], (int) $user['id']);
+        return $user;
+    }
+
+    /**
+     * Authenticate a Google profile: link an existing account by email, or
+     * create one when registration is open.
+     *
+     * @param array{google_id:string,email:string,name:string,avatar:string,email_verified:bool} $profile
+     * @return array<string,mixed>
+     */
+    public static function signInWithGoogle(array $profile): array
+    {
+        $email = mb_strtolower(trim($profile['email']));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new HttpError(422, 'Google did not return a usable email address.');
+        }
+        if (!$profile['email_verified']) {
+            throw new HttpError(403, 'Your Google account email is not verified.');
+        }
+
+        $byGoogle = Db::one('SELECT * FROM users WHERE google_id = :gid', ['gid' => $profile['google_id']]);
+        if ($byGoogle !== null) {
+            self::touchGoogle($byGoogle, $profile);
+            self::startSession((int) $byGoogle['id']);
+            Audit::log('auth.google', null, $email, (int) $byGoogle['id']);
+            return $byGoogle;
+        }
+
+        $byEmail = Db::one('SELECT * FROM users WHERE email = :email', ['email' => $email]);
+        if ($byEmail !== null) {
+            // A verified Google address is proof of ownership, so link it.
+            Db::run(
+                'UPDATE users SET google_id = :gid, avatar_url = :avatar WHERE id = :id',
+                ['gid' => $profile['google_id'], 'avatar' => $profile['avatar'], 'id' => (int) $byEmail['id']],
+            );
+            self::startSession((int) $byEmail['id']);
+            Audit::log('auth.google.link', null, $email, (int) $byEmail['id']);
+            return Db::one('SELECT * FROM users WHERE id = :id', ['id' => (int) $byEmail['id']]) ?? $byEmail;
+        }
+
+        if (!self::registrationOpen()) {
+            throw new HttpError(403, 'No panel account matches that Google address. Ask an administrator.');
+        }
+        RateLimiter::hit('google-signup', $email, 5, 900, false);
+
+        // Google-only accounts get an unusable random password so password_hash
+        // stays NOT NULL and password_verify() can never succeed.
+        $id = Db::insert('users', [
+            'email' => $email,
+            'name' => mb_substr($profile['name'] !== '' ? $profile['name'] : $email, 0, 120),
+            'password_hash' => password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
+            'role' => 'member',
+            'created_at' => gmdate('c'),
+            'google_id' => $profile['google_id'],
+            'avatar_url' => $profile['avatar'],
+        ]);
+        self::startSession($id);
+        Audit::log('auth.google.register', null, $email, $id);
+
+        return Db::one('SELECT * FROM users WHERE id = :id', ['id' => $id]) ?? [];
+    }
+
+    /**
+     * @param array<string,mixed> $user
+     * @param array{name:string,avatar:string} $profile
+     */
+    private static function touchGoogle(array $user, array $profile): void
+    {
+        if ($profile['avatar'] !== '' && ($user['avatar_url'] ?? '') !== $profile['avatar']) {
+            Db::run('UPDATE users SET avatar_url = :avatar WHERE id = :id', [
+                'avatar' => $profile['avatar'],
+                'id' => (int) $user['id'],
+            ]);
+        }
+    }
+
+    /**
+     * Set a password without knowing the old one (administrator or reset flow)
+     * and revoke every other session.
+     */
+    public static function setPassword(int $userId, string $password, ?string $keepToken = null): void
+    {
+        if (mb_strlen($password) < 10) {
+            throw new HttpError(422, 'Password must be at least 10 characters.');
+        }
+        Db::run('UPDATE users SET password_hash = :hash WHERE id = :id', [
+            'hash' => password_hash($password, PASSWORD_DEFAULT),
+            'id' => $userId,
+        ]);
+        Db::run('DELETE FROM sessions WHERE user_id = :id AND token_hash != :keep', [
+            'id' => $userId,
+            'keep' => hash('sha256', (string) ($keepToken ?? '')),
+        ]);
     }
 
     public static function countAdmins(): int
