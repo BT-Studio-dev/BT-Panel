@@ -13,7 +13,6 @@ import {
   Play,
   Plus,
   RotateCw,
-  Search,
   Send,
   Server as ServerIcon,
   Skull,
@@ -49,7 +48,7 @@ export function ServersView() {
 
 // ── List ────────────────────────────────────────────────────────────────────
 function ServerList() {
-  const { servers, serverQuery: query, setServerQuery: setQuery } = usePanel();
+  const { servers, serverQuery: query } = usePanel();
   const [filter, setFilter] = useState<Filter>("all");
   const [creating, setCreating] = useState(false);
   const now = useNow(2000);
@@ -66,30 +65,17 @@ function ServerList() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-end">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative md:hidden">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
-            <input
-              type="search"
-              className="panel-input w-56 pl-9"
-              placeholder="Search servers…"
-              aria-label="Search servers"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-1.5">
-            {(["all", "running", "offline"] as Filter[]).map((f) => (
-              <button key={f} type="button" className={cn("pill-tab capitalize", filter === f && "active")} onClick={() => setFilter(f)}>
-                {f}
-              </button>
-            ))}
-          </div>
-          <button type="button" className="btn-accent" onClick={() => setCreating(true)}>
-            <Plus className="size-4" /> Create Server
-          </button>
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <div className="flex gap-1.5">
+          {(["all", "running", "offline"] as Filter[]).map((f) => (
+            <button key={f} type="button" className={cn("pill-tab capitalize", filter === f && "active")} onClick={() => setFilter(f)}>
+              {f}
+            </button>
+          ))}
         </div>
+        <button type="button" className="btn-accent" onClick={() => setCreating(true)}>
+          <Plus className="size-4" /> Create Server
+        </button>
       </div>
 
       {list.length === 0 ? (

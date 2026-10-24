@@ -299,9 +299,16 @@ function Header() {
         >
           <Menu className="size-4" />
         </button>
-        <h1 className="truncate text-[18px] font-extrabold tracking-tight">{TITLES[view]}</h1>
+        <h1
+          className={cn(
+            "truncate text-[18px] font-extrabold tracking-tight",
+            view === "servers" && !openServerId && "hidden min-[420px]:block",
+          )}
+        >
+          {TITLES[view]}
+        </h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {music.playing ? (
           <button
             type="button"
@@ -319,7 +326,7 @@ function Header() {
           </button>
         ) : null}
         {view === "servers" && !openServerId ? (
-          <div className="relative hidden w-52 md:block xl:w-64">
+          <div className="relative min-w-0 flex-1 sm:w-52 sm:flex-none xl:w-64">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
             <input
               type="search"
