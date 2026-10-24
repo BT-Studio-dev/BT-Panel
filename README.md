@@ -38,6 +38,7 @@ A modern control panel interface built with Next.js, TypeScript, Tailwind CSS, a
 
 - [Ubuntu deployment guide](docs/UBUNTU-DEPLOYMENT.md)
 - [Frontend modules and customization](docs/BT-PANEL-MODULES.md)
+- [Standalone PHP web edition](phpweb/README.md)
 - [Environment variable example](.env.example)
 
 ## Server management
