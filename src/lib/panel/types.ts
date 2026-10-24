@@ -10,6 +10,20 @@ export type PanelView =
   | "updates"
   | "account";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "bars" | "access";
+export type AdminSection =
+  | "overview"
+  | "activity"
+  | "settings"
+  | "users"
+  | "locations"
+  | "nodes"
+  | "server"
+  | "databases"
+  | "mounts"
+  | "eggs"
+  | "tags"
+  | "extensions"
+  | "api-keys";
 
 /** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
 export type ThemeMode = "dark" | "light" | "oled";
@@ -121,6 +135,21 @@ export type ServerEventDto = {
   level: "info" | "warn" | "error" | "cmd" | "system";
   message: string;
   createdAt: string;
+};
+
+export type AdminActivityDto = ServerEventDto & {
+  serverId: string;
+  serverName: string;
+};
+
+export type ApiKeyDto = {
+  id: string;
+  name: string;
+  prefix: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  ownerName?: string;
 };
 
 export type BackupStatus = "creating" | "ready";

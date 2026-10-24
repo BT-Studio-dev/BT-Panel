@@ -28,7 +28,7 @@ import { BrandMark, PresenceAvatar } from "./ui";
 import { WallpaperLayer } from "./wallpaper-layer";
 import { HomeView } from "./views/home-view";
 import { ServersView } from "./views/servers-view";
-import { SettingsView } from "./views/settings-view";
+import { AdminView } from "./views/admin-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
 import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
@@ -40,7 +40,7 @@ const NAV: NavItem[] = [
   { id: "servers", label: "Servers", icon: Server, section: "dashboard" },
   { id: "team", label: "Team", icon: Users, section: "dashboard" },
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
-  { id: "settings", label: "Admin Settings", icon: Settings, section: "admin" },
+  { id: "settings", label: "Admin Control Center", icon: Settings, section: "admin" },
   { id: "users", label: "User Management", icon: ShieldCheck, section: "admin" },
   { id: "updates", label: "Updates", icon: RefreshCw, section: "admin" },
   ...PANEL_MODULES.map((module) => ({ id: module.id, label: module.label, icon: module.icon, section: module.section })),
@@ -52,7 +52,7 @@ const TITLES: Record<PanelView, string> = {
   servers: "Servers",
   team: "Team",
   music: "Music",
-  settings: "Admin Settings",
+  settings: "Admin Control Center",
   users: "User Management",
   updates: "System Updates",
   account: "My Account",
@@ -96,7 +96,7 @@ function ShellInner() {
               {view === "servers" ? <ServersView /> : null}
               {view === "team" ? <TeamView /> : null}
               {view === "music" ? <MusicView /> : null}
-              {view === "settings" ? <SettingsView /> : null}
+              {view === "settings" ? <AdminView /> : null}
               {view === "users" ? <UsersView /> : null}
               {view === "updates" ? <UpdatesView /> : null}
               {view === "account" ? <AccountView /> : null}

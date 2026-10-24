@@ -62,6 +62,19 @@ create table if not exists sessions (
   constraint sessions_user_id_users_id_fk foreign key (user_id) references users(id) on delete cascade
 );
 create index if not exists sessions_user_idx on sessions (user_id);
+create table if not exists api_keys (
+  id text primary key,
+  user_id text not null,
+  name text not null,
+  prefix text not null,
+  token_hash text not null unique,
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz,
+  expires_at timestamptz,
+  constraint api_keys_user_id_users_id_fk foreign key (user_id) references users(id) on delete cascade
+);
+create index if not exists api_keys_user_idx on api_keys (user_id);
+create index if not exists api_keys_hash_idx on api_keys (token_hash);
 create table if not exists panel_settings (
   id integer primary key,
   theme_mode text not null default 'dark',

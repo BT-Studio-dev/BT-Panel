@@ -15,6 +15,7 @@ import { applyFavicon, applyTheme, getLocalModeOverride, setLocalModeOverride } 
 import {
   isAdminRole,
   pickTheme,
+  type AdminSection,
   type BootstrapPayload,
   type PanelProfile,
   type PanelSettings,
@@ -59,6 +60,8 @@ type PanelContextValue = {
   setView: (view: PanelView) => void;
   settingsTab: SettingsTab;
   setSettingsTab: (tab: SettingsTab) => void;
+  adminSection: AdminSection;
+  setAdminSection: (section: AdminSection) => void;
   openServerId: string | null;
   openServer: (id: string | null) => void;
   sidebarCollapsed: boolean;
@@ -111,6 +114,7 @@ export function PanelProvider({
   const [userCount, setUserCount] = useState(initial.userCount);
   const [view, setViewState] = useState<PanelView>(initialView);
   const [settingsTab, setSettingsTabState] = useState<SettingsTab>("appearance");
+  const [adminSection, setAdminSectionState] = useState<AdminSection>("overview");
   const [openServerId, setOpenServerId] = useState<string | null>(initialServerId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -188,6 +192,7 @@ export function PanelProvider({
   const setView = useCallback((next: PanelView) => {
     setViewState(next);
     setMobileOpen(false);
+    if (next === "settings") setAdminSectionState("overview");
     if (next !== "servers") setOpenServerId(null);
     syncUrl(next, null);
   }, []);
@@ -201,7 +206,15 @@ export function PanelProvider({
 
   const setSettingsTab = useCallback((tab: SettingsTab) => {
     setSettingsTabState(tab);
+    setAdminSectionState("settings");
     setViewState("settings");
+    syncUrl("settings", null);
+  }, []);
+
+  const setAdminSection = useCallback((section: AdminSection) => {
+    setAdminSectionState(section);
+    setViewState("settings");
+    setMobileOpen(false);
     syncUrl("settings", null);
   }, []);
 
@@ -378,6 +391,8 @@ export function PanelProvider({
     setView,
     settingsTab,
     setSettingsTab,
+    adminSection,
+    setAdminSection,
     openServerId,
     openServer,
     sidebarCollapsed,

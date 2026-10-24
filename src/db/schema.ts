@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * BT Panel schema — accounts, sessions, the singleton panel settings row
+ * BT Panel schema — accounts, sessions, hashed API keys, the singleton panel settings row
  * (theme / branding / bars / access), game & app servers with a console
  * event log, on-demand backup snapshots, and uploaded wallpaper media.
  *
@@ -30,6 +30,23 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    prefix: text("prefix").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+  },
+  (t) => [index("api_keys_user_idx").on(t.userId), index("api_keys_hash_idx").on(t.tokenHash)],
+);
 
 export const sessions = pgTable(
   "sessions",

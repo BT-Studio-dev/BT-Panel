@@ -217,10 +217,20 @@ export function getTemplate(id: string): ServerTemplate {
   return SERVER_TEMPLATES.find((t) => t.id === id) ?? SERVER_TEMPLATES[0];
 }
 
-export const NODES: { id: string; name: string; region: string; subnet: string }[] = [
-  { id: "eu-fra-01", name: "Frankfurt", region: "EU", subnet: "10.20.0." },
-  { id: "us-nyc-02", name: "New York", region: "US", subnet: "10.40.0." },
-  { id: "ap-sgp-01", name: "Singapore", region: "APAC", subnet: "10.60.0." },
+export type PanelNode = {
+  id: string;
+  name: string;
+  region: string;
+  location: string;
+  subnet: string;
+  daemonPort: number;
+  sftpPort: number;
+};
+
+export const NODES: PanelNode[] = [
+  { id: "eu-fra-01", name: "Frankfurt", region: "EU", location: "Frankfurt, DE", subnet: "10.20.0.", daemonPort: 8080, sftpPort: 2022 },
+  { id: "us-nyc-02", name: "New York", region: "US", location: "New York, US", subnet: "10.40.0.", daemonPort: 8080, sftpPort: 2022 },
+  { id: "ap-sgp-01", name: "Singapore", region: "APAC", location: "Singapore, SG", subnet: "10.60.0.", daemonPort: 8080, sftpPort: 2022 },
 ];
 
 export const MEMORY_OPTIONS = [1024, 2048, 4096, 8192, 16384];

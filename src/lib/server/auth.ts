@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { and, eq, gt, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { sessions, users } from "@/db/schema";
+import { apiKeys, sessions, users } from "@/db/schema";
 import { isAdminRole } from "@/lib/panel/types";
 import { HttpError, newToken, sha256 } from "./core";
 import { ensureDatabase, type UserRow } from "./data";
@@ -48,6 +48,24 @@ export const getSessionUser = cache(async (): Promise<UserRow | null> => {
   for (const hash of hashes) {
     const match = rows.find((r) => r.sessionId === hash);
     if (match && match.user.status === "active") return match.user;
+  }
+
+  // Personal API keys use the same Bearer transport as sessions, but only
+  // their SHA-256 digest is stored. Cookie sessions always take priority.
+  const keyRows = await db
+    .select({ key: apiKeys, user: users })
+    .from(apiKeys)
+    .innerJoin(users, eq(apiKeys.userId, users.id))
+    .where(inArray(apiKeys.tokenHash, hashes));
+  const now = Date.now();
+  for (const hash of hashes) {
+    const match = keyRows.find((r) => r.key.tokenHash === hash);
+    if (!match || match.user.status !== "active") continue;
+    if (match.key.expiresAt && match.key.expiresAt.getTime() <= now) continue;
+    if (!match.key.lastUsedAt || now - match.key.lastUsedAt.getTime() > 60_000) {
+      await db.update(apiKeys).set({ lastUsedAt: new Date(now) }).where(eq(apiKeys.id, match.key.id));
+    }
+    return match.user;
   }
   return null;
 });
