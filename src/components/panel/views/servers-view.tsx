@@ -49,7 +49,7 @@ export function ServersView() {
 
 // ── List ────────────────────────────────────────────────────────────────────
 function ServerList() {
-  const { servers, isAdmin, serverQuery: query, setServerQuery: setQuery } = usePanel();
+  const { servers, serverQuery: query, setServerQuery: setQuery } = usePanel();
   const [filter, setFilter] = useState<Filter>("all");
   const [creating, setCreating] = useState(false);
   const now = useNow(2000);
@@ -63,17 +63,10 @@ function ServerList() {
       v.toLowerCase().includes(q),
     );
   });
-  const running = servers.filter((s) => s.status === "running").length;
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h2 className="text-[22px] font-extrabold tracking-tight">Server Fleet</h2>
-          <p className="mt-1 text-[13px] font-semibold text-steel">
-            {running} of {servers.length} running · {isAdmin ? "every server on the panel" : "servers you own"}
-          </p>
-        </div>
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-end">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative md:hidden">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
