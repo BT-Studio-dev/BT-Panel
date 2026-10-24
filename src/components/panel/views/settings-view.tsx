@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
@@ -457,6 +457,8 @@ function UploadBox({ onUploaded, compact }: { onUploaded: (url: string) => void;
 
 // ── 4K Wallpapers / Background Engine ───────────────────────────────────────
 type EngineMode = "catalog" | "shaders" | "url" | "upload";
+type WallpaperCategory = (typeof WALLPAPER_CATEGORIES)[number]["id"];
+type WallpaperPage = { items: WallpaperItem[]; hasMore: boolean };
 
 const ENGINE_TABS: { id: EngineMode; label: string; icon: typeof Eye }[] = [
   { id: "catalog", label: "4K Wallpapers", icon: ImageIcon },
@@ -468,12 +470,80 @@ const ENGINE_TABS: { id: EngineMode; label: string; icon: typeof Eye }[] = [
 function WallpapersPanel() {
   const { draft, setDraft, persistTheme, settings } = usePanel();
   const [mode, setMode] = useState<EngineMode>("catalog");
-  const [category, setCategory] = useState<(typeof WALLPAPER_CATEGORIES)[number]["id"]>("all");
+  const [category, setCategory] = useState<WallpaperCategory>("all");
+  const [remoteWallpapers, setRemoteWallpapers] = useState<WallpaperItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const requestRef = useRef(0);
+  const loadingRef = useRef(false);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const saved = settings.wallpaperUrl;
   const previewing = draft.wallpaperUrl !== saved;
   const validUrl = /^https?:\/\/\S+$/i.test(url.trim());
+
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMore || loadError) return;
+    const requestId = ++requestRef.current;
+    loadingRef.current = true;
+    setLoadingMore(true);
+    try {
+      const data = await api<WallpaperPage>(`/api/wallpapers?category=${category}&page=${page}`);
+      if (requestId !== requestRef.current) return;
+      setRemoteWallpapers((current) => {
+        const known = new Set(current.map((item) => item.full));
+        return [...current, ...data.items.filter((item) => !known.has(item.full))];
+      });
+      setPage(page + 1);
+      setHasMore(data.hasMore && data.items.length > 0);
+    } catch {
+      if (requestId === requestRef.current) setLoadError(true);
+    } finally {
+      if (requestId === requestRef.current) {
+        loadingRef.current = false;
+        setLoadingMore(false);
+      }
+    }
+  }, [category, hasMore, loadError, page]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (mode !== "catalog" || !sentinel || !hasMore || loadError || loadingMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadError, loadingMore, loadMore, mode]);
+
+  useEffect(
+    () => () => {
+      requestRef.current += 1;
+      loadingRef.current = false;
+    },
+    [],
+  );
+
+  function selectCategory(next: WallpaperCategory) {
+    if (next === category) return;
+    requestRef.current += 1;
+    loadingRef.current = false;
+    setCategory(next);
+    setRemoteWallpapers([]);
+    setPage(1);
+    setHasMore(true);
+    setLoadError(false);
+    setLoadingMore(false);
+  }
+
+  const curated = WALLPAPERS.filter((item) => category === "all" || item.category === category);
+  const catalog = [...new Map([...curated, ...remoteWallpapers].map((item) => [item.full, item])).values()];
 
   async function apply(value: string, label: string) {
     setBusy(value);
@@ -536,14 +606,14 @@ function WallpapersPanel() {
                   "rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors",
                   category === c.id ? "border-accent/60 bg-accent/15 text-ice" : "border-line bg-fill text-steel hover:text-ice",
                 )}
-                onClick={() => setCategory(c.id)}
+                onClick={() => selectCategory(c.id)}
               >
                 {c.name}
               </button>
             ))}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-            {WALLPAPERS.filter((w) => category === "all" || w.category === category).map((w) => (
+            {catalog.map((w) => (
               <WallpaperCard
                 key={w.id}
                 item={w}
@@ -553,6 +623,28 @@ function WallpapersPanel() {
                 onApply={() => void apply(w.full, w.title)}
               />
             ))}
+          </div>
+          <div ref={sentinelRef} className="mt-5 flex min-h-10 items-center justify-center gap-3" aria-live="polite">
+            {loadError ? (
+              <>
+                <span className="text-[12px] font-semibold text-steel">More wallpapers could not load.</span>
+                <button type="button" className="btn-ghost min-h-9 px-3 text-[12px]" onClick={() => setLoadError(false)}>
+                  Retry
+                </button>
+              </>
+            ) : hasMore ? (
+              <button
+                type="button"
+                className="btn-ghost min-h-9 px-4 text-[11.5px]"
+                disabled={loadingMore}
+                onClick={() => void loadMore()}
+              >
+                {loadingMore ? <Spinner /> : <ImageIcon className="size-3.5" />}
+                {loadingMore ? "Loading wallpapers…" : "Load more wallpapers"}
+              </button>
+            ) : (
+              <span className="text-[11.5px] font-semibold text-faint">All caught up · {catalog.length} wallpapers</span>
+            )}
           </div>
           <p className="mt-3 text-[11px] font-semibold text-faint">
             New 4K wallpapers via{" "}
