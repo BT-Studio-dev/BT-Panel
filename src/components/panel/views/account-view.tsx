@@ -16,7 +16,7 @@ export function AccountView() {
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
-  const [showPw, setShowPw] = useState(false);
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
   const myServers = servers.filter((s) => s.ownerId === profile.userId).length;
 
   async function patch(body: Record<string, unknown>, message: string) {
@@ -127,23 +127,39 @@ export function AccountView() {
         </form>
 
         <form onSubmit={onPassword} className="glass p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-[14px] font-extrabold">
-              <KeyRound className="size-4 text-accent" /> Change Password
-            </h3>
-            <button type="button" className="icon-btn size-8" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? "Hide passwords" : "Show passwords"}>
-              {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
+          <h3 className="flex items-center gap-2 text-[14px] font-extrabold">
+            <KeyRound className="size-4 text-accent" /> Change Password
+          </h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <Field label="Current password">
-              <input className="panel-input" type={showPw ? "text" : "password"} value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} autoComplete="current-password" required />
+              <PasswordInput
+                label="Current password"
+                value={pw.current}
+                onChange={(value) => setPw({ ...pw, current: value })}
+                autoComplete="current-password"
+                visible={showPw.current}
+                onToggle={() => setShowPw((current) => ({ ...current, current: !current.current }))}
+              />
             </Field>
             <Field label="New password">
-              <input className="panel-input" type={showPw ? "text" : "password"} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} autoComplete="new-password" required />
+              <PasswordInput
+                label="New password"
+                value={pw.next}
+                onChange={(value) => setPw({ ...pw, next: value })}
+                autoComplete="new-password"
+                visible={showPw.next}
+                onToggle={() => setShowPw((current) => ({ ...current, next: !current.next }))}
+              />
             </Field>
             <Field label="Confirm new password">
-              <input className="panel-input" type={showPw ? "text" : "password"} value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} autoComplete="new-password" required />
+              <PasswordInput
+                label="Confirm new password"
+                value={pw.confirm}
+                onChange={(value) => setPw({ ...pw, confirm: value })}
+                autoComplete="new-password"
+                visible={showPw.confirm}
+                onToggle={() => setShowPw((current) => ({ ...current, confirm: !current.confirm }))}
+              />
             </Field>
           </div>
           {pwError ? <p className="mt-3 text-[12.5px] font-bold text-danger">{pwError}</p> : null}
@@ -152,6 +168,46 @@ export function AccountView() {
           </button>
         </form>
       </div>
+    </div>
+  );
+}
+
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  visible,
+  onToggle,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: string;
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  const toggleLabel = `${visible ? "Hide" : "Show"} ${label.toLowerCase()}`;
+  return (
+    <div className="relative">
+      <input
+        className="panel-input pr-11"
+        type={visible ? "text" : "password"}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        autoComplete={autoComplete}
+        required
+      />
+      <button
+        type="button"
+        className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-[8px] text-steel transition-colors hover:bg-fill hover:text-ice"
+        onClick={onToggle}
+        aria-label={toggleLabel}
+        aria-pressed={visible}
+        title={toggleLabel}
+      >
+        {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+      </button>
     </div>
   );
 }
