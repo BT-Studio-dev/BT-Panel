@@ -11,6 +11,7 @@ import {
   Pause,
   Play,
   RefreshCw,
+  Search,
   Server,
   Settings,
   ShieldCheck,
@@ -277,7 +278,7 @@ function NavButton({
 }
 
 function Header() {
-  const { profile, settings, view, setView, setMobileOpen, mode, toggleMode, draft, music, signOut } = usePanel();
+  const { profile, settings, view, setView, setMobileOpen, mode, toggleMode, draft, music, signOut, serverQuery, setServerQuery, openServerId } = usePanel();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -320,6 +321,20 @@ function Header() {
             </span>
             Now playing
           </button>
+        ) : null}
+        {view === "servers" && !openServerId ? (
+          <div className="relative hidden w-52 md:block xl:w-64">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
+            <input
+              type="search"
+              className="panel-input h-10 min-h-10 w-full pl-9"
+              placeholder="Search servers…"
+              aria-label="Search servers"
+              autoComplete="off"
+              value={serverQuery}
+              onChange={(event) => setServerQuery(event.target.value)}
+            />
+          </div>
         ) : null}
         {settings.showThemeToggle !== false ? (
           <button

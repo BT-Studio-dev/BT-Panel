@@ -58,6 +58,8 @@ type PanelContextValue = {
   isAdmin: boolean;
   view: PanelView;
   setView: (view: PanelView) => void;
+  serverQuery: string;
+  setServerQuery: (query: string) => void;
   settingsTab: SettingsTab;
   setSettingsTab: (tab: SettingsTab) => void;
   adminSection: AdminSection;
@@ -113,6 +115,7 @@ export function PanelProvider({
   const [servers, setServers] = useState(initial.servers);
   const [userCount, setUserCount] = useState(initial.userCount);
   const [view, setViewState] = useState<PanelView>(initialView);
+  const [serverQuery, setServerQuery] = useState("");
   const [settingsTab, setSettingsTabState] = useState<SettingsTab>("appearance");
   const [adminSection, setAdminSectionState] = useState<AdminSection>("overview");
   const [openServerId, setOpenServerId] = useState<string | null>(initialServerId);
@@ -389,6 +392,8 @@ export function PanelProvider({
     isAdmin,
     view,
     setView,
+    serverQuery,
+    setServerQuery,
     settingsTab,
     setSettingsTab,
     adminSection,

@@ -49,8 +49,7 @@ export function ServersView() {
 
 // ── List ────────────────────────────────────────────────────────────────────
 function ServerList() {
-  const { servers, isAdmin } = usePanel();
-  const [query, setQuery] = useState("");
+  const { servers, isAdmin, serverQuery: query, setServerQuery: setQuery } = usePanel();
   const [filter, setFilter] = useState<Filter>("all");
   const [creating, setCreating] = useState(false);
   const now = useNow(2000);
@@ -76,11 +75,13 @@ function ServerList() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+          <div className="relative md:hidden">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
             <input
+              type="search"
               className="panel-input w-56 pl-9"
               placeholder="Search servers…"
+              aria-label="Search servers"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
