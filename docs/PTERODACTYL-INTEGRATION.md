@@ -98,6 +98,16 @@ File mutations use `POST /api/integrations/pterodactyl/servers/{identifier}/file
 
 Paths must be absolute, cannot contain parent-directory (`..`) segments, and are limited to 1024 characters. Individual filenames are limited to 255 characters. Write/content bodies are limited to 1 MB. Delete is permanent and may recursively remove a folder through Wings; the UI requires confirmation.
 
+## Minecraft Java Edition configuration
+
+The **Minecraft** tab reads and writes the real `/server.properties` through the same authenticated file API. It provides fields for MOTD, player limits, game mode, difficulty, view/simulation distance, spawn protection, PvP, whitelist, online mode, server port, GameSpy query, and RCON. Unknown properties, comments, existing key order, and line endings are preserved; missing exposed keys are appended only when the administrator saves.
+
+The connection card shows the primary Pterodactyl allocation and can copy its `host:port` address. If `server-port` differs from the primary allocation, the UI shows a warning and offers to apply the allocated port to the form. Saving does not modify allocations and does not restart Minecraft: review the change, save, then use **Overview → Restart** when ready.
+
+**Copy config** invokes the real Pterodactyl file-copy operation for `/server.properties`, creating a copy in the server root. It does not overwrite the active configuration. The Minecraft form deliberately does not display or edit the RCON password; use the full file editor for sensitive advanced settings and restrict RCON access to trusted networks.
+
+This tool expects a Java Edition `server.properties` file in the server root. It does not generate a missing file, install Minecraft, select an egg, or manage Bedrock/plugin-specific configuration.
+
 ## Create a real server
 
 `POST /api/integrations/pterodactyl/servers` accepts the Pterodactyl 1.x Application API create-server body. You must supply IDs that exist in your own Pterodactyl installation. This is a destructive/capacity-allocating action and is restricted to BT Panel admins.

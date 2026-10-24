@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Activity,
   Box,
+  Blocks,
   Copy,
   Cpu,
   Files,
@@ -23,6 +24,7 @@ import {
 import { api, formatDuration } from "@/lib/utils";
 import { Meter, Modal } from "../ui";
 import { PterodactylFiles } from "./pterodactyl-files";
+import { PterodactylMinecraft } from "./pterodactyl-minecraft";
 import { PterodactylNetwork } from "./pterodactyl-network";
 import {
   copyText,
@@ -36,7 +38,7 @@ import {
   type ResourceView,
 } from "./pterodactyl-shared";
 
-type ManagerTab = "overview" | "network" | "files";
+type ManagerTab = "overview" | "network" | "minecraft" | "files";
 type PowerAction = "start" | "restart" | "stop" | "kill";
 
 export function PterodactylServerManager({ server }: { server: ApiItem }) {
@@ -136,6 +138,7 @@ export function PterodactylServerManager({ server }: { server: ApiItem }) {
           {([
             ["overview", "Overview", Activity],
             ["network", "Network & ports", Network],
+            ["minecraft", "Minecraft", Blocks],
             ["files", "Files", Files],
           ] as const).map(([id, label, Icon]) => (
             <button key={id} className={`flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-colors ${tab === id ? "bg-accent text-white shadow-[0_3px_12px_var(--accent-glow)]" : "text-steel hover:bg-fill hover:text-ice"}`} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>
@@ -173,6 +176,7 @@ export function PterodactylServerManager({ server }: { server: ApiItem }) {
             </div>
           ) : null}
           {tab === "network" ? <PterodactylNetwork identifier={identifier} /> : null}
+          {tab === "minecraft" ? <PterodactylMinecraft identifier={identifier} onOpenFiles={() => setTab("files")} /> : null}
           {tab === "files" ? <PterodactylFiles identifier={identifier} /> : null}
         </div>
       </div>
