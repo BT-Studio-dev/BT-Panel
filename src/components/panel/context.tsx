@@ -33,6 +33,7 @@ export type MusicState = MusicPrefs & {
   playing: boolean;
   current: number;
   duration: number;
+  prepare: () => void;
   toggle: () => void;
   seek: (seconds: number) => void;
   setPrefs: (patch: Partial<MusicPrefs>) => void;
@@ -313,6 +314,10 @@ export function PanelProvider({
     return audioRef.current;
   }, []);
 
+  const prepare = useCallback(() => {
+    ensureAudio();
+  }, [ensureAudio]);
+
   const toggle = useCallback(() => {
     const audio = ensureAudio();
     if (audio.paused) {
@@ -368,8 +373,8 @@ export function PanelProvider({
   useEffect(() => () => audioRef.current?.pause(), []);
 
   const music = useMemo<MusicState>(
-    () => ({ ...prefs, playing, current, duration, toggle, seek, setPrefs }),
-    [prefs, playing, current, duration, toggle, seek, setPrefs],
+    () => ({ ...prefs, playing, current, duration, prepare, toggle, seek, setPrefs }),
+    [prefs, playing, current, duration, prepare, toggle, seek, setPrefs],
   );
 
   const value: PanelContextValue = {
