@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servers · BT Minecraft Panel</title>
+<meta name="csrf-token" content="demo-token">
+<meta name="app-base" content="/">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../public/assets/app.css">
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('btp-theme');
+      if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-mark"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7z"/>
+            <path d="M3.5 7 12 11.5 20.5 7"/>
+            <path d="M12 11.5v10"/>
+            <path d="M7.8 9.3v5.2L12 17l4.2-2.5V9.3"/>
+        </svg></span>
+      <span class="brand-text">
+        <strong>BT Minecraft Panel</strong>
+        <span>Minecraft control</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <span class="nav-label">Manage</span>
+              <a href="dashboard.html" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span>
+        </a>
+              <a href="servers.html" class="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg><span>Servers</span>
+        </a>
+      
+              <span class="nav-label">Administration</span>
+                  <a href="users.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.5"/><path d="M22 20v-1.5a4 4 0 0 0-3-3.87M16.5 3.6a3.5 3.5 0 0 1 0 6.8"/></svg><span>Users</span>
+          </a>
+                  <a href="activity.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg><span>Activity</span>
+          </a>
+                  <a href="settings.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span>
+          </a>
+                  </nav>
+
+    <div class="sidebar-foot">
+              <div class="user-chip">
+          <span class="avatar">AA</span>
+          <span class="who">
+            <strong>Ada Admin</strong>
+            <span>admin</span>
+          </span>
+        </div>
+        <form method="post" action="login.html">
+          <input type="hidden" name="_csrf" value="demo-token">
+          <button class="ghost-btn" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg> Sign out</button>
+        </form>
+          </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>Servers</h1>
+        <div class="crumbs">BT Minecraft Panel / Servers</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="topbar-actions">
+        <button class="ghost-btn icon" type="button" data-theme-toggle title="Toggle light/dark theme" aria-label="Toggle theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>        </button>
+                  <button class="btn" type="button" data-open-modal="create-server"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New server</button>
+              </div>
+    </header>
+    <div class="content"><div class="card" style="border-color:rgba(208,0,0,.4);background:linear-gradient(120deg,rgba(208,0,0,.16),rgba(255,255,255,.03))"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 18px"><span class="badge accent">Static design preview</span><span class="small muted" style="flex:1;min-width:200px">Buttons are inert here. Run the PHP panel to manage real servers — see README and docs/BT-PANEL-DEPLOY.md.</span><a class="ghost-btn sm" href="login.html">Login</a><a class="ghost-btn sm" href="register.html">Register</a><a class="ghost-btn sm" href="forgot.html">Reset</a><a class="ghost-btn sm" href="server.html">Server detail</a></div></div>
+
+<section class="card">
+  <div class="card-head">
+    <h2>All servers</h2>
+    <div class="spacer"></div>
+    <span class="badge">3 total</span>
+    <button class="btn sm" type="button" data-open-modal="create-server"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New server</button>
+  </div>
+  <div class="card-body tight">
+          <table class="data">
+        <thead>
+          <tr>
+            <th>Server</th>
+            <th>Software</th>
+            <th>Port</th>
+            <th>State</th>
+            <th>Memory</th>
+            <th>Owner</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+                            <tr data-server-row data-server-id="6e8cc5db-ffce-44ef-ac3d-14330d5061f8">
+            <td>
+              <a href="server.html" style="font-weight:700">Survival SMP</a>
+              <div class="faint small">survival-smp-7497</div>
+            </td>
+            <td><span class="badge">paper</span> <span class="faint small">1.21.4</span></td>
+            <td class="mono">25565</td>
+            <td>
+              <span class="badge ok" data-status-badge>
+                <span class="dot on"></span>Running              </span>
+            </td>
+            <td class="mono">6144 MB</td>
+            <td class="faint small">—</td>
+            <td>
+              <div class="actions">
+                                  <button class="ghost-btn sm" type="button" data-power="stop" data-server="6e8cc5db-ffce-44ef-ac3d-14330d5061f8"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg> Stop</button>
+                                <a class="ghost-btn sm" href="server.html">Open</a>
+              </div>
+            </td>
+          </tr>
+                            <tr data-server-row data-server-id="cdd4395b-5f89-4cee-bdda-be8fa2b67629">
+            <td>
+              <a href="server.html" style="font-weight:700">Creative Plot</a>
+              <div class="faint small">creative-plot-a4f3</div>
+            </td>
+            <td><span class="badge">vanilla</span> <span class="faint small">1.21.4</span></td>
+            <td class="mono">25566</td>
+            <td>
+              <span class="badge ok" data-status-badge>
+                <span class="dot on"></span>Running              </span>
+            </td>
+            <td class="mono">2048 MB</td>
+            <td class="faint small">—</td>
+            <td>
+              <div class="actions">
+                                  <button class="ghost-btn sm" type="button" data-power="stop" data-server="cdd4395b-5f89-4cee-bdda-be8fa2b67629"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg> Stop</button>
+                                <a class="ghost-btn sm" href="server.html">Open</a>
+              </div>
+            </td>
+          </tr>
+                            <tr data-server-row data-server-id="cc792c8e-c734-403d-a53c-9b387ca68a05">
+            <td>
+              <a href="server.html" style="font-weight:700">Sky Factory</a>
+              <div class="faint small">sky-factory-adbc</div>
+            </td>
+            <td><span class="badge">purpur</span> <span class="faint small">1.20.6</span></td>
+            <td class="mono">25567</td>
+            <td>
+              <span class="badge off" data-status-badge>
+                <span class="dot off"></span>Stopped              </span>
+            </td>
+            <td class="mono">8192 MB</td>
+            <td class="faint small">—</td>
+            <td>
+              <div class="actions">
+                                  <button class="ghost-btn sm" type="button" data-power="start" data-server="cc792c8e-c734-403d-a53c-9b387ca68a05"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 20 12 6 20.5z"/></svg> Start</button>
+                                <a class="ghost-btn sm" href="server.html">Open</a>
+              </div>
+            </td>
+          </tr>
+                </tbody>
+      </table>
+      </div>
+</section>
+
+<template id="create-server-form-template">
+  <form data-create-server novalidate>
+    <div class="form-error" data-form-error role="alert"></div>
+
+    <div class="field">
+      <label for="new-name">Server name</label>
+      <input id="new-name" name="name" type="text" maxlength="64" required placeholder="Survival SMP">
+      <span class="hint">Used for the folder name and the MOTD.</span>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="new-type">Software</label>
+        <select id="new-type" name="type">
+                      <option value="vanilla">Vanilla</option>
+                      <option value="paper">Paper</option>
+                      <option value="purpur">Purpur</option>
+                      <option value="custom">Custom</option>
+                  </select>
+      </div>
+      <div class="field">
+        <label for="new-version">Minecraft version</label>
+        <input id="new-version" name="version" type="text" value="latest" placeholder="latest / 1.21.4">
+        <span class="hint">“latest” resolves when you install.</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="new-memory">Heap (MB)</label>
+        <input id="new-memory" name="memory_mb" type="number" min="512" max="65536" step="256" value="4096">
+      </div>
+      <div class="field">
+        <label for="new-port">Port</label>
+        <input id="new-port" name="port" type="number" min="1024" max="65535" value="25565">
+        <span class="hint">The next free port is used if this one is busy.</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="new-flags">Extra JVM flags <span class="faint">(optional)</span></label>
+      <input id="new-flags" name="java_flags" type="text" placeholder="-XX:+UseG1GC -XX:MaxGCPauseMillis=200" maxlength="400">
+    </div>
+
+    <div class="check">
+      <input type="checkbox" id="new-eula" name="accept_eula" required>
+      <label for="new-eula">
+        I accept the <a href="https://www.minecraft.net/en-us/eula" target="_blank" rel="noopener noreferrer">Minecraft EULA</a> and understand
+        servers run as the panel's system user.
+      </label>
+    </div>
+  </form>
+</template>
+
+      </div><!-- /.content -->
+    </div><!-- /.main -->
+  </div><!-- /.shell -->
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="modal-root">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header>
+        <h3 id="modal-title">Dialog</h3>
+        <button type="button" data-close-modal aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body" id="modal-body"></div>
+      <footer id="modal-footer"></footer>
+    </div>
+  </div>
+
+  
+<script>
+  // Demo only: switch tabs without the panel backend.
+  document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t === tab); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    });
+  });
+  document.querySelectorAll('[data-tab-jump]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.tabJump;
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === target); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    });
+  });
+</script></body>
+</html>

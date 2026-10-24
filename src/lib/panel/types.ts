@@ -9,7 +9,8 @@ export type PanelView =
   | "users"
   | "updates"
   | "account"
-  | "integrations";
+  | "integrations"
+  | "minecraft";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "bars" | "access";
 
 /** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
@@ -234,6 +235,7 @@ export const PANEL_VIEWS: PanelView[] = [
   "home",
   "servers",
   "team",
+  "minecraft",
   "music",
   "settings",
   "users",

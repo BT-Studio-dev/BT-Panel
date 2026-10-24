@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard · BT Minecraft Panel</title>
+<meta name="csrf-token" content="demo-token">
+<meta name="app-base" content="/">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../public/assets/app.css">
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('btp-theme');
+      if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-mark"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7z"/>
+            <path d="M3.5 7 12 11.5 20.5 7"/>
+            <path d="M12 11.5v10"/>
+            <path d="M7.8 9.3v5.2L12 17l4.2-2.5V9.3"/>
+        </svg></span>
+      <span class="brand-text">
+        <strong>BT Minecraft Panel</strong>
+        <span>Minecraft control</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <span class="nav-label">Manage</span>
+              <a href="dashboard.html" class="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span>
+        </a>
+              <a href="servers.html" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg><span>Servers</span>
+        </a>
+      
+              <span class="nav-label">Administration</span>
+                  <a href="users.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.5"/><path d="M22 20v-1.5a4 4 0 0 0-3-3.87M16.5 3.6a3.5 3.5 0 0 1 0 6.8"/></svg><span>Users</span>
+          </a>
+                  <a href="activity.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg><span>Activity</span>
+          </a>
+                  <a href="settings.html" class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span>
+          </a>
+                  </nav>
+
+    <div class="sidebar-foot">
+              <div class="user-chip">
+          <span class="avatar">AA</span>
+          <span class="who">
+            <strong>Ada Admin</strong>
+            <span>admin</span>
+          </span>
+        </div>
+        <form method="post" action="login.html">
+          <input type="hidden" name="_csrf" value="demo-token">
+          <button class="ghost-btn" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg> Sign out</button>
+        </form>
+          </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="crumbs">BT Minecraft Panel / Dashboard</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="topbar-actions">
+        <button class="ghost-btn icon" type="button" data-theme-toggle title="Toggle light/dark theme" aria-label="Toggle theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>        </button>
+              </div>
+    </header>
+    <div class="content"><div class="card" style="border-color:rgba(208,0,0,.4);background:linear-gradient(120deg,rgba(208,0,0,.16),rgba(255,255,255,.03))"><div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 18px"><span class="badge accent">Static design preview</span><span class="small muted" style="flex:1;min-width:200px">Buttons are inert here. Run the PHP panel to manage real servers — see README and docs/BT-PANEL-DEPLOY.md.</span><a class="ghost-btn sm" href="login.html">Login</a><a class="ghost-btn sm" href="register.html">Register</a><a class="ghost-btn sm" href="forgot.html">Reset</a><a class="ghost-btn sm" href="server.html">Server detail</a></div></div>
+
+<section class="grid cols-4">
+  <div class="stat">
+    <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg> Servers</span>
+    <span class="value">3</span>
+    <span class="hint">2 running now</span>
+  </div>
+  <div class="stat">
+    <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10v4M10 10v4M14 10v4M18 10v4"/></svg> Heap in use</span>
+    <span class="value">5.1 GB</span>
+    <span class="hint">Across running JVMs</span>
+  </div>
+  <div class="stat">
+    <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="M2.5 13h19"/><path d="M6.5 16.5h.01M10 16.5h.01"/></svg> Server storage</span>
+    <span class="value">12.4 GB</span>
+    <span class="hint">58.2 GB free on disk</span>
+  </div>
+  <div class="stat">
+    <span class="label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3.5" width="18" height="5" rx="1.5"/><path d="M4.5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h12A1.5 1.5 0 0 0 19.5 19V8.5"/><path d="M10 12.5h4"/></svg> Backups</span>
+    <span class="value">2</span>
+    <span class="hint">Archives on disk</span>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Your servers</h2>
+    <div class="spacer"></div>
+    <span class="badge accent"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a15 15 0 0 1 18 0"/><path d="M6.5 12.5a10 10 0 0 1 11 0"/><path d="M10 16a5 5 0 0 1 4 0"/><path d="M12 19.5h.01"/></svg> screen</span>
+    <a class="ghost-btn sm" href="servers.html">All servers <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+  </div>
+  <div class="card-body">
+          <div class="server-grid">
+                  <article class="server-card" data-server-card data-server-id="6e8cc5db-ffce-44ef-ac3d-14330d5061f8" data-memory-limit="6144 MB">
+  <header>
+    <span class="server-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg></span>
+    <div style="min-width:0;flex:1">
+      <h3><a href="server.html">Survival SMP</a></h3>
+      <div class="sub">Paper 1.21.4 · survival-smp-7497</div>
+    </div>
+    <span class="badge ok" data-status-badge>
+      <span class="dot on"></span>
+      Running    </span>
+  </header>
+
+  <div class="server-meta">
+    <div><span>Address</span><strong>example.com:443:25565</strong></div>
+    <div><span>Memory</span><strong data-memory>3.4 GB / 6144 MB</strong></div>
+    <div><span>Uptime</span><strong data-uptime>1d 03h</strong></div>
+  </div>
+
+  <div class="meter green" aria-hidden="true"><i style="width: 57%"></i></div>
+
+  <div class="btn-row">
+          <button class="ghost-btn sm" type="button" data-power="restart" data-server="6e8cc5db-ffce-44ef-ac3d-14330d5061f8"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg> Restart</button>
+      <button class="ghost-btn sm" type="button" data-power="stop" data-server="6e8cc5db-ffce-44ef-ac3d-14330d5061f8"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg> Stop</button>
+        <a class="ghost-btn sm" href="server.html"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7 5 5-5 5"/><path d="M13 17h6"/></svg> Console</a>
+    <a class="ghost-btn sm" href="server.html" style="margin-left:auto">Manage <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+  </div>
+</article>
+                  <article class="server-card" data-server-card data-server-id="cdd4395b-5f89-4cee-bdda-be8fa2b67629" data-memory-limit="2048 MB">
+  <header>
+    <span class="server-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg></span>
+    <div style="min-width:0;flex:1">
+      <h3><a href="server.html">Creative Plot</a></h3>
+      <div class="sub">Vanilla 1.21.4 · creative-plot-a4f3</div>
+    </div>
+    <span class="badge ok" data-status-badge>
+      <span class="dot on"></span>
+      Running    </span>
+  </header>
+
+  <div class="server-meta">
+    <div><span>Address</span><strong>example.com:443:25566</strong></div>
+    <div><span>Memory</span><strong data-memory>3.4 GB / 2048 MB</strong></div>
+    <div><span>Uptime</span><strong data-uptime>1d 03h</strong></div>
+  </div>
+
+  <div class="meter " aria-hidden="true"><i style="width: 100%"></i></div>
+
+  <div class="btn-row">
+          <button class="ghost-btn sm" type="button" data-power="restart" data-server="cdd4395b-5f89-4cee-bdda-be8fa2b67629"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg> Restart</button>
+      <button class="ghost-btn sm" type="button" data-power="stop" data-server="cdd4395b-5f89-4cee-bdda-be8fa2b67629"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg> Stop</button>
+        <a class="ghost-btn sm" href="/servers/cdd4395b-5f89-4cee-bdda-be8fa2b67629#console"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7 5 5-5 5"/><path d="M13 17h6"/></svg> Console</a>
+    <a class="ghost-btn sm" href="server.html" style="margin-left:auto">Manage <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+  </div>
+</article>
+                  <article class="server-card" data-server-card data-server-id="cc792c8e-c734-403d-a53c-9b387ca68a05" data-memory-limit="8192 MB">
+  <header>
+    <span class="server-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="7" rx="2"/><rect x="2.5" y="14" width="19" height="7" rx="2"/><path d="M6.5 6.5h.01M6.5 17.5h.01"/></svg></span>
+    <div style="min-width:0;flex:1">
+      <h3><a href="server.html">Sky Factory</a></h3>
+      <div class="sub">Purpur 1.20.6 · sky-factory-adbc</div>
+    </div>
+    <span class="badge off" data-status-badge>
+      <span class="dot off"></span>
+      Stopped    </span>
+  </header>
+
+  <div class="server-meta">
+    <div><span>Address</span><strong>example.com:443:25567</strong></div>
+    <div><span>Memory</span><strong data-memory>0 B / 8192 MB</strong></div>
+    <div><span>Uptime</span><strong data-uptime>—</strong></div>
+  </div>
+
+  <div class="meter green" aria-hidden="true"><i style="width: 0%"></i></div>
+
+  <div class="btn-row">
+          <button class="btn sm" type="button" data-power="start" data-server="cc792c8e-c734-403d-a53c-9b387ca68a05"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 20 12 6 20.5z"/></svg> Start</button>
+        <a class="ghost-btn sm" href="/servers/cc792c8e-c734-403d-a53c-9b387ca68a05#console"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7 5 5-5 5"/><path d="M13 17h6"/></svg> Console</a>
+    <a class="ghost-btn sm" href="server.html" style="margin-left:auto">Manage <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+  </div>
+</article>
+              </div>
+      </div>
+</section>
+
+<div class="grid cols-2">
+  <section class="card">
+    <div class="card-head">
+      <h2>Recent activity</h2>
+      <div class="spacer"></div>
+              <a class="ghost-btn sm" href="activity.html">Full log</a>
+          </div>
+    <div class="card-body tight">
+              <table class="data">
+          <tbody>
+                      <tr>
+              <td style="width:1%"><span class="badge">server.stop</span></td>
+              <td>
+                <div>Survival SM</div>
+                <div class="faint small">system · 1h ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">backup.create</span></td>
+              <td>
+                <div>Survival SMP</div>
+                <div class="faint small">ada@example.com · 59m ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">server.start</span></td>
+              <td>
+                <div>Survival SMP</div>
+                <div class="faint small">ada@example.com · 58m ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">server.command</span></td>
+              <td>
+                <div>Survival SMP</div>
+                <div class="faint small">mo@example.com · 15m ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">server.install</span></td>
+              <td>
+                <div>Sky Factory</div>
+                <div class="faint small">ada@example.com · 1d ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">user.create</span></td>
+              <td>
+                <div>—</div>
+                <div class="faint small">ada@example.com · 2d ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">server.create</span></td>
+              <td>
+                <div>Creative Plot</div>
+                <div class="faint small">mo@example.com · 3d ago</div>
+              </td>
+            </tr>
+                      <tr>
+              <td style="width:1%"><span class="badge">auth.login</span></td>
+              <td>
+                <div>—</div>
+                <div class="faint small">ada@example.com · 5m ago</div>
+              </td>
+            </tr>
+                    </tbody>
+        </table>
+          </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Host &amp; runtime</h2></div>
+    <div class="card-body">
+      <dl class="kv">
+        <dt>Hostname</dt><dd>emscripten</dd>
+        <dt>PHP</dt><dd>8.3.33</dd>
+        <dt>Java</dt><dd>21.0.4</dd>
+        <dt>Process backend</dt><dd>screen</dd>
+        <dt>Free disk</dt><dd data-free-disk>58.2 GB</dd>
+                  <dt>Panel users</dt><dd>3</dd>
+              </dl>
+      <div class="btn-row" style="margin-top:16px">
+        <a class="ghost-btn sm" href="settings.html"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg> Panel settings</a>
+        <button class="ghost-btn sm" type="button" data-refresh-stats><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg> Refresh</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+      </div><!-- /.content -->
+    </div><!-- /.main -->
+  </div><!-- /.shell -->
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="modal-root">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header>
+        <h3 id="modal-title">Dialog</h3>
+        <button type="button" data-close-modal aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body" id="modal-body"></div>
+      <footer id="modal-footer"></footer>
+    </div>
+  </div>
+
+  
+<script>
+  // Demo only: switch tabs without the panel backend.
+  document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t === tab); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    });
+  });
+  document.querySelectorAll('[data-tab-jump]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.tabJump;
+      document.querySelectorAll('[data-tab]').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === target); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    });
+  });
+</script></body>
+</html>

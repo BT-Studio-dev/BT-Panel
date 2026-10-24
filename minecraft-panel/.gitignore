@@ -1,0 +1,14 @@
+# Runtime configuration (contains host-specific paths)
+config.php
+
+# Panel database, server files, backups, logs and caches
+storage/*
+!storage/.gitkeep
+!storage/README.md
+
+# Local test databases
+tests/tmp/
+
+# Editor / OS noise
+.DS_Store
+*.swp
