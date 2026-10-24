@@ -282,7 +282,7 @@ function AppearancePanel() {
                 className="panel-input"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://images.pexels.com/…"
+                placeholder="https://images.hdqwalls.com/…"
               />
               <button
                 type="button"
@@ -554,7 +554,18 @@ function WallpapersPanel() {
               />
             ))}
           </div>
-          <p className="mt-3 text-[11px] font-semibold text-faint">Photos via Pexels (free to use). Hover a tile to preview or apply.</p>
+          <p className="mt-3 text-[11px] font-semibold text-faint">
+            New 4K wallpapers via{" "}
+            <a
+              href="https://hdqwalls.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-extrabold text-steel underline decoration-line-strong underline-offset-2 transition-colors hover:text-ice"
+            >
+              HDQWalls
+            </a>
+            . Hover a tile to preview or apply.
+          </p>
         </>
       ) : null}
 
@@ -668,7 +679,7 @@ function WallpaperCard({
       </div>
       <div className="mt-1.5 flex items-center justify-between gap-2 px-0.5">
         <span className="truncate text-[12.5px] font-extrabold">{item.title}</span>
-        <span className="truncate text-[10.5px] font-semibold text-faint">© {item.credit}</span>
+        <span className="truncate text-[10.5px] font-semibold text-faint">Source: {item.credit}</span>
       </div>
     </div>
   );

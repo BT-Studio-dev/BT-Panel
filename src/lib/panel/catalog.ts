@@ -26,7 +26,7 @@ export function parseShaderWallpaper(url: string | undefined | null): ShaderVari
   return SHADER_VARIANTS.some((v) => v.id === id) ? (id as ShaderVariant) : null;
 }
 
-// ── Curated wallpapers (Pexels, free to use) ────────────────────────────────
+// ── Curated wallpapers (HDQWalls, 3840×2160) ────────────────────────────────
 export type WallpaperItem = {
   id: string;
   title: string;
@@ -43,24 +43,62 @@ export const WALLPAPER_CATEGORIES: { id: "all" | WallpaperItem["category"]; name
   { id: "nature", name: "Nature & Landscapes" },
 ];
 
-function pexels(id: number, ext: "jpeg" | "png" = "jpeg") {
-  const base = `https://images.pexels.com/photos/${id}/pexels-photo-${id}.${ext}?auto=compress&cs=tinysrgb`;
-  return { thumb: `${base}&fit=crop&w=480&h=300`, full: `${base}&fit=crop&w=2560&h=1440` };
+function hdqwalls(id: string) {
+  return {
+    thumb: `https://images.hdqwalls.com/wallpapers/bthumb/${id}.jpg`,
+    full: `https://images.hdqwalls.com/download/${id}-3840x2160.jpg`,
+  };
 }
 
 export const WALLPAPERS: WallpaperItem[] = [
-  { id: "red-nebula", title: "Crimson Nebula", category: "space", credit: "Dennis Ariel", ...pexels(36489751, "png") },
-  { id: "deep-nebula", title: "Deep Space Nebula", category: "space", credit: "Jeremy Müller", ...pexels(6074272) },
-  { id: "milky-way", title: "Milky Way Core", category: "space", credit: "Wallace Henry", ...pexels(39360634) },
-  { id: "star-veil", title: "Star Veil", category: "space", credit: "Engin Akyurt", ...pexels(6138036) },
-  { id: "galaxy", title: "Galaxy Arc", category: "space", credit: "Adrien Olichon", ...pexels(2538107) },
-  { id: "red-city", title: "Red Neon Skyline", category: "cyber", credit: "Pachon in Motion", ...pexels(18545010) },
-  { id: "arcade", title: "Neon Arcade", category: "cyber", credit: "Michael Kessel", ...pexels(31298539) },
-  { id: "cyber-street", title: "Cyberpunk Street", category: "cyber", credit: "Mikhail Nilov", ...pexels(8108316) },
-  { id: "dark-peak", title: "Dark Peak", category: "nature", credit: "Francesco Ungaro", ...pexels(9286934) },
-  { id: "night-tree", title: "Starry Tirol", category: "nature", credit: "Markus Partoll", ...pexels(10131034) },
-  { id: "dusk-ridge", title: "Dusk Ridge", category: "nature", credit: "Andreas Ebner", ...pexels(18586193) },
-  { id: "twilight", title: "Twilight Hills", category: "nature", credit: "Ivan Larin", ...pexels(10189434) },
+  { id: "cosmic-nebula", title: "Cosmic Nebula", category: "space", credit: "HDQWalls", ...hdqwalls("space-art-nebula-8k-jy") },
+  { id: "cloud-planet", title: "Planet in the Clouds", category: "space", credit: "HDQWalls", ...hdqwalls("planet-in-the-clouds-yj") },
+  { id: "event-horizon", title: "Event Horizon", category: "space", credit: "HDQWalls", ...hdqwalls("black-hole-ai-43") },
+  {
+    id: "cosmic-rings",
+    title: "Beyond the Rings",
+    category: "space",
+    credit: "HDQWalls",
+    ...hdqwalls("beyond-the-rings-cosmic-odyssey-q9"),
+  },
+  { id: "neon-geometry", title: "Neon Geometry", category: "cyber", credit: "HDQWalls", ...hdqwalls("abstract-x-neon-shape-qw") },
+  {
+    id: "dual-neon-rings",
+    title: "Dual Neon Rings",
+    category: "cyber",
+    credit: "HDQWalls",
+    ...hdqwalls("neon-dual-rings-futuristic-abstract-glow-cn"),
+  },
+  { id: "crimson-sphere", title: "Crimson Sphere", category: "cyber", credit: "HDQWalls", ...hdqwalls("crimson-black-sphere-yj") },
+  {
+    id: "ribbon-light",
+    title: "Midnight Ribbon",
+    category: "cyber",
+    credit: "HDQWalls",
+    ...hdqwalls("dark-blue-black-abstract-with-warm-ribbon-light-6z"),
+  },
+  {
+    id: "sunset-valley",
+    title: "Sunset Valley",
+    category: "nature",
+    credit: "HDQWalls",
+    ...hdqwalls("beautiful-landscape-sunset-5k-yu"),
+  },
+  {
+    id: "iceland-falls",
+    title: "Iceland Falls",
+    category: "nature",
+    credit: "HDQWalls",
+    ...hdqwalls("seljalandsfoss-waterfall-iceland-jc"),
+  },
+  { id: "moraine-lake", title: "Moraine Lake", category: "nature", credit: "HDQWalls", ...hdqwalls("moraine-lake-canada-ek") },
+  {
+    id: "alpine-reflection",
+    title: "Alpine Reflection",
+    category: "nature",
+    credit: "HDQWalls",
+    ...hdqwalls("swiss-alps-lake-reflection-rx"),
+  },
 ];
 
 // ── Server templates ────────────────────────────────────────────────────────
