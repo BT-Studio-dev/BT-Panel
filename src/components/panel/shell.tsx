@@ -181,7 +181,7 @@ function Sidebar() {
           </button>
         </div>
 
-        <nav className="scrollbar-thin flex flex-1 flex-col gap-0.5 overflow-y-auto">
+        <nav className={cn("scrollbar-thin flex flex-1 flex-col overflow-y-auto", collapsed ? "justify-between gap-2 py-2" : "gap-0.5")}>
           <SectionLabel collapsed={collapsed}>Dashboard</SectionLabel>
           {visible.filter((item) => item.section === "dashboard").map(renderItem)}
           {isAdmin ? (
@@ -232,7 +232,7 @@ function Sidebar() {
 }
 
 function SectionLabel({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
-  if (collapsed) return <div className="h-5" aria-hidden="true" />;
+  if (collapsed) return null;
   return (
     <div className="mt-4 mb-1.5 flex items-center px-2 text-[10px] font-extrabold tracking-[0.16em] text-faint uppercase first:mt-0">
       {children}
