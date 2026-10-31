@@ -47,12 +47,14 @@ create table if not exists users (
   status text not null default 'active',
   bio text not null default '',
   profile_pic text not null default '',
+  profile_banner text not null default '',
   last_seen timestamptz,
   last_login_at timestamptz,
   created_at timestamptz not null default now(),
   constraint users_username_unique unique (username),
   constraint users_email_unique unique (email)
 );
+alter table users add column if not exists profile_banner text not null default '';
 create table if not exists sessions (
   id text primary key,
   user_id text not null,
@@ -404,6 +406,7 @@ export function toProfile(row: UserRow, includeEmail = true): PanelProfile {
     status: row.status === "suspended" ? "suspended" : "active",
     bio: row.bio,
     profilePic: row.profilePic,
+    profileBanner: row.profileBanner,
     lastSeen: row.lastSeen ? row.lastSeen.toISOString() : null,
     lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
@@ -515,6 +518,13 @@ export async function updateOwnProfile(user: UserRow, input: Record<string, unkn
     if (pic && !/^data:image\/(png|jpe?g|webp);base64,/i.test(pic)) throw new HttpError(400, "Profile picture must be a PNG, JPEG or WebP image.");
     if (pic.length > 200_000) throw new HttpError(413, "Profile picture is too large.");
     patch.profilePic = pic;
+  }
+  if (input.profileBanner !== undefined) {
+    const banner = typeof input.profileBanner === "string" ? input.profileBanner.trim() : "";
+    const match = banner.match(/^data:image\/(?:png|gif);base64,([A-Za-z0-9+/=]+)$/i);
+    if (banner && !match) throw new HttpError(400, "Profile banner must be a PNG or GIF image.");
+    if (match && match[1].length > 6_000_000) throw new HttpError(413, "Profile banner is too large (max 4.5 MB).");
+    patch.profileBanner = banner;
   }
   if (Object.keys(patch).length === 0) throw new HttpError(400, "Nothing to update.");
   const rows = await db.update(users).set(patch).where(eq(users.id, user.id)).returning();

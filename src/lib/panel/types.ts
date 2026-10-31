@@ -105,6 +105,7 @@ export type PanelProfile = {
   status: PanelStatus;
   bio: string;
   profilePic: string;
+  profileBanner: string;
   lastSeen: string | null;
   lastLoginAt: string | null;
   createdAt: string;

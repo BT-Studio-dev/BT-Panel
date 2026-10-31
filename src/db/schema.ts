@@ -26,6 +26,7 @@ export const users = pgTable("users", {
   status: text("status").notNull().default("active"),
   bio: text("bio").notNull().default(""),
   profilePic: text("profile_pic").notNull().default(""),
+  profileBanner: text("profile_banner").notNull().default(""),
   lastSeen: timestamp("last_seen", { withTimezone: true }),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
