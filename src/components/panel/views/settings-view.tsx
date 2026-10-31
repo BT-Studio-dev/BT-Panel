@@ -314,12 +314,6 @@ function AppearancePanel() {
         </div>
 
         <div className="grid content-start gap-4">
-          <ToggleRow
-            label={`Card Glass: ${draft.cardGlass ? "On" : "Off"}`}
-            hint="Toggle backdrop blur for cards while preserving their surface color and content."
-            checked={draft.cardGlass}
-            onChange={(v) => onGlassChange({ cardGlass: v })}
-          />
           <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => onGlassChange({ bgBlur: v })} />
           <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => onGlassChange({ bgOpacity: v })} />
           <div>
