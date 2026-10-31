@@ -11,7 +11,6 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { applyFavicon, applyTheme, getLocalModeOverride, setLocalModeOverride } from "@/lib/panel/theme";
 import {
   isAdminRole,
@@ -109,7 +108,6 @@ export function PanelProvider({
   initialModeOverride: ThemeMode | null;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const [profile, setProfile] = useState(initial.profile);
   const [settings, setSettings] = useState(initial.settings);
   const [draft, setDraftState] = useState<ThemeSettings>(() => pickTheme(initial.settings));
@@ -131,8 +129,11 @@ export function PanelProvider({
   const endSession = useCallback(() => {
     clearStoredToken();
     clearCachedPanel();
-    router.replace("/login");
-  }, [router]);
+    // AuthEntry can host the panel in the same document, so a client-side URL
+    // change alone leaves the dashboard (and any open modal) mounted. A full
+    // navigation reliably replaces it with the signed-out flow.
+    window.location.replace("/login");
+  }, []);
 
   useEffect(() => {
     window.addEventListener(SESSION_EXPIRED_EVENT, endSession);
