@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { randomBytes } from "node:crypto";
 import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { db, pool } from "@/db";
 import { mediaFiles, panelSettings, passwordResetTokens, serverBackups, serverEvents, servers, sessions, users } from "@/db/schema";
@@ -225,59 +224,31 @@ const LINES = {
   killed: `${SYSTEM} Server process killed (SIGKILL)`,
 };
 const DAY = 86_400_000;
-const HOUR = 3_600_000;
 
 function levelOf(message: string): EventLevel {
   return message.startsWith(SYSTEM) ? "system" : "info";
 }
 
 async function seedDemo() {
-  // SEED_DEMO=false (a real server) skips the sample accounts and fleet so the
-  // first account registered becomes the panel owner.
+  // SEED_DEMO=false skips the owner login so the first registered account
+  // becomes the panel owner. Demo mode seeds only that login: the fleet starts
+  // empty and no additional member accounts are created.
   if (process.env.SEED_DEMO === "false" || process.env.SEED_DEMO === "0") return;
   const res = await pool.query<{ n: number }>("select count(*)::int as n from users");
   if ((res.rows[0]?.n ?? 0) > 0) return;
-  const now = Date.now();
-  const [ownerDemo, memberDemo] = DEMO_ACCOUNTS;
-  const ownerHash = await hashPassword(ownerDemo.password);
-  const steveHash = await hashPassword(memberDemo.password);
-  const lockedHash = await hashPassword(randomBytes(18).toString("hex"));
+  const [ownerDemo] = DEMO_ACCOUNTS;
   await db
     .insert(users)
-    .values([
-      { id: ownerDemo.id, username: ownerDemo.username, email: "admin@btpanel.local", passwordHash: ownerHash, role: "owner", bio: "Panel owner — keeps every server humming.", createdAt: new Date(now - 64 * DAY) },
-      { id: memberDemo.id, username: memberDemo.username, email: "steve@btpanel.local", passwordHash: steveHash, role: "member", bio: "Runs the Valheim realm and the building contests.", createdAt: new Date(now - 22 * DAY) },
-      { id: "usr_nova", username: "nova", email: "nova@btpanel.local", passwordHash: lockedHash, role: "admin", bio: "Infrastructure & game ops.", lastSeen: new Date(now - 3 * HOUR), createdAt: new Date(now - 51 * DAY) },
-      { id: "usr_kairo", username: "kairo", email: "kairo@btpanel.local", passwordHash: lockedHash, role: "member", bio: "Minecraft builder and redstone wizard.", lastSeen: new Date(now - 26 * HOUR), createdAt: new Date(now - 30 * DAY) },
-      { id: "usr_lumen", username: "lumen", email: "lumen@btpanel.local", passwordHash: lockedHash, role: "member", bio: "Discord bot maintainer.", lastSeen: new Date(now - 6 * DAY), createdAt: new Date(now - 12 * DAY) },
-    ])
+    .values({
+      id: ownerDemo.id,
+      username: ownerDemo.username,
+      email: "admin@btpanel.local",
+      passwordHash: await hashPassword(ownerDemo.password),
+      role: "owner",
+      bio: "Panel owner — keeps every server humming.",
+      createdAt: new Date(Date.now() - 64 * DAY),
+    })
     .onConflictDoNothing();
-
-  const seeds = [
-    { id: "srv_smp", name: "Survival SMP", template: "minecraft", up: 3 * DAY + 4 * HOUR, node: "eu-fra-01", ip: "10.20.0.11", port: 25565, cpuLimit: 400, memoryMb: 8192, diskMb: 51200, ownerId: "usr_admin" },
-    { id: "srv_cs2", name: "CS2 Competitive", template: "cs2", up: 7 * HOUR, node: "us-nyc-02", ip: "10.40.0.21", port: 27015, cpuLimit: 200, memoryMb: 4096, diskMb: 51200, ownerId: "usr_nova" },
-    { id: "srv_bot", name: "BT Discord Bot", template: "discord-bot", up: 12 * DAY, node: "eu-fra-01", ip: "10.20.0.14", port: 8080, cpuLimit: 100, memoryMb: 1024, diskMb: 10240, ownerId: "usr_admin" },
-    { id: "srv_api", name: "Status API", template: "nodejs", up: 26 * HOUR, node: "us-nyc-02", ip: "10.40.0.22", port: 3000, cpuLimit: 100, memoryMb: 2048, diskMb: 10240, ownerId: "usr_admin" },
-    { id: "srv_rust", name: "Rust Main", template: "rust", up: 0, node: "ap-sgp-01", ip: "10.60.0.31", port: 28015, cpuLimit: 400, memoryMb: 16384, diskMb: 102400, ownerId: "usr_admin" },
-    { id: "srv_valheim", name: "Valheim Realm", template: "valheim", up: 0, node: "eu-fra-01", ip: "10.20.0.12", port: 2456, cpuLimit: 200, memoryMb: 4096, diskMb: 20480, ownerId: "usr_steve" },
-  ];
-  for (const [index, seed] of seeds.entries()) {
-    const { up, ...rest } = seed;
-    const startedAt = up ? new Date(now - up) : null;
-    const changedAt = startedAt ?? new Date(now - 2 * DAY);
-    const inserted = await db
-      .insert(servers)
-      .values({ ...rest, status: up ? "running" : "offline", statusChangedAt: changedAt, startedAt, createdAt: new Date(now - 40 * DAY + index * 60_000) })
-      .onConflictDoNothing()
-      .returning({ id: servers.id });
-    if (!inserted.length) continue;
-    const t = getTemplate(seed.template);
-    const lines = startedAt ? [...t.bootLog, LINES.running] : [LINES.stopping, ...t.stopLog, LINES.offline];
-    const origin = changedAt.getTime() - (startedAt ? BOOT_MS : 0);
-    await db.insert(serverEvents).values(
-      lines.map((message, i) => ({ serverId: seed.id, level: levelOf(message), message, createdAt: new Date(origin + i * 600) })),
-    );
-  }
 }
 
 // ── Settings ────────────────────────────────────────────────────────────────

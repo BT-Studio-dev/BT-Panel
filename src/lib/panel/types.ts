@@ -252,10 +252,9 @@ export function pickTheme(settings: PanelSettings): ThemeSettings {
 
 export const PANEL_VERSION = "v2.1.1";
 
-/** Demo accounts seeded on a fresh database (ids below match the seed). */
+/** Demo owner seeded on a fresh database (the id matches the seed). */
 export const DEMO_ACCOUNTS = [
   { id: "usr_admin", label: "Owner", username: "admin", password: "btpanel123" },
-  { id: "usr_steve", label: "Member", username: "steve", password: "steve12345" },
 ] as const;
 
 export function isAdminRole(role: PanelRole | string | undefined): boolean {
