@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html
       lang="en"
       data-theme-mode={mode}
-      data-card-glass={settings.cardGlass ? "on" : "off"}
+      data-card-glass={settings.glassOpacity > 0 ? "on" : "off"}
       data-card-theme={settings.cardTheme}
       style={vars as CSSProperties}
       suppressHydrationWarning

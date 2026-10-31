@@ -80,7 +80,7 @@ export function applyTheme(theme: ThemeSettings, mode: ThemeMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.themeMode = mode;
-  root.dataset.cardGlass = theme.cardGlass ? "on" : "off";
+  root.dataset.cardGlass = theme.glassOpacity > 0 ? "on" : "off";
   root.dataset.cardTheme = parseCardTheme(theme.cardTheme) ?? "auto";
   const vars = themeVars(theme, mode);
   for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);

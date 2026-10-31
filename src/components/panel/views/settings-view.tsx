@@ -342,12 +342,12 @@ function AppearancePanel() {
           </div>
           <ColorField label="Glass Tint" value={draft.glassTint} hint="Base color for glassmorphism panels" onChange={(v) => onGlassChange({ glassTint: v })} />
           <Slider
-            label="Glass Opacity"
+            label={`Glass Opacity: ${draft.glassOpacity > 0 ? "On" : "Off"}`}
             value={draft.glassOpacity}
             max={100}
             suffix="%"
-            hint="0% = fully transparent, 100% = full tint"
-            onChange={(v) => onGlassChange({ glassOpacity: v })}
+            hint="0% = Off (transparent cards, no backdrop blur) · above 0% = On with the selected opacity"
+            onChange={(v) => onGlassChange({ glassOpacity: v, cardGlass: v > 0 })}
           />
           <ColorField label="Nav Text" value={draft.navText} hint="Sidebar inactive item text" onChange={(v) => onGlassChange({ navText: v })} />
           <ColorField label="Nav Text Active" value={draft.navTextActive} hint="Sidebar active item text" onChange={(v) => onGlassChange({ navTextActive: v })} />
