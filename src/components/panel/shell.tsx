@@ -299,14 +299,7 @@ function Header() {
         >
           <Menu className="size-4" />
         </button>
-        <h1
-          className={cn(
-            "truncate text-[18px] font-extrabold tracking-tight",
-            view === "servers" && !openServerId && "hidden min-[420px]:block",
-          )}
-        >
-          {TITLES[view]}
-        </h1>
+        <h1 className="hidden truncate text-[18px] font-extrabold tracking-tight min-[420px]:block">{TITLES[view]}</h1>
       </div>
       <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {music.playing ? (

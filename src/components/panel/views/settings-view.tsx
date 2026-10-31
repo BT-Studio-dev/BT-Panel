@@ -554,7 +554,7 @@ function WallpapersPanel() {
   }
 
   return (
-    <div className="glass p-5">
+    <div className="glass p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
@@ -565,14 +565,15 @@ function WallpapersPanel() {
           </p>
         </div>
         {previewing ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-[var(--control-radius)] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn">
-            <Eye className="size-4" /> Previewing {wallpaperLabel(draft.wallpaperUrl)}
-            <button type="button" className="btn-ghost min-h-8 px-2.5 text-[11.5px]" onClick={() => setDraft({ wallpaperUrl: saved })}>
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-[var(--control-radius)] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn sm:w-auto">
+            <Eye className="size-4 shrink-0" />
+            <span className="min-w-28 flex-1">Previewing {wallpaperLabel(draft.wallpaperUrl)}</span>
+            <button type="button" className="btn-ghost min-h-11 px-2.5 text-[11.5px] pointer-fine:min-h-8" onClick={() => setDraft({ wallpaperUrl: saved })}>
               Revert
             </button>
             <button
               type="button"
-              className="btn-accent min-h-8 px-2.5 text-[11.5px]"
+              className="btn-accent min-h-11 px-2.5 text-[11.5px] pointer-fine:min-h-8"
               onClick={() => void apply(draft.wallpaperUrl, wallpaperLabel(draft.wallpaperUrl))}
             >
               Apply
@@ -586,7 +587,7 @@ function WallpapersPanel() {
           <button
             key={tab.id}
             type="button"
-            className={cn("pill-tab inline-flex items-center gap-1.5", mode === tab.id && "active")}
+            className={cn("pill-tab inline-flex min-h-11 items-center gap-1.5 pointer-fine:min-h-10", mode === tab.id && "active")}
             onClick={() => setMode(tab.id)}
           >
             <tab.icon className="size-3.5" />
@@ -603,7 +604,7 @@ function WallpapersPanel() {
                 key={c.id}
                 type="button"
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors",
+                  "min-h-11 rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors pointer-fine:min-h-0",
                   category === c.id ? "border-accent/60 bg-accent/15 text-ice" : "border-line bg-fill text-steel hover:text-ice",
                 )}
                 onClick={() => selectCategory(c.id)}
@@ -612,7 +613,7 @@ function WallpapersPanel() {
               </button>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 lg:gap-3 xl:grid-cols-4">
             {catalog.map((w) => (
               <WallpaperCard
                 key={w.id}
@@ -635,7 +636,7 @@ function WallpapersPanel() {
             ) : hasMore ? (
               <button
                 type="button"
-                className="btn-ghost min-h-9 px-4 text-[11.5px]"
+                className="btn-ghost min-h-11 px-4 text-[11.5px] pointer-fine:min-h-9"
                 disabled={loadingMore}
                 onClick={() => void loadMore()}
               >
@@ -656,7 +657,7 @@ function WallpapersPanel() {
             >
               HDQWalls
             </a>
-            . Hover a tile to preview or apply.
+            . Use a tile to preview or apply a background.
           </p>
         </>
       ) : null}
@@ -683,12 +684,12 @@ function WallpapersPanel() {
                   </div>
                   <p className="mt-0.5 text-[11.5px] font-semibold text-steel">{v.description}</p>
                   <div className="mt-3 flex gap-2">
-                    <button type="button" className="btn-ghost min-h-9 flex-1 px-2 text-[12px]" onClick={() => setDraft({ wallpaperUrl: value })}>
+                    <button type="button" className="btn-ghost min-h-11 flex-1 px-2 text-[12px] pointer-fine:min-h-9" onClick={() => setDraft({ wallpaperUrl: value })}>
                       <Eye className="size-3.5" /> Preview
                     </button>
                     <button
                       type="button"
-                      className="btn-accent min-h-9 flex-1 px-2 text-[12px]"
+                      className="btn-accent min-h-11 flex-1 px-2 text-[12px] pointer-fine:min-h-9"
                       disabled={busy === value}
                       onClick={() => void apply(value, v.name)}
                     >
@@ -744,18 +745,18 @@ function WallpaperCard({
     <div className="group">
       <div className={cn("wallpaper-tile", active && "active")}>
         <img src={item.thumb} alt={item.title} loading="lazy" />
-        <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/75 via-black/10 to-transparent p-2.5 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/75 via-black/10 to-transparent p-2.5 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100">
           <div className="flex w-full gap-1.5">
             <button
               type="button"
-              className="flex-1 rounded-[var(--control-radius)] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25"
+              className="min-h-11 flex-1 rounded-[var(--control-radius)] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25 pointer-fine:min-h-0"
               onClick={onPreview}
             >
               Preview
             </button>
             <button
               type="button"
-              className="flex-1 rounded-[var(--control-radius)] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110"
+              className="min-h-11 flex-1 rounded-[var(--control-radius)] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110 pointer-fine:min-h-0"
               onClick={onApply}
               disabled={busy}
             >
@@ -769,8 +770,8 @@ function WallpaperCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-1.5 flex items-center justify-between gap-2 px-0.5">
-        <span className="truncate text-[12.5px] font-extrabold">{item.title}</span>
+      <div className="mt-2 flex flex-col gap-0.5 px-0.5 min-[480px]:mt-1.5 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between min-[480px]:gap-2">
+        <span className="truncate text-[13px] font-extrabold min-[480px]:text-[12.5px]">{item.title}</span>
         <span className="truncate text-[10.5px] font-semibold text-faint">Source: {item.credit}</span>
       </div>
     </div>
