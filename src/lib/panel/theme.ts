@@ -18,7 +18,7 @@ export function parseCardTheme(value: unknown): CardTheme | null {
 }
 
 // Light scheme replaces the admin-picked glass tint / nav colors.
-const LIGHT = { tint: "250 251 254", nav: "#4e5669", navActive: "#13162a" } as const;
+const LIGHT = { tint: "255 255 255", nav: "#55657f", navActive: "#182238" } as const;
 
 export function themeVars(theme: ThemeSettings, mode: ThemeMode): Record<string, string> {
   const accent = toHexColor(theme.accentColor, DEFAULT_THEME.accentColor);

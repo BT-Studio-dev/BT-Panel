@@ -193,8 +193,8 @@ function LogoField({
 
 // ── Appearance ──────────────────────────────────────────────────────────────
 const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[] = [
-  { id: "dark", label: "Dark", hint: "classic night palette", icon: Moon },
-  { id: "light", label: "Light", hint: "bright day palette", icon: Sun },
+  { id: "dark", label: "Dark", hint: "midnight blue palette", icon: Moon },
+  { id: "light", label: "Light", hint: "porcelain daylight palette", icon: Sun },
 ];
 
 function AppearancePanel() {

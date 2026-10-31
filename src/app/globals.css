@@ -3,9 +3,9 @@
 @theme {
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
-  --color-ink: #080a12;
-  --color-ice: #e7e9f0;
-  --color-steel: #9da3b4;
+  --color-ink: #080b12;
+  --color-ice: #f3f6fc;
+  --color-steel: #a7b2c6;
   --color-crimson: #d00000;
   --color-ok: #4ade80;
   --color-warn: #ffc857;
@@ -21,17 +21,17 @@
 }
 
 :root {
-  --bg-main: #080a12;
+  --bg-main: #080b12;
   --wallpaper-url: none;
   --default-wallpaper: linear-gradient(
     135deg,
-    #07080f 0%,
-    #0b0e1a 50%,
-    #07080f 100%
+    #06080e 0%,
+    #0d1420 50%,
+    #070a10 100%
   );
   --bg-blur: 0px;
   --bg-opacity: 1;
-  --glass-tint: 10 12 20;
+  --glass-tint: 11 16 26;
   --glass-opacity: 0.62;
   --glass-blur: 20px;
   --glass-saturate: 160%;
@@ -40,14 +40,14 @@
   --control-radius: max(0px, calc(var(--panel-radius) - 6px));
   --accent: #d00000;
   --accent-glow: rgb(208 0 0 / 0.34);
-  --nav-text: #9da3b4;
-  --nav-text-active: #e7e9f0;
-  --text-primary: #e7e9f0;
-  --text-dim: #9da3b4;
-  --text-faint: rgb(255 255 255 / 0.55);
-  --glass-border: rgb(255 255 255 / 0.16);
-  --glass-shine: rgb(255 255 255 / 0.08);
-  --console-bg: rgb(3 4 8 / 0.72);
+  --nav-text: #a7b2c6;
+  --nav-text-active: #f3f6fc;
+  --text-primary: #f3f6fc;
+  --text-dim: #a7b2c6;
+  --text-faint: rgb(230 236 248 / 0.56);
+  --glass-border: rgb(167 178 198 / 0.16);
+  --glass-shine: rgb(230 236 248 / 0.09);
+  --console-bg: rgb(4 7 13 / 0.78);
 
   /* Root values retained for portals/modals nested inside a themed card. */
   --base-text-primary: var(--text-primary);
@@ -72,29 +72,29 @@
   --console-bg: rgb(0 0 0 / 0.85);
 }
 
-/* Light: white canvas, dark text, white glass. */
+/* Light: porcelain canvas, navy text, and clean white glass. */
 :root[data-theme-mode="light"] {
   color-scheme: light;
-  --bg-main: #e9edf4;
+  --bg-main: #f3f6fb;
   --default-wallpaper: linear-gradient(
     135deg,
-    #e7ebf3 0%,
-    #f5f7fc 50%,
-    #e7ebf3 100%
+    #e8eef7 0%,
+    #f9fbff 50%,
+    #edf2f9 100%
   );
-  --color-ice: #151826;
-  --color-steel: #4e5669;
-  --color-line: rgb(13 18 34 / 0.1);
-  --color-line-strong: rgb(13 18 34 / 0.2);
-  --color-fill: rgb(13 18 34 / 0.04);
-  --color-fill-strong: rgb(13 18 34 / 0.08);
-  --color-sunken: rgb(255 255 255 / 0.6);
-  --color-faint: rgb(13 18 34 / 0.5);
-  --text-primary: #151826;
-  --text-dim: #4e5669;
-  --text-faint: rgb(13 18 34 / 0.55);
-  --glass-border: rgb(13 18 34 / 0.12);
-  --glass-shine: rgb(255 255 255 / 0.55);
+  --color-ice: #182238;
+  --color-steel: #55657f;
+  --color-line: rgb(24 34 56 / 0.1);
+  --color-line-strong: rgb(24 34 56 / 0.2);
+  --color-fill: rgb(24 34 56 / 0.04);
+  --color-fill-strong: rgb(24 34 56 / 0.08);
+  --color-sunken: rgb(255 255 255 / 0.72);
+  --color-faint: rgb(24 34 56 / 0.52);
+  --text-primary: #182238;
+  --text-dim: #55657f;
+  --text-faint: rgb(24 34 56 / 0.56);
+  --glass-border: rgb(24 34 56 / 0.12);
+  --glass-shine: rgb(255 255 255 / 0.72);
   --console-bg: rgb(14 17 28 / 0.92);
 }
 
@@ -140,13 +140,13 @@
   }
 
   select option {
-    background: #0d0f18;
-    color: #e7e9f0;
+    background: #0b101a;
+    color: #f3f6fc;
   }
 
   :root[data-theme-mode="light"] select option {
     background: #ffffff;
-    color: #151826;
+    color: #182238;
   }
 }
 
@@ -201,18 +201,18 @@
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(90deg, rgb(8 10 18 / 0.55) 0%, transparent 28%),
+      linear-gradient(90deg, rgb(8 11 18 / 0.55) 0%, transparent 28%),
       linear-gradient(
         180deg,
-        rgb(8 10 18 / 0.28) 0%,
+        rgb(8 11 18 / 0.28) 0%,
         transparent 22%,
-        rgb(8 10 18 / 0.45) 100%
+        rgb(8 11 18 / 0.45) 100%
       );
   }
 
   /* ── Glass ─────────────────────────────────────────────────────────────── */
   .glass {
-    background-color: rgb(10 12 20 / 0.45);
+    background-color: rgb(11 16 26 / 0.45);
     background: rgb(var(--glass-tint) / calc(0.72 * var(--glass-opacity)));
     border: 1px solid var(--glass-border);
     border-radius: var(--panel-radius);
@@ -278,7 +278,7 @@
     --color-sunken: var(--base-color-sunken);
     --glass-border: var(--base-glass-border);
     --glass-shine: var(--base-glass-shine);
-    background-color: rgb(10 12 20 / 1);
+    background-color: rgb(11 16 26 / 1);
     background: rgb(var(--glass-tint) / 1);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -813,12 +813,13 @@
   /* ── Light-mode refinements ─────────────────────────────────────────── */
   :root[data-theme-mode="light"] .bg-vignette {
     background:
-      linear-gradient(90deg, rgb(233 237 244 / 0.75) 0%, transparent 28%),
+      linear-gradient(rgb(243 246 251 / 0.38), rgb(243 246 251 / 0.38)),
+      linear-gradient(90deg, rgb(243 246 251 / 0.75) 0%, transparent 28%),
       linear-gradient(
         180deg,
-        rgb(233 237 244 / 0.45) 0%,
+        rgb(243 246 251 / 0.45) 0%,
         transparent 22%,
-        rgb(233 237 244 / 0.58) 100%
+        rgb(243 246 251 / 0.58) 100%
       );
   }
 
@@ -851,12 +852,23 @@
     background: rgb(255 255 255 / 0.65);
   }
 
+  :root[data-theme-mode="light"] .pill-tab:not(.active) {
+    background: rgb(255 255 255 / 0.78);
+    color: var(--text-dim);
+    box-shadow: inset 0 0 0 1px rgb(24 34 56 / 0.08);
+  }
+
+  :root[data-theme-mode="light"] .pill-tab:not(.active):hover {
+    background: rgb(255 255 255 / 0.95);
+    color: var(--text-primary);
+  }
+
   :root[data-theme-mode="light"] .user-table tbody tr:hover {
     background: rgb(13 18 34 / 0.035);
   }
 
   :root[data-theme-mode="light"] .presence-dot {
-    border-color: rgb(233 237 244 / 0.9);
+    border-color: rgb(243 246 251 / 0.9);
   }
 
   :root[data-theme-mode="light"] .scrollbar-thin {

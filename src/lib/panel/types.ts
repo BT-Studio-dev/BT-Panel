@@ -23,7 +23,7 @@ export type AdminSection =
   | "extensions"
   | "api-keys";
 
-/** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
+/** Panel color-scheme: midnight dark, OLED pure-black (#000000), or porcelain light. */
 export type ThemeMode = "dark" | "light" | "oled";
 export type CardTheme = "auto" | "hidden" | "off-white" | "dark";
 
@@ -181,9 +181,9 @@ export const DEFAULT_THEME: ThemeSettings = {
   bgBlur: 0,
   bgOpacity: 100,
   accentColor: "#d00000",
-  glassTint: "#0a0c14",
-  navText: "#9da3b4",
-  navTextActive: "#e7e9f0",
+  glassTint: "#0b101a",
+  navText: "#a7b2c6",
+  navTextActive: "#f3f6fc",
   glassBlur: 32,
   glassSaturate: 180,
   borderRadius: 18,
