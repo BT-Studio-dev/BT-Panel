@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ArrowUpRight, Bot, CodeXml, Crosshair, Flame, Hexagon, LoaderCircle, Pickaxe, Swords, X } from "lucide-react";
 import { getTemplate, type TemplateIcon } from "@/lib/panel/catalog";
 import type { ServerStatus } from "@/lib/panel/types";
@@ -367,8 +368,10 @@ export function Modal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
-  if (!open) return null;
-  return (
+  if (!open || typeof document === "undefined") return null;
+  // Glass blur and overflow create fixed-position containing blocks/clips.
+  // Portal every dialog so nested cards can never trap it inside their bounds.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 grid overflow-y-auto bg-black/85 p-4 [place-items:center]"
       onMouseDown={onClose}
@@ -395,7 +398,8 @@ export function Modal({
         </div>
         <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
