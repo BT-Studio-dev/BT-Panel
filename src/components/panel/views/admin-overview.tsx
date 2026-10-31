@@ -14,14 +14,14 @@ import {
   Users,
 } from "lucide-react";
 import { NODES, SERVER_TEMPLATES, getTemplate } from "@/lib/panel/catalog";
-import { PANEL_VERSION, type AdminActivityDto } from "@/lib/panel/types";
+import type { AdminActivityDto } from "@/lib/panel/types";
 import { api, cn, formatJoined, formatMb, timeAgo } from "@/lib/utils";
 import { usePanel } from "../context";
 import { EmptyState, SectionCard, Spinner, StatusBadge, TemplateBadge, useNow } from "../ui";
 import { AdminPageHeader, AdminStat } from "./admin-shared";
 
 export function AdminOverviewView() {
-  const { servers, userCount, openServer, setAdminSection, profile } = usePanel();
+  const { servers, userCount, openServer, setAdminSection } = usePanel();
   const running = servers.filter((server) => server.status === "running").length;
   const transitioning = servers.filter((server) => server.status === "starting" || server.status === "stopping").length;
   const minecraft = servers.filter((server) => server.template === "minecraft").length;
@@ -30,12 +30,6 @@ export function AdminOverviewView() {
 
   return (
     <div>
-      <AdminPageHeader
-        title="Administration Overview"
-        description={`A live view of the BT Panel Game fleet, signed in as ${profile.username}.`}
-        actions={<span className="pill-tab active">Panel {PANEL_VERSION}</span>}
-      />
-
       <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <AdminStat icon={ServerIcon} label="Servers" value={servers.length} detail={`${transitioning} currently transitioning`} />
         <AdminStat icon={ActivityIcon} label="Running" value={running} detail={`${servers.length - running} not running`} tone="ok" />
