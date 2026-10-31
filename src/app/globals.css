@@ -248,6 +248,11 @@
     background: rgb(var(--glass-tint) / calc(0.92 * var(--glass-opacity)));
   }
 
+  /* Header and tab bars need a stable surface over detailed wallpapers. */
+  .glass-bar {
+    background: rgb(var(--glass-tint) / 0.94);
+  }
+
   .glass-soft {
     background: rgb(var(--glass-tint) / calc(0.5 * var(--glass-opacity)));
   }

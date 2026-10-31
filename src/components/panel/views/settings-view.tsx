@@ -52,7 +52,7 @@ export function SettingsView() {
           Configure your panel, appearance, access, and runtime defaults.
         </p>
       </div>
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <div className="glass glass-strong glass-bar mb-4 flex flex-wrap gap-1.5 p-1.5">
         {TABS.map((tab) => (
           <button
             key={tab.id}
