@@ -80,14 +80,17 @@ export function AdminView() {
   return (
     <div className="view-enter">
       <div className="grid items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
-        <nav className="glass scrollbar-thin flex gap-1 overflow-x-auto p-2.5 xl:sticky xl:top-5 xl:flex-col xl:overflow-visible" aria-label="Admin Control Center sections">
+        <nav
+          className="glass grid grid-cols-2 items-start gap-1 p-2.5 min-[560px]:grid-cols-3 lg:grid-cols-4 xl:sticky xl:top-5 xl:grid-cols-1"
+          aria-label="Admin Control Center sections"
+        >
           {ADMIN_SECTIONS.map((section) => (
             <button
               key={section.id}
               type="button"
               onClick={() => setAdminSection(section.id)}
               className={cn(
-                "flex min-h-11 shrink-0 items-center gap-2.5 rounded-[var(--control-radius)] border border-transparent px-3 text-left text-[12.5px] font-bold whitespace-nowrap text-steel transition-colors hover:bg-fill hover:text-ice xl:w-full",
+                "flex min-h-11 w-full min-w-0 items-center gap-2.5 rounded-[var(--control-radius)] border border-transparent px-3 text-left text-[12.5px] leading-tight font-bold text-steel transition-colors hover:bg-fill hover:text-ice",
                 adminSection === section.id && "border-accent/25 bg-accent/12 text-accent",
               )}
               aria-current={adminSection === section.id ? "page" : undefined}

@@ -26,7 +26,7 @@ export function parseShaderWallpaper(url: string | undefined | null): ShaderVari
   return SHADER_VARIANTS.some((v) => v.id === id) ? (id as ShaderVariant) : null;
 }
 
-// ── Curated wallpapers (HDQWalls, 3840×2160) ────────────────────────────────
+// ── Curated wallpapers (bundled high-resolution artwork) ───────────────────
 export type WallpaperItem = {
   id: string;
   title: string;
@@ -36,6 +36,8 @@ export type WallpaperItem = {
   credit: string;
 };
 
+export const WALLPAPER_SOURCE = { name: "WallpaperAccess", url: "https://wallpaperaccess.com/" } as const;
+
 export const WALLPAPER_CATEGORIES: { id: "all" | WallpaperItem["category"]; name: string }[] = [
   { id: "all", name: "All Wallpapers" },
   { id: "space", name: "Space & Galaxy" },
@@ -43,86 +45,54 @@ export const WALLPAPER_CATEGORIES: { id: "all" | WallpaperItem["category"]; name
   { id: "nature", name: "Nature & Landscapes" },
 ];
 
-function hdqwalls(id: string) {
+function wallpaper(id: string, title: string, category: WallpaperItem["category"]): WallpaperItem {
   return {
-    thumb: `https://images.hdqwalls.com/wallpapers/bthumb/${id}.jpg`,
-    full: `https://images.hdqwalls.com/download/${id}-3840x2160.jpg`,
+    id,
+    title,
+    category,
+    thumb: `/wallpapers/thumbs/${id}.webp`,
+    full: `/wallpapers/full/${id}.jpg`,
+    credit: WALLPAPER_SOURCE.name,
   };
 }
 
 export const WALLPAPERS: WallpaperItem[] = [
-  { id: "cosmic-nebula", title: "Cosmic Nebula", category: "space", credit: "HDQWalls", ...hdqwalls("space-art-nebula-8k-jy") },
-  { id: "cloud-planet", title: "Planet in the Clouds", category: "space", credit: "HDQWalls", ...hdqwalls("planet-in-the-clouds-yj") },
-  { id: "event-horizon", title: "Event Horizon", category: "space", credit: "HDQWalls", ...hdqwalls("black-hole-ai-43") },
-  {
-    id: "cosmic-rings",
-    title: "Beyond the Rings",
-    category: "space",
-    credit: "HDQWalls",
-    ...hdqwalls("beyond-the-rings-cosmic-odyssey-q9"),
-  },
-  { id: "neon-geometry", title: "Neon Geometry", category: "cyber", credit: "HDQWalls", ...hdqwalls("abstract-x-neon-shape-qw") },
-  {
-    id: "dual-neon-rings",
-    title: "Dual Neon Rings",
-    category: "cyber",
-    credit: "HDQWalls",
-    ...hdqwalls("neon-dual-rings-futuristic-abstract-glow-cn"),
-  },
-  { id: "crimson-sphere", title: "Crimson Sphere", category: "cyber", credit: "HDQWalls", ...hdqwalls("crimson-black-sphere-yj") },
-  {
-    id: "ribbon-light",
-    title: "Midnight Ribbon",
-    category: "cyber",
-    credit: "HDQWalls",
-    ...hdqwalls("dark-blue-black-abstract-with-warm-ribbon-light-6z"),
-  },
-  {
-    id: "sunset-valley",
-    title: "Sunset Valley",
-    category: "nature",
-    credit: "HDQWalls",
-    ...hdqwalls("beautiful-landscape-sunset-5k-yu"),
-  },
-  {
-    id: "iceland-falls",
-    title: "Iceland Falls",
-    category: "nature",
-    credit: "HDQWalls",
-    ...hdqwalls("seljalandsfoss-waterfall-iceland-jc"),
-  },
-  { id: "moraine-lake", title: "Moraine Lake", category: "nature", credit: "HDQWalls", ...hdqwalls("moraine-lake-canada-ek") },
-  {
-    id: "alpine-reflection",
-    title: "Alpine Reflection",
-    category: "nature",
-    credit: "HDQWalls",
-    ...hdqwalls("swiss-alps-lake-reflection-rx"),
-  },
-  { id: "digital-starfield", title: "Digital Starfield", category: "space", credit: "HDQWalls", ...hdqwalls("space-galaxy-universe-digital-art-stars-ht") },
-  { id: "galactic-stars", title: "Galactic Stars", category: "space", credit: "HDQWalls", ...hdqwalls("space-galaxy-stars-8k-1q") },
-  { id: "lunar-art", title: "Lunar Art", category: "space", credit: "HDQWalls", ...hdqwalls("art-space-moon-hk") },
-  { id: "andromeda", title: "Andromeda", category: "space", credit: "HDQWalls", ...hdqwalls("the-andromeda-galaxy-j6") },
-  { id: "andromeda-glow", title: "Andromeda Glow", category: "space", credit: "HDQWalls", ...hdqwalls("andromeda-galaxy-5k-gb") },
-  { id: "starlight", title: "Starlight", category: "space", credit: "HDQWalls", ...hdqwalls("galaxy-stars-4k-7j") },
-  { id: "nebula-exposure", title: "Nebula Exposure", category: "space", credit: "HDQWalls", ...hdqwalls("nebula-space-long-exposure-3d") },
-  { id: "red-cosmos", title: "Red Cosmos", category: "space", credit: "HDQWalls", ...hdqwalls("red-nebula-astrononmy-5k-ol") },
-  { id: "sunset-twist", title: "Sunset Twist", category: "cyber", credit: "HDQWalls", ...hdqwalls("sunset-twist-abstract-3d-4c") },
-  { id: "sharp-abstract", title: "Sharp Abstract", category: "cyber", credit: "HDQWalls", ...hdqwalls("abstract-sharp-things-jm") },
-  { id: "rainbow-tunnel", title: "Rainbow Tunnel", category: "cyber", credit: "HDQWalls", ...hdqwalls("the-spiky-rainbow-orb-tunnel-0o") },
-  { id: "geometric-flow", title: "Geometric Flow", category: "cyber", credit: "HDQWalls", ...hdqwalls("geometric-flow-aq") },
-  { id: "color-spiral", title: "Color Spiral", category: "cyber", credit: "HDQWalls", ...hdqwalls("colorful-spiral-abstract-lq") },
-  { id: "chromatic-chaos", title: "Chromatic Chaos", category: "cyber", credit: "HDQWalls", ...hdqwalls("chromatic-chaos-eu") },
-  { id: "shadow-sphere", title: "Shadow Sphere", category: "cyber", credit: "HDQWalls", ...hdqwalls("shadow-sphere-abstract-5k-wq") },
-  { id: "red-fractal", title: "Red Fractal", category: "cyber", credit: "HDQWalls", ...hdqwalls("red-fractal-shape-object-abstract-5k-ny") },
-  { id: "red-cliff", title: "Red Cliff", category: "nature", credit: "HDQWalls", ...hdqwalls("shrine-pass-road-red-cliff-united-states-bs") },
-  { id: "lofoten", title: "Lofoten", category: "nature", credit: "HDQWalls", ...hdqwalls("lofoten-norwegen-nu") },
-  { id: "forest-sunbeams", title: "Forest Sunbeams", category: "nature", credit: "HDQWalls", ...hdqwalls("autumn-forest-sunbeams-an") },
-  { id: "yucca-dunes", title: "Yucca Dunes", category: "nature", credit: "HDQWalls", ...hdqwalls("the-full-sunset-over-the-pink-sky-and-yucca-dunes-ck") },
-  { id: "fairy-glen", title: "Fairy Glen", category: "nature", credit: "HDQWalls", ...hdqwalls("fairy-glen-sunrise-valley-ls") },
-  { id: "golden-mountain", title: "Golden Mountain", category: "nature", credit: "HDQWalls", ...hdqwalls("golden-mountain-glow-2t") },
-  { id: "green-night", title: "Green Night", category: "nature", credit: "HDQWalls", ...hdqwalls("green-landscape-and-night-qg") },
-  { id: "skogafoss", title: "Skogafoss Rainbow", category: "nature", credit: "HDQWalls", ...hdqwalls("skogafoss-waterfall-iceland-waterfall-with-rainbow-av") },
+  wallpaper("cosmic-nebula", "Cosmic Nebula", "space"),
+  wallpaper("cloud-planet", "Planet in the Clouds", "space"),
+  wallpaper("event-horizon", "Event Horizon", "space"),
+  wallpaper("cosmic-rings", "Beyond the Rings", "space"),
+  wallpaper("neon-geometry", "Neon Geometry", "cyber"),
+  wallpaper("dual-neon-rings", "Dual Neon Rings", "cyber"),
+  wallpaper("crimson-sphere", "Crimson Sphere", "cyber"),
+  wallpaper("ribbon-light", "Midnight Ribbon", "cyber"),
+  wallpaper("sunset-valley", "Sunset Valley", "nature"),
+  wallpaper("iceland-falls", "Iceland Falls", "nature"),
+  wallpaper("moraine-lake", "Moraine Lake", "nature"),
+  wallpaper("alpine-reflection", "Alpine Reflection", "nature"),
+  wallpaper("digital-starfield", "Digital Starfield", "space"),
+  wallpaper("galactic-stars", "Galactic Stars", "space"),
+  wallpaper("lunar-art", "Lunar Art", "space"),
+  wallpaper("andromeda", "Ember Nebula", "space"),
+  wallpaper("andromeda-glow", "Frozen Worlds", "space"),
+  wallpaper("starlight", "Starlight", "space"),
+  wallpaper("nebula-exposure", "Planetary Dawn", "space"),
+  wallpaper("red-cosmos", "Meteor Shower", "space"),
+  wallpaper("sunset-twist", "Violet Tunnel", "cyber"),
+  wallpaper("sharp-abstract", "Sharp Abstract", "cyber"),
+  wallpaper("rainbow-tunnel", "Crimson Tunnel", "cyber"),
+  wallpaper("geometric-flow", "Geometric Flow", "cyber"),
+  wallpaper("color-spiral", "Color Spiral", "cyber"),
+  wallpaper("chromatic-chaos", "Chromatic Chaos", "cyber"),
+  wallpaper("shadow-sphere", "Dark Constellation", "cyber"),
+  wallpaper("red-fractal", "Infinite Corridor", "cyber"),
+  wallpaper("red-cliff", "Forest River", "nature"),
+  wallpaper("lofoten", "Lofoten", "nature"),
+  wallpaper("forest-sunbeams", "Forest Sunset", "nature"),
+  wallpaper("yucca-dunes", "Alpine Dusk", "nature"),
+  wallpaper("fairy-glen", "Panorama Ridge", "nature"),
+  wallpaper("golden-mountain", "Yosemite Falls", "nature"),
+  wallpaper("green-night", "Iceland Highlands", "nature"),
+  wallpaper("skogafoss", "Lake Louise", "nature"),
 ];
 
 // ── Server templates ────────────────────────────────────────────────────────

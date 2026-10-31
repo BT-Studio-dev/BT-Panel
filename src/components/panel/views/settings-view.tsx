@@ -21,6 +21,7 @@ import {
   SHADER_VARIANTS,
   WALLPAPERS,
   WALLPAPER_CATEGORIES,
+  WALLPAPER_SOURCE,
   parseShaderWallpaper,
   shaderWallpaperValue,
   type WallpaperItem,
@@ -282,7 +283,7 @@ function AppearancePanel() {
                 className="panel-input"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://images.hdqwalls.com/…"
+                placeholder="https://example.com/wallpaper.jpg"
               />
               <button
                 type="button"
@@ -454,6 +455,12 @@ type EngineMode = "catalog" | "shaders" | "url" | "upload";
 type WallpaperCategory = (typeof WALLPAPER_CATEGORIES)[number]["id"];
 type WallpaperPage = { items: WallpaperItem[]; hasMore: boolean };
 
+const WALLPAPER_PAGE_SIZE = 12;
+
+function wallpapersInCategory(category: WallpaperCategory) {
+  return WALLPAPERS.filter((item) => category === "all" || item.category === category);
+}
+
 const ENGINE_TABS: { id: EngineMode; label: string; icon: typeof Eye }[] = [
   { id: "catalog", label: "4K Wallpapers", icon: ImageIcon },
   { id: "shaders", label: "Live Shaders", icon: WavesHorizontal },
@@ -465,10 +472,10 @@ function WallpapersPanel() {
   const { draft, setDraft, persistTheme, settings } = usePanel();
   const [mode, setMode] = useState<EngineMode>("catalog");
   const [category, setCategory] = useState<WallpaperCategory>("all");
-  const [remoteWallpapers, setRemoteWallpapers] = useState<WallpaperItem[]>([]);
-  const [page, setPage] = useState(1);
+  const [pagedWallpapers, setPagedWallpapers] = useState<WallpaperItem[]>([]);
+  const [page, setPage] = useState(2);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(() => WALLPAPERS.length > WALLPAPER_PAGE_SIZE);
   const [loadError, setLoadError] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef(0);
@@ -487,7 +494,7 @@ function WallpapersPanel() {
     try {
       const data = await api<WallpaperPage>(`/api/wallpapers?category=${category}&page=${page}`);
       if (requestId !== requestRef.current) return;
-      setRemoteWallpapers((current) => {
+      setPagedWallpapers((current) => {
         const known = new Set(current.map((item) => item.full));
         return [...current, ...data.items.filter((item) => !known.has(item.full))];
       });
@@ -529,15 +536,15 @@ function WallpapersPanel() {
     requestRef.current += 1;
     loadingRef.current = false;
     setCategory(next);
-    setRemoteWallpapers([]);
-    setPage(1);
-    setHasMore(true);
+    setPagedWallpapers([]);
+    setPage(2);
+    setHasMore(wallpapersInCategory(next).length > WALLPAPER_PAGE_SIZE);
     setLoadError(false);
     setLoadingMore(false);
   }
 
-  const curated = WALLPAPERS.filter((item) => category === "all" || item.category === category);
-  const catalog = [...new Map([...curated, ...remoteWallpapers].map((item) => [item.full, item])).values()];
+  const curated = wallpapersInCategory(category).slice(0, WALLPAPER_PAGE_SIZE);
+  const catalog = [...new Map([...curated, ...pagedWallpapers].map((item) => [item.full, item])).values()];
 
   async function apply(value: string, label: string) {
     setBusy(value);
@@ -642,16 +649,16 @@ function WallpapersPanel() {
             )}
           </div>
           <p className="mt-3 text-[11px] font-semibold text-faint">
-            New 4K wallpapers via{" "}
+            High-resolution wallpapers sourced from{" "}
             <a
-              href="https://hdqwalls.com/"
+              href={WALLPAPER_SOURCE.url}
               target="_blank"
               rel="noreferrer"
               className="font-extrabold text-steel underline decoration-line-strong underline-offset-2 transition-colors hover:text-ice"
             >
-              HDQWalls
+              {WALLPAPER_SOURCE.name}
             </a>
-            . Use a tile to preview or apply a background.
+            , served locally for reliable previews. Use a tile to preview or apply a background.
           </p>
         </>
       ) : null}
