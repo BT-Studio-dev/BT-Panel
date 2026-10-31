@@ -57,8 +57,12 @@ export function getLocalModeOverride(): ThemeMode | null {
   } catch {
     /* storage unavailable */
   }
-  const match = document.cookie.match(new RegExp(`(?:^|; )${MODE_COOKIE}=([^;]*)`));
-  return parseMode(match?.[1]);
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${MODE_COOKIE}=([^;]*)`));
+    return parseMode(match?.[1]);
+  } catch {
+    return null;
+  }
 }
 
 export function setLocalModeOverride(mode: ThemeMode | null) {
@@ -71,9 +75,13 @@ export function setLocalModeOverride(mode: ThemeMode | null) {
   }
   const secure = window.location.protocol === "https:";
   const attrs = secure ? "; SameSite=None; Secure; Partitioned" : "; SameSite=Lax";
-  document.cookie = mode
-    ? `${MODE_COOKIE}=${mode}; Path=/; Max-Age=31536000${attrs}`
-    : `${MODE_COOKIE}=; Path=/; Max-Age=0${attrs}`;
+  try {
+    document.cookie = mode
+      ? `${MODE_COOKIE}=${mode}; Path=/; Max-Age=31536000${attrs}`
+      : `${MODE_COOKIE}=; Path=/; Max-Age=0${attrs}`;
+  } catch {
+    /* A blocked cookie store must not prevent the in-memory theme switch. */
+  }
 }
 
 export function applyTheme(theme: ThemeSettings, mode: ThemeMode) {

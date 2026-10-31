@@ -190,13 +190,20 @@ export function ToggleRow({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[var(--control-radius)] border border-line bg-fill px-4 py-3">
-      <div className="min-w-0">
-        <div className="text-[13.5px] font-extrabold">{label}</div>
-        {hint ? <div className="mt-0.5 text-[12px] font-semibold text-steel">{hint}</div> : null}
-      </div>
-      <Switch checked={checked} onChange={onChange} label={label} />
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className="flex w-full items-center justify-between gap-4 rounded-[var(--control-radius)] border border-line bg-fill px-4 py-3 text-left transition-colors hover:border-line-strong"
+      onClick={() => onChange(!checked)}
+    >
+      <span className="min-w-0">
+        <span className="block text-[13.5px] font-extrabold">{label}</span>
+        {hint ? <span className="mt-0.5 block text-[12px] font-semibold text-steel">{hint}</span> : null}
+      </span>
+      <span className="switch" data-checked={checked} aria-hidden="true" />
+    </button>
   );
 }
 

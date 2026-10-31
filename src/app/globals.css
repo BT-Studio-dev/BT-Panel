@@ -706,6 +706,7 @@
   /* ── Switch ────────────────────────────────────────────────────────────── */
   .switch {
     position: relative;
+    display: inline-block;
     width: 42px;
     height: 24px;
     flex-shrink: 0;
@@ -728,13 +729,15 @@
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .switch[aria-checked="true"] {
+  .switch[aria-checked="true"],
+  .switch[data-checked="true"] {
     background: var(--accent);
     border-color: transparent;
     box-shadow: 0 0 12px var(--accent-glow);
   }
 
-  .switch[aria-checked="true"]::after {
+  .switch[aria-checked="true"]::after,
+  .switch[data-checked="true"]::after {
     transform: translateX(18px);
   }
 
@@ -1115,5 +1118,16 @@
     background: transparent;
     border-color: transparent;
     box-shadow: none;
+  }
+}
+
+/* Mobile notifications appear below the header without sliding through its
+ * controls. Opacity still animates, and dismissal remains fully interactive. */
+@media (max-width: 600px) {
+  [data-sonner-toaster] [data-sonner-toast] {
+    transition:
+      opacity 180ms ease,
+      height 180ms ease,
+      box-shadow 150ms ease;
   }
 }

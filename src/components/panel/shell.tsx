@@ -100,7 +100,9 @@ function ShellInner() {
       <Toaster
         theme={mode === "light" ? "light" : "dark"}
         position="top-right"
+        visibleToasts={1}
         offset={{ top: 72, right: 20 }}
+        mobileOffset={{ top: 72, right: 16, left: 16 }}
         toastOptions={{
           style: {
             background: "rgb(var(--glass-tint) / 0.92)",
