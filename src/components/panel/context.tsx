@@ -25,7 +25,7 @@ import {
   type ThemeMode,
   type ThemeSettings,
 } from "@/lib/panel/types";
-import { api, clearCachedPanel, clearStoredToken, isSessionExpiredError, SESSION_EXPIRED_EVENT } from "@/lib/utils";
+import { ApiError, api, clearCachedPanel, clearStoredToken, isSessionExpiredError, SESSION_EXPIRED_EVENT } from "@/lib/utils";
 
 type MusicPrefs = { volume: number; loop: boolean; autoplay: boolean };
 
@@ -185,15 +185,25 @@ export function PanelProvider({
   }, [draft]);
 
   const persistSettings = useCallback(async (patch: Partial<PanelSettings>, message = "Settings saved") => {
-    try {
-      const res = await api<{ settings: PanelSettings }>("/api/settings", { method: "PUT", body: patch });
-      setSettings(res.settings);
-      toast.success(message);
-      return true;
-    } catch (err) {
-      if (!isSessionExpiredError(err)) toast.error(err instanceof Error ? err.message : "Could not save settings");
-      return false;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const res = await api<{ settings: PanelSettings }>("/api/settings", { method: "PUT", body: patch });
+        setSettings(res.settings);
+        toast.success(message);
+        return true;
+      } catch (err) {
+        if (isSessionExpiredError(err)) return false;
+        // Settings PUTs are idempotent. Retry a dropped connection once, but
+        // never repeat a server response such as a validation error or 404.
+        if (!(err instanceof ApiError) && attempt === 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, 350));
+          continue;
+        }
+        toast.error(err instanceof Error ? err.message : "Could not save settings");
+        return false;
+      }
     }
+    return false;
   }, []);
 
   const toggleMode = useCallback(() => {
