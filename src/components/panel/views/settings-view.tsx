@@ -353,7 +353,14 @@ function AppearancePanel() {
           <ColorField label="Nav Text Active" value={draft.navTextActive} hint="Sidebar active item text" onChange={(v) => onGlassChange({ navTextActive: v })} />
           <Slider label="Glass Blur" value={draft.glassBlur} max={40} suffix="px" onChange={(v) => onGlassChange({ glassBlur: v })} />
           <Slider label="Glass Saturate" value={draft.glassSaturate} min={100} max={250} suffix="%" onChange={(v) => onGlassChange({ glassSaturate: v })} />
-          <Slider label="Border Radius" value={draft.borderRadius} max={24} suffix="px" onChange={(v) => onGlassChange({ borderRadius: v })} />
+          <Slider
+            label="Border Radius"
+            value={draft.borderRadius}
+            max={24}
+            suffix="px"
+            hint="Applies to all cards, navigation, headers, tabs, and controls"
+            onChange={(v) => onGlassChange({ borderRadius: v })}
+          />
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-accent" disabled={saving} onClick={() => void save()}>
               {saving ? <Spinner /> : <Check className="size-4" />} Save Theme
@@ -605,7 +612,7 @@ function WallpapersPanel() {
                 key={c.id}
                 type="button"
                 className={cn(
-                  "min-h-11 rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors pointer-fine:min-h-0",
+                  "min-h-11 rounded-[var(--control-radius)] border px-3 py-1.5 text-[12px] font-bold transition-colors pointer-fine:min-h-0",
                   category === c.id ? "border-accent/60 bg-accent/15 text-ice" : "border-line bg-fill text-steel hover:text-ice",
                 )}
                 onClick={() => selectCategory(c.id)}

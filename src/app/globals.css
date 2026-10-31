@@ -468,7 +468,7 @@
 
   .pill-tab {
     min-height: 40px;
-    border-radius: 999px;
+    border-radius: var(--control-radius);
     padding: 0 16px;
     font-size: 13px;
     font-weight: 800;
