@@ -183,6 +183,9 @@ export function clearCachedPanel() {
   }
 }
 
+/** Broadcast confirmed auth failures to the mounted panel shell. */
+export const SESSION_EXPIRED_EVENT = "btpanel:session-expired";
+
 /** JSON fetch error with the HTTP status retained for auth/session decisions. */
 export class ApiError extends Error {
   status: number;
@@ -221,6 +224,7 @@ export async function api<T>(url: string, init?: { method?: string; body?: unkno
     data = null;
   }
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined") window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
     const message =
       data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
         ? (data as { error: string }).error

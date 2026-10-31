@@ -48,7 +48,7 @@ export function ServersView() {
 
 // ── List ────────────────────────────────────────────────────────────────────
 function ServerList() {
-  const { servers, serverQuery: query } = usePanel();
+  const { servers, searchQuery: query } = usePanel();
   const [filter, setFilter] = useState<Filter>("all");
   const [creating, setCreating] = useState(false);
   const now = useNow(2000);

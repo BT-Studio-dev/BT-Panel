@@ -26,7 +26,7 @@ import { PanelProvider, usePanel } from "./context";
 import { BrandMark, PresenceAvatar } from "./ui";
 import { WallpaperLayer } from "./wallpaper-layer";
 import { ServersView } from "./views/servers-view";
-import { AdminView } from "./views/admin-view";
+import { AdminView, ADMIN_SECTIONS } from "./views/admin-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
 import { MusicView, TeamView } from "./views/misc-views";
@@ -273,8 +273,201 @@ function NavButton({
   );
 }
 
+type HeaderSearchResult = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+  select: () => void;
+};
+
+const SETTINGS_SEARCH_TABS = [
+  { id: "general", label: "General" },
+  { id: "appearance", label: "Appearance" },
+  { id: "wallpapers", label: "4K Wallpapers" },
+  { id: "bars", label: "Bars" },
+  { id: "access", label: "Access" },
+] as const;
+
+function HeaderSearch() {
+  const {
+    view,
+    openServerId,
+    adminSection,
+    searchQuery,
+    setSearchQuery,
+    servers,
+    team,
+    settings,
+    isAdmin,
+    setView,
+    openServer,
+    setAdminSection,
+    setSettingsTab,
+  } = usePanel();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(event: MouseEvent) {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const query = searchQuery.trim().toLowerCase();
+  const activitySearch = view === "settings" && adminSection === "activity";
+  const inline = (view === "servers" && !openServerId) || view === "team" || view === "users" || activitySearch;
+  const results: HeaderSearchResult[] = [];
+  if (query && !inline) {
+    const matches = (...values: (string | null | undefined)[]) => values.some((value) => value?.toLowerCase().includes(query));
+    NAV.filter((item) => {
+      if (item.section === "admin" && !isAdmin) return false;
+      if (item.id === "team" && !settings.showTeam && !isAdmin) return false;
+      return matches(item.label, TITLES[item.id]);
+    }).forEach((item) => {
+      results.push({
+        id: `page-${item.id}`,
+        title: item.label,
+        subtitle: "Panel page",
+        icon: item.icon,
+        select: () => {
+          setSearchQuery("");
+          setView(item.id);
+        },
+      });
+    });
+    if (isAdmin) {
+      ADMIN_SECTIONS.filter((section) => matches(section.label)).forEach((section) => {
+        results.push({
+          id: `admin-${section.id}`,
+          title: section.label,
+          subtitle: "Admin Control Center",
+          icon: section.icon,
+          select: () => {
+            setSearchQuery("");
+            setAdminSection(section.id);
+          },
+        });
+      });
+      SETTINGS_SEARCH_TABS.filter((tab) => matches(tab.label, `${tab.label} settings`)).forEach((tab) => {
+        results.push({
+          id: `settings-${tab.id}`,
+          title: tab.label,
+          subtitle: "Settings Management",
+          icon: Settings,
+          select: () => {
+            setSearchQuery("");
+            setSettingsTab(tab.id);
+          },
+        });
+      });
+    }
+    servers
+      .filter((server) => matches(server.name, server.template, server.node, server.ip, server.ownerName))
+      .forEach((server) => {
+        results.push({
+          id: `server-${server.id}`,
+          title: server.name,
+          subtitle: `Server · ${server.ip}:${server.port}`,
+          icon: Server,
+          select: () => {
+            setSearchQuery("");
+            openServer(server.id);
+          },
+        });
+      });
+    team
+      .filter((member) => matches(member.username, member.email, member.role, member.bio))
+      .forEach((member) => {
+        results.push({
+          id: `member-${member.userId}`,
+          title: member.username,
+          subtitle: `Team · ${member.role}`,
+          icon: Users,
+          select: () => {
+            setView("team");
+            setSearchQuery(member.username);
+          },
+        });
+      });
+    if (matches("BT Ambient Loop", "ambient audio music")) {
+      results.push({
+        id: "music-ambient",
+        title: "BT Ambient Loop",
+        subtitle: "Music · Ambient audio",
+        icon: Music2,
+        select: () => {
+          setSearchQuery("");
+          setView("music");
+        },
+      });
+    }
+  }
+  const visible = results.slice(0, 8);
+  const showResults = open && !!query && !inline;
+  const label = activitySearch ? "activity" : inline ? (view === "team" ? "team" : view === "users" ? "users" : "servers") : "panel";
+
+  return (
+    <div className="relative min-w-0 flex-1 sm:w-52 sm:flex-none xl:w-64" ref={ref}>
+      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
+      <input
+        type="search"
+        className="panel-input h-10 min-h-10 w-full pl-9"
+        placeholder={`Search ${label}…`}
+        aria-label={`Search ${label}`}
+        autoComplete="off"
+        value={searchQuery}
+        onFocus={() => setOpen(true)}
+        onChange={(event) => {
+          setSearchQuery(event.target.value);
+          setOpen(true);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+          if (event.key === "Enter" && showResults && visible[0]) {
+            event.preventDefault();
+            visible[0].select();
+            setOpen(false);
+          }
+        }}
+      />
+      {showResults ? (
+        <div
+          id="header-search-results"
+          className="glass glass-strong view-enter scrollbar-thin fixed top-[72px] right-4 left-4 z-40 max-h-[70dvh] overflow-y-auto p-1.5 sm:absolute sm:top-[calc(100%+8px)] sm:right-0 sm:left-auto sm:w-[360px]"
+          aria-label="Search results"
+        >
+          {visible.length ? (
+            visible.map((result) => (
+              <button
+                key={result.id}
+                type="button"
+                className="flex w-full items-center gap-3 rounded-[var(--control-radius)] px-3 py-2.5 text-left hover:bg-fill-strong"
+                onClick={() => {
+                  result.select();
+                  setOpen(false);
+                }}
+              >
+                <result.icon className="size-4 shrink-0 text-steel" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-extrabold">{result.title}</span>
+                  <span className="block truncate text-[11px] font-semibold text-steel">{result.subtitle}</span>
+                </span>
+              </button>
+            ))
+          ) : (
+            <p className="px-3 py-5 text-center text-[12px] font-semibold text-steel">No matching pages, servers, or members.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Header() {
-  const { profile, settings, view, setView, setMobileOpen, mode, toggleMode, draft, music, signOut, serverQuery, setServerQuery, openServerId } = usePanel();
+  const { profile, settings, view, setView, setMobileOpen, mode, toggleMode, draft, music, signOut } = usePanel();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -299,7 +492,7 @@ function Header() {
         >
           <Menu className="size-4" />
         </button>
-        <h1 className="hidden truncate text-[18px] font-extrabold tracking-tight min-[420px]:block">{TITLES[view]}</h1>
+        <h1 className="hidden truncate text-[18px] font-extrabold tracking-tight sm:block">{TITLES[view]}</h1>
       </div>
       <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {music.playing ? (
@@ -318,20 +511,7 @@ function Header() {
             Now playing
           </button>
         ) : null}
-        {view === "servers" && !openServerId ? (
-          <div className="relative min-w-0 flex-1 sm:w-52 sm:flex-none xl:w-64">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
-            <input
-              type="search"
-              className="panel-input h-10 min-h-10 w-full pl-9"
-              placeholder="Search servers…"
-              aria-label="Search servers"
-              autoComplete="off"
-              value={serverQuery}
-              onChange={(event) => setServerQuery(event.target.value)}
-            />
-          </div>
-        ) : null}
+        <HeaderSearch />
         {settings.showThemeToggle !== false ? (
           <button
             type="button"

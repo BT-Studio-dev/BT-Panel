@@ -37,7 +37,7 @@ import { ServersView } from "./servers-view";
 import { SettingsView } from "./settings-view";
 import { UsersView } from "./users-view";
 
-const SECTIONS: { id: AdminSection; label: string; icon: LucideIcon }[] = [
+export const ADMIN_SECTIONS: { id: AdminSection; label: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "activity", label: "Activity", icon: Activity },
   { id: "settings", label: "Settings", icon: Settings },
@@ -93,7 +93,7 @@ export function AdminView() {
 
       <div className="grid items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
         <nav className="glass scrollbar-thin flex gap-1 overflow-x-auto p-2.5 xl:sticky xl:top-5 xl:flex-col xl:overflow-visible" aria-label="Admin Control Center sections">
-          {SECTIONS.map((section) => (
+          {ADMIN_SECTIONS.map((section) => (
             <button
               key={section.id}
               type="button"

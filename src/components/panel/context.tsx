@@ -26,7 +26,7 @@ import {
   type ThemeMode,
   type ThemeSettings,
 } from "@/lib/panel/types";
-import { api, clearCachedPanel, clearStoredToken } from "@/lib/utils";
+import { api, clearCachedPanel, clearStoredToken, isSessionExpiredError, SESSION_EXPIRED_EVENT } from "@/lib/utils";
 
 type MusicPrefs = { volume: number; loop: boolean; autoplay: boolean };
 
@@ -60,8 +60,8 @@ type PanelContextValue = {
   isAdmin: boolean;
   view: PanelView;
   setView: (view: PanelView) => void;
-  serverQuery: string;
-  setServerQuery: (query: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   settingsTab: SettingsTab;
   setSettingsTab: (tab: SettingsTab) => void;
   adminSection: AdminSection;
@@ -118,7 +118,7 @@ export function PanelProvider({
   const [servers, setServers] = useState(initial.servers);
   const [userCount, setUserCount] = useState(initial.userCount);
   const [view, setViewState] = useState<PanelView>(initialView);
-  const [serverQuery, setServerQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [settingsTab, setSettingsTabState] = useState<SettingsTab>("appearance");
   const [adminSection, setAdminSectionState] = useState<AdminSection>("overview");
   const [openServerId, setOpenServerId] = useState<string | null>(initialServerId);
@@ -127,6 +127,17 @@ export function PanelProvider({
 
   const isAdmin = isAdminRole(profile.role);
   const mode: ThemeMode = override ?? draft.mode;
+
+  const endSession = useCallback(() => {
+    clearStoredToken();
+    clearCachedPanel();
+    router.replace("/login");
+  }, [router]);
+
+  useEffect(() => {
+    window.addEventListener(SESSION_EXPIRED_EVENT, endSession);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, endSession);
+  }, [endSession]);
 
   // ── Theme ──
   useEffect(() => {
@@ -167,7 +178,7 @@ export function PanelProvider({
       if (!opts?.quiet) toast.success("Theme saved for everyone");
       return true;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save theme");
+      if (!isSessionExpiredError(err)) toast.error(err instanceof Error ? err.message : "Could not save theme");
       return false;
     }
   }, [draft]);
@@ -179,7 +190,7 @@ export function PanelProvider({
       toast.success(message);
       return true;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save settings");
+      if (!isSessionExpiredError(err)) toast.error(err instanceof Error ? err.message : "Could not save settings");
       return false;
     }
   }, []);
@@ -246,14 +257,11 @@ export function PanelProvider({
       setUserCount(data.userCount);
       const me = data.team.find((m) => m.userId === initial.profile.userId);
       if (me) setProfile((prev) => ({ ...prev, online: true, lastSeen: me.lastSeen }));
-    } catch (err) {
-      if (err instanceof Error && /session has expired/i.test(err.message)) {
-        clearStoredToken();
-        clearCachedPanel();
-        router.replace("/login");
-      }
+    } catch {
+      // The shared session event handles confirmed auth failures. Transient
+      // failures keep the current panel and retry on the next refresh.
     }
-  }, [initial.profile.userId, router]);
+  }, [initial.profile.userId]);
 
   const transitional = servers.some((s) => s.status === "starting" || s.status === "stopping");
   useEffect(() => {
@@ -288,10 +296,8 @@ export function PanelProvider({
     } catch {
       /* ignore */
     }
-    clearStoredToken();
-    clearCachedPanel();
-    router.replace("/login");
-  }, [router]);
+    endSession();
+  }, [endSession]);
 
   // ── Ambient music player (persists across views) ──
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -414,8 +420,8 @@ export function PanelProvider({
     isAdmin,
     view,
     setView,
-    serverQuery,
-    setServerQuery,
+    searchQuery,
+    setSearchQuery,
     settingsTab,
     setSettingsTab,
     adminSection,

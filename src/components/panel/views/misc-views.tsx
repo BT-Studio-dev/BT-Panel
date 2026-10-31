@@ -11,7 +11,7 @@ import { BrandMark, EmptyState, Modal, PresenceAvatar, ToggleRow, useNow } from 
 type PresenceFilter = "all" | "online" | "offline";
 
 export function TeamView() {
-  const { team, profile, settings, isAdmin } = usePanel();
+  const { team, profile, settings, isAdmin, searchQuery } = usePanel();
   const now = useNow(30000);
   const [filter, setFilter] = useState<PresenceFilter>("all");
   const [profileMember, setProfileMember] = useState<PanelProfile | null>(null);
@@ -25,7 +25,12 @@ export function TeamView() {
     );
   }
 
-  const list = team.filter((m) => (filter === "all" ? true : filter === "online" ? isOnline(m) : !isOnline(m)));
+  const query = searchQuery.trim().toLowerCase();
+  const list = team.filter((member) => {
+    if (filter === "online" && !isOnline(member)) return false;
+    if (filter === "offline" && isOnline(member)) return false;
+    return !query || [member.username, member.email, member.role, member.bio].some((value) => value.toLowerCase().includes(query));
+  });
 
   return (
     <div className="glass overflow-hidden">
@@ -46,7 +51,9 @@ export function TeamView() {
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
         {list.length === 0 ? (
-          <p className="col-span-full px-2 py-8 text-center text-sm font-semibold text-steel">No members in this filter.</p>
+          <p className="col-span-full px-2 py-8 text-center text-sm font-semibold text-steel">
+            {query ? `No members match “${searchQuery.trim()}”.` : "No members in this filter."}
+          </p>
         ) : (
           list.map((member) => {
             const online = isOnline(member);

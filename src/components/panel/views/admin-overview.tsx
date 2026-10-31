@@ -9,7 +9,6 @@ import {
   MemoryStick,
   Network,
   RefreshCw,
-  Search,
   Server as ServerIcon,
   ShieldCheck,
   Users,
@@ -157,12 +156,11 @@ export function AdminOverviewView() {
 const LEVELS = ["all", "info", "warn", "error", "cmd", "system"] as const;
 
 export function AdminActivityView() {
-  const { openServer } = usePanel();
+  const { openServer, searchQuery } = usePanel();
   const now = useNow(30_000);
   const [activity, setActivity] = useState<AdminActivityDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState("");
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("all");
   const [error, setError] = useState("");
 
@@ -191,12 +189,12 @@ export function AdminActivityView() {
   }, [load]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     return activity.filter((event) => {
       if (level !== "all" && event.level !== level) return false;
       return !q || `${event.serverName} ${event.message}`.toLowerCase().includes(q);
     });
-  }, [activity, level, query]);
+  }, [activity, level, searchQuery]);
 
   return (
     <div>
@@ -210,12 +208,8 @@ export function AdminActivityView() {
         }
       />
       <div className="glass overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-line p-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
-            <input className="panel-input pl-9" placeholder="Search activity or server…" value={query} onChange={(event) => setQuery(event.target.value)} />
-          </div>
-          <select className="panel-input sm:w-40" value={level} onChange={(event) => setLevel(event.target.value as (typeof LEVELS)[number])} aria-label="Filter activity level">
+        <div className="flex border-b border-line p-4">
+          <select className="panel-input sm:ml-auto sm:w-40" value={level} onChange={(event) => setLevel(event.target.value as (typeof LEVELS)[number])} aria-label="Filter activity level">
             {LEVELS.map((item) => <option key={item} value={item}>{item === "all" ? "All events" : item.toUpperCase()}</option>)}
           </select>
         </div>
