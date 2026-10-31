@@ -933,14 +933,8 @@
 
   /* ── Card glass and independent card surfaces ──────────────────────────
    * Header, navigation, strong sidebar/popover surfaces, and modals are not
-   * cards. They retain the base panel theme; only content cards are scoped.
+   * content cards. Their On appearance retains the base panel theme.
    */
-  :root[data-card-glass="off"]
-    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
   :root[data-card-theme="hidden"]
     .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
     background: transparent;
@@ -1096,5 +1090,18 @@
     tbody
     tr:hover {
     background: rgb(255 255 255 / 0.05);
+  }
+
+  /* Glass Opacity 0% is a real global Off: remove every glass surface while
+   * preserving its layout and content. The second selector matches the themed
+   * content-card specificity so Off also wins over independent card themes. */
+  :root[data-card-glass="off"] .glass,
+  :root[data-card-glass="off"]
+    .glass:not(.glass-strong):not(.glass-modal):not(header):not(nav) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
   }
 }
