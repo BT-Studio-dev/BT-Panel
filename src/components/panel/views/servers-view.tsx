@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEven
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Check,
+  ChevronDown,
   Clock,
   Copy,
   Cpu,
@@ -280,6 +282,138 @@ function PowerButtons({
 }
 
 // ── Create ──────────────────────────────────────────────────────────────────
+type ResourceOption = { value: string; label: string };
+
+function ResourceSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: ResourceOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
+  const [activeIndex, setActiveIndex] = useState(selectedIndex);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listId = useId().replace(/:/g, "");
+  const selected = options[selectedIndex] ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) document.getElementById(`${listId}-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, listId, open]);
+
+  function choose(index: number) {
+    onChange(options[index].value);
+    setActiveIndex(index);
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  function onTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "Tab") {
+      setOpen(false);
+      return;
+    }
+    if (event.key === "Escape" && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      buttonRef.current?.focus();
+      return;
+    }
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      if (!open) {
+        setActiveIndex(selectedIndex);
+        setOpen(true);
+        return;
+      }
+      const next =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? options.length - 1
+            : event.key === "ArrowDown"
+              ? Math.min(options.length - 1, activeIndex + 1)
+              : Math.max(0, activeIndex - 1);
+      setActiveIndex(next);
+      return;
+    }
+    if (open && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      choose(activeIndex);
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        className="panel-input flex items-center justify-between gap-3 text-left"
+        role="combobox"
+        aria-label={label}
+        aria-autocomplete="none"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={open ? `${listId}-${activeIndex}` : undefined}
+        onClick={() => {
+          setActiveIndex(selectedIndex);
+          setOpen((current) => !current);
+        }}
+        onKeyDown={onTriggerKeyDown}
+      >
+        <span className="min-w-0 truncate">{selected.label}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-steel transition-transform", open && "rotate-180")} />
+      </button>
+      {open ? (
+        <div
+          id={listId}
+          role="listbox"
+          aria-label={`${label} options`}
+          className="glass-modal view-enter scrollbar-thin absolute right-0 bottom-[calc(100%+6px)] left-0 z-40 max-h-56 overflow-y-auto p-1.5"
+        >
+          {options.map((option, index) => (
+            <button
+              id={`${listId}-${index}`}
+              key={option.value}
+              type="button"
+              role="option"
+              tabIndex={-1}
+              aria-selected={index === selectedIndex}
+              className={cn(
+                "flex min-h-10 w-full items-center justify-between gap-3 rounded-[var(--control-radius)] px-3 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-fill-strong",
+                index === activeIndex && "bg-accent/12",
+                index === selectedIndex ? "text-accent" : index === activeIndex && "text-ice",
+              )}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => choose(index)}
+            >
+              <span className="min-w-0 truncate">{option.label}</span>
+              {index === selectedIndex ? <Check className="size-4 shrink-0" /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function CreateServerModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { setServers, openServer } = usePanel();
   const [name, setName] = useState("");
@@ -346,40 +480,36 @@ function CreateServerModal({ open, onClose }: { open: boolean; onClose: () => vo
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Node">
-            <select className="panel-input" value={node} onChange={(e) => setNode(e.target.value)}>
-              {NODES.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.name} ({n.region})
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Node"
+              value={node}
+              options={NODES.map((item) => ({ value: item.id, label: `${item.name} (${item.region})` }))}
+              onChange={setNode}
+            />
           </Field>
           <Field label="Memory">
-            <select className="panel-input" value={memoryMb} onChange={(e) => setMemoryMb(Number(e.target.value))}>
-              {MEMORY_OPTIONS.map((m) => (
-                <option key={m} value={m}>
-                  {formatMb(m)}
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Memory"
+              value={String(memoryMb)}
+              options={MEMORY_OPTIONS.map((item) => ({ value: String(item), label: formatMb(item) }))}
+              onChange={(next) => setMemoryMb(Number(next))}
+            />
           </Field>
           <Field label="CPU limit">
-            <select className="panel-input" value={cpuLimit} onChange={(e) => setCpuLimit(Number(e.target.value))}>
-              {CPU_OPTIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c}% · {c / 100} vCPU
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="CPU limit"
+              value={String(cpuLimit)}
+              options={CPU_OPTIONS.map((item) => ({ value: String(item), label: `${item}% · ${item / 100} vCPU` }))}
+              onChange={(next) => setCpuLimit(Number(next))}
+            />
           </Field>
           <Field label="Disk">
-            <select className="panel-input" value={diskMb} onChange={(e) => setDiskMb(Number(e.target.value))}>
-              {DISK_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {formatMb(d)}
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Disk"
+              value={String(diskMb)}
+              options={DISK_OPTIONS.map((item) => ({ value: String(item), label: formatMb(item) }))}
+              onChange={(next) => setDiskMb(Number(next))}
+            />
           </Field>
         </div>
         <div className="flex justify-end gap-2 border-t border-line pt-4">
