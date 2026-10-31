@@ -232,7 +232,7 @@ function Sidebar() {
 }
 
 function SectionLabel({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
-  if (collapsed) return <div className="mx-auto my-2.5 h-px w-8 bg-line" />;
+  if (collapsed) return <div className="h-5" aria-hidden="true" />;
   return (
     <div className="mt-4 mb-1.5 flex items-center px-2 text-[10px] font-extrabold tracking-[0.16em] text-faint uppercase first:mt-0">
       {children}
