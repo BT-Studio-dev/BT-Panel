@@ -181,7 +181,7 @@ function Sidebar() {
           </button>
         </div>
 
-        <nav className={cn("scrollbar-thin flex flex-1 flex-col overflow-y-auto", collapsed ? "justify-between gap-2 py-2" : "gap-0.5")}>
+        <nav className="scrollbar-thin flex flex-1 flex-col gap-0.5 overflow-y-auto">
           <SectionLabel collapsed={collapsed}>Dashboard</SectionLabel>
           {visible.filter((item) => item.section === "dashboard").map(renderItem)}
           {isAdmin ? (
@@ -218,7 +218,7 @@ function Sidebar() {
           </button>
           <button
             type="button"
-            className={cn("nav-item text-danger hover:text-danger", collapsed && "justify-center px-2.5")}
+            className={cn("nav-item text-danger hover:text-danger", collapsed && "min-h-10 justify-center px-2.5")}
             onClick={() => void signOut()}
             title="Logout"
           >
@@ -232,7 +232,7 @@ function Sidebar() {
 }
 
 function SectionLabel({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
-  if (collapsed) return null;
+  if (collapsed) return <div className="h-3 shrink-0 first:h-0" aria-hidden="true" />;
   return (
     <div className="mt-4 mb-1.5 flex items-center px-2 text-[10px] font-extrabold tracking-[0.16em] text-faint uppercase first:mt-0">
       {children}
@@ -257,7 +257,7 @@ function NavButton({
   return (
     <button
       type="button"
-      className={cn("nav-item", active && "active", collapsed && "justify-center px-2.5")}
+      className={cn("nav-item", active && "active", collapsed && "min-h-10 justify-center px-2.5")}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
