@@ -11,10 +11,8 @@ import {
   Image as ImageIcon,
   Link2,
   Mail,
-  Moon,
   ShieldCheck,
   Sparkles,
-  Sun,
   WavesHorizontal,
 } from "lucide-react";
 import {
@@ -26,7 +24,7 @@ import {
   shaderWallpaperValue,
   type WallpaperItem,
 } from "@/lib/panel/catalog";
-import { DEFAULT_THEME, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
+import { DEFAULT_THEME, type SettingsTab, type ThemeSettings } from "@/lib/panel/types";
 import { api, cn, compressImageFile, isVideoUrl } from "@/lib/utils";
 import { usePanel } from "../context";
 import { ShaderCanvas } from "../wallpaper-layer";
@@ -192,11 +190,6 @@ function LogoField({
 }
 
 // ── Appearance ──────────────────────────────────────────────────────────────
-const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[] = [
-  { id: "dark", label: "Dark", hint: "midnight blue palette", icon: Moon },
-  { id: "light", label: "Light", hint: "porcelain daylight palette", icon: Sun },
-];
-
 function AppearancePanel() {
   const { settings, draft, setDraft, persistTheme, persistSettings, clearModeOverride, setSettingsTab } = usePanel();
   const [saving, setSaving] = useState(false);
@@ -244,31 +237,6 @@ function AppearancePanel() {
             }}
           />
         </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {MODES.map((option) => {
-            const active = draft.mode === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                className={cn("select-tile flex items-center gap-2.5 px-3 py-2.5 text-left", active && "active")}
-                onClick={() => {
-                  setDraft({ mode: option.id });
-                  clearModeOverride();
-                }}
-              >
-                <option.icon className={cn("size-[18px] shrink-0", active ? "text-accent" : "text-steel")} />
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold">{option.label}</span>
-                  <span className="block truncate text-[10.5px] font-semibold text-steel">{option.hint}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-1.5 text-[11px] font-semibold text-steel">
-          Panel-wide palette for everyone. Any user can still flip themselves dark↔light with the header sun/moon button.
-        </p>
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(280px,1.05fr)]">
