@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { applyFavicon, applyTheme, getLocalModeOverride, setLocalModeOverride } from "@/lib/panel/theme";
 import {
   isAdminRole,
@@ -108,6 +109,7 @@ export function PanelProvider({
   initialModeOverride: ThemeMode | null;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [profile, setProfile] = useState(initial.profile);
   const [settings, setSettings] = useState(initial.settings);
   const [draft, setDraftState] = useState<ThemeSettings>(() => pickTheme(initial.settings));
@@ -122,21 +124,23 @@ export function PanelProvider({
   const [openServerId, setOpenServerId] = useState<string | null>(initialServerId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
 
   const isAdmin = isAdminRole(profile.role);
   const mode: ThemeMode = override ?? draft.mode;
 
   // ── Theme ──
   useEffect(() => {
-    const local = getLocalModeOverride();
-    if (local && local !== initialModeOverride) setOverride(local);
-    try {
-      setSidebarCollapsed(window.localStorage.getItem(COLLAPSED_KEY) === "1");
-    } catch {
-      /* ignore */
-    }
+    // Hydrate browser-only preferences after the SSR-matching first paint.
+    const timeout = window.setTimeout(() => {
+      const local = getLocalModeOverride();
+      if (local && local !== initialModeOverride) setOverride(local);
+      try {
+        setSidebarCollapsed(window.localStorage.getItem(COLLAPSED_KEY) === "1");
+      } catch {
+        /* ignore */
+      }
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [initialModeOverride]);
 
   useEffect(() => {
@@ -156,7 +160,7 @@ export function PanelProvider({
     try {
       const res = await api<{ settings: PanelSettings }>("/api/settings", {
         method: "PUT",
-        body: { ...draftRef.current, ...extra },
+        body: { ...draft, ...extra },
       });
       setSettings(res.settings);
       setDraftState(pickTheme(res.settings));
@@ -166,7 +170,7 @@ export function PanelProvider({
       toast.error(err instanceof Error ? err.message : "Could not save theme");
       return false;
     }
-  }, []);
+  }, [draft]);
 
   const persistSettings = useCallback(async (patch: Partial<PanelSettings>, message = "Settings saved") => {
     try {
@@ -181,11 +185,11 @@ export function PanelProvider({
   }, []);
 
   const toggleMode = useCallback(() => {
-    const darkBase: ThemeMode = draftRef.current.mode === "light" ? "dark" : draftRef.current.mode;
+    const darkBase: ThemeMode = draft.mode === "light" ? "dark" : draft.mode;
     const target: ThemeMode = mode === "light" ? darkBase : "light";
     setLocalModeOverride(target);
     setOverride(target);
-  }, [mode]);
+  }, [draft.mode, mode]);
 
   const clearModeOverride = useCallback(() => {
     setLocalModeOverride(null);
@@ -246,10 +250,10 @@ export function PanelProvider({
       if (err instanceof Error && /session has expired/i.test(err.message)) {
         clearStoredToken();
         clearCachedPanel();
-        window.location.assign("/login");
+        router.replace("/login");
       }
     }
-  }, [initial.profile.userId]);
+  }, [initial.profile.userId, router]);
 
   const transitional = servers.some((s) => s.status === "starting" || s.status === "stopping");
   useEffect(() => {
@@ -286,14 +290,12 @@ export function PanelProvider({
     }
     clearStoredToken();
     clearCachedPanel();
-    window.location.assign("/login");
-  }, []);
+    router.replace("/login");
+  }, [router]);
 
   // ── Ambient music player (persists across views) ──
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [prefs, setPrefsState] = useState<MusicPrefs>({ volume: 0.35, loop: true, autoplay: false });
-  const prefsRef = useRef(prefs);
-  prefsRef.current = prefs;
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -302,8 +304,8 @@ export function PanelProvider({
     if (!audioRef.current) {
       const audio = new Audio("/audio/bt-ambient-loop.wav");
       audio.preload = "auto";
-      audio.volume = prefsRef.current.volume;
-      audio.loop = prefsRef.current.loop;
+      audio.volume = prefs.volume;
+      audio.loop = prefs.loop;
       audio.addEventListener("timeupdate", () => setCurrent(audio.currentTime));
       audio.addEventListener("loadedmetadata", () => setDuration(Number.isFinite(audio.duration) ? audio.duration : 0));
       audio.addEventListener("play", () => setPlaying(true));
@@ -312,7 +314,7 @@ export function PanelProvider({
       audioRef.current = audio;
     }
     return audioRef.current;
-  }, []);
+  }, [prefs.loop, prefs.volume]);
 
   const prepare = useCallback(() => {
     ensureAudio();
@@ -340,12 +342,27 @@ export function PanelProvider({
   }, []);
 
   useEffect(() => {
+    let stored: Partial<MusicPrefs> | null = null;
     try {
       const raw = window.localStorage.getItem(MUSIC_KEY);
-      if (raw) setPrefsState((prev) => ({ ...prev, ...(JSON.parse(raw) as Partial<MusicPrefs>) }));
+      const parsed: unknown = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === "object") {
+        const value = parsed as Partial<MusicPrefs>;
+        stored = {
+          ...(typeof value.volume === "number" && Number.isFinite(value.volume)
+            ? { volume: Math.min(1, Math.max(0, value.volume)) }
+            : null),
+          ...(typeof value.loop === "boolean" ? { loop: value.loop } : null),
+          ...(typeof value.autoplay === "boolean" ? { autoplay: value.autoplay } : null),
+        };
+      }
     } catch {
       /* ignore */
     }
+    const timeout = window.setTimeout(() => {
+      if (stored) setPrefsState((prev) => ({ ...prev, ...stored }));
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   useEffect(() => {

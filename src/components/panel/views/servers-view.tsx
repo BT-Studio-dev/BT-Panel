@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -401,10 +401,7 @@ function ServerDetail({ id }: { id: string }) {
   const [server, setServer] = useState<ServerDto | null>(() => servers.find((s) => s.id === id) ?? null);
   const [events, setEvents] = useState<ServerEventDto[] | null>(null);
   const [missing, setMissing] = useState(false);
-  const [history, setHistory] = useState<{ cpu: number[]; mem: number[] }>({ cpu: [], mem: [] });
   const now = useNow(1000);
-  const serverRef = useRef(server);
-  serverRef.current = server;
 
   const apply = useCallback(
     (data: ServerSnapshot) => {
@@ -424,32 +421,30 @@ function ServerDetail({ id }: { id: string }) {
   }, [id, apply]);
 
   useEffect(() => {
-    void load();
-    const timer = window.setInterval(() => {
+    const initial = window.setTimeout(() => void load(), 0);
+    const interval = window.setInterval(() => {
       if (!document.hidden) void load();
     }, 1500);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, [load]);
 
-  useEffect(() => {
-    const s = serverRef.current;
-    if (!now || !s) return;
-    setHistory((h) => {
-      if (h.cpu.length === 0) {
-        // Backfill: telemetry is deterministic, so the recent past is reproducible.
-        const cpu: number[] = [];
-        const mem: number[] = [];
-        for (let i = 47; i >= 0; i--) {
-          const tel = sampleTelemetry(s, now - i * 1000);
-          cpu.push(tel.cpu / s.cpuLimit);
-          mem.push(tel.memMb / s.memoryMb);
-        }
-        return { cpu, mem };
+  const history = useMemo(() => {
+    const cpu: number[] = [];
+    const mem: number[] = [];
+    if (now && server) {
+      // Telemetry is deterministic, so the complete recent series can be
+      // derived without a state-synchronizing effect or render-time ref.
+      for (let i = 47; i >= 0; i--) {
+        const sample = sampleTelemetry(server, now - i * 1000);
+        cpu.push(sample.cpu / server.cpuLimit);
+        mem.push(sample.memMb / server.memoryMb);
       }
-      const tel = sampleTelemetry(s, now);
-      return { cpu: [...h.cpu.slice(-47), tel.cpu / s.cpuLimit], mem: [...h.mem.slice(-47), tel.memMb / s.memoryMb] };
-    });
-  }, [now]);
+    }
+    return { cpu, mem };
+  }, [now, server]);
 
   if (missing || !server) {
     return (

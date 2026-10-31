@@ -45,9 +45,13 @@ export function PresenceAvatar({
 export function useNow(intervalMs = 1000): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
-    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
-    return () => window.clearInterval(id);
+    const update = () => setNow(Date.now());
+    const initial = window.setTimeout(update, 0);
+    const interval = window.setInterval(update, intervalMs);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, [intervalMs]);
   return now;
 }
@@ -245,8 +249,8 @@ export function ColorField({
   hint?: string;
   onChange: (value: string) => void;
 }) {
-  const [text, setText] = useState(value);
-  useEffect(() => setText(value), [value]);
+  const [edit, setEdit] = useState<{ base: string; text: string } | null>(null);
+  const text = edit?.base === value ? edit.text : value;
   return (
     <div>
       <div className="text-[12.5px] font-bold text-ice">{label}</div>
@@ -259,7 +263,10 @@ export function ColorField({
             type="color"
             className="absolute inset-0 size-full cursor-pointer opacity-0"
             value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              setEdit({ base: e.target.value, text: e.target.value });
+              onChange(e.target.value);
+            }}
             aria-label={label}
           />
         </label>
@@ -268,8 +275,9 @@ export function ColorField({
           value={text}
           maxLength={7}
           onChange={(e) => {
-            setText(e.target.value);
-            if (/^#[0-9a-f]{6}$/i.test(e.target.value)) onChange(e.target.value.toLowerCase());
+            const next = e.target.value;
+            setEdit({ base: value, text: next });
+            if (/^#[0-9a-f]{6}$/i.test(next)) onChange(next.toLowerCase());
           }}
         />
       </div>
