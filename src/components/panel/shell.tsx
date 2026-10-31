@@ -4,14 +4,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import {
   ChevronDown,
-  House,
   LogOut,
   Menu,
   Moon,
   Music2,
   Pause,
   Play,
-  RefreshCw,
+  Search,
   Server,
   Settings,
   ShieldCheck,
@@ -26,38 +25,31 @@ import { cn } from "@/lib/utils";
 import { PanelProvider, usePanel } from "./context";
 import { BrandMark, PresenceAvatar } from "./ui";
 import { WallpaperLayer } from "./wallpaper-layer";
-import { HomeView } from "./views/home-view";
 import { ServersView } from "./views/servers-view";
-import { SettingsView } from "./views/settings-view";
+import { AdminView, ADMIN_SECTIONS } from "./views/admin-view";
 import { UsersView } from "./views/users-view";
 import { AccountView } from "./views/account-view";
-import { MusicView, TeamView, UpdatesView } from "./views/misc-views";
-import { PterodactylView } from "./views/pterodactyl-view";
+import { MusicView, TeamView } from "./views/misc-views";
 
 type NavItem = { id: PanelView; label: string; icon: LucideIcon; section: "dashboard" | "admin" | "account" };
 
 const NAV: NavItem[] = [
-  { id: "home", label: "Home", icon: House, section: "dashboard" },
   { id: "servers", label: "Servers", icon: Server, section: "dashboard" },
   { id: "team", label: "Team", icon: Users, section: "dashboard" },
   { id: "music", label: "Music", icon: Music2, section: "dashboard" },
-  { id: "settings", label: "Admin Settings", icon: Settings, section: "admin" },
+  { id: "settings", label: "Admin Control Center", icon: Settings, section: "admin" },
   { id: "users", label: "User Management", icon: ShieldCheck, section: "admin" },
-  { id: "updates", label: "Updates", icon: RefreshCw, section: "admin" },
   ...PANEL_MODULES.map((module) => ({ id: module.id, label: module.label, icon: module.icon, section: module.section })),
   { id: "account", label: "My Account", icon: UserRound, section: "account" },
 ];
 
 const TITLES: Record<PanelView, string> = {
-  home: "Home",
   servers: "Servers",
   team: "Team",
   music: "Music",
-  settings: "Admin Settings",
+  settings: "Admin Control Center",
   users: "User Management",
-  updates: "System Updates",
   account: "My Account",
-  integrations: "Integrations",
 };
 
 export function PanelShell({
@@ -94,15 +86,12 @@ function ShellInner() {
           <Header />
           <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
             <div key={view} className="view-enter mx-auto w-full max-w-[1600px]">
-              {view === "home" ? <HomeView /> : null}
               {view === "servers" ? <ServersView /> : null}
               {view === "team" ? <TeamView /> : null}
               {view === "music" ? <MusicView /> : null}
-              {view === "settings" ? <SettingsView /> : null}
+              {view === "settings" ? <AdminView /> : null}
               {view === "users" ? <UsersView /> : null}
-              {view === "updates" ? <UpdatesView /> : null}
               {view === "account" ? <AccountView /> : null}
-              {view === "integrations" ? <PterodactylView /> : null}
             </div>
           </main>
         </div>
@@ -111,7 +100,9 @@ function ShellInner() {
       <Toaster
         theme={mode === "light" ? "light" : "dark"}
         position="top-right"
+        visibleToasts={1}
         offset={{ top: 72, right: 20 }}
+        mobileOffset={{ top: 72, right: 16, left: 16 }}
         toastOptions={{
           style: {
             background: "rgb(var(--glass-tint) / 0.92)",
@@ -120,7 +111,7 @@ function ShellInner() {
             backdropFilter: "blur(16px)",
             fontFamily: "var(--font-sans)",
             fontWeight: 700,
-            borderRadius: "12px",
+            borderRadius: "var(--control-radius)",
           },
         }}
       />
@@ -163,7 +154,7 @@ function Sidebar() {
       ) : null}
       <aside
         className={cn(
-          "glass glass-strong fixed inset-y-0 left-0 z-40 flex flex-col rounded-l-none border-y-0 border-l-0 p-4 transition-[width,transform] duration-200 md:static md:translate-x-0",
+          "glass glass-strong fixed inset-y-0 left-0 z-40 flex flex-col border-y-0 border-l-0 p-4 transition-[width,transform] duration-200 md:static md:translate-x-0",
           collapsed ? "w-[78px]" : "w-[260px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
@@ -184,7 +175,7 @@ function Sidebar() {
           </div>
           <button
             type="button"
-            className="hidden size-8 shrink-0 items-center justify-center rounded-[9px] border border-line-strong bg-sunken text-steel transition-colors hover:text-ice md:inline-flex"
+            className="hidden size-8 shrink-0 items-center justify-center rounded-[var(--control-radius)] border border-line-strong bg-sunken text-steel transition-colors hover:text-ice md:inline-flex"
             onClick={toggleCollapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -214,7 +205,7 @@ function Sidebar() {
           <button
             type="button"
             className={cn(
-              "mb-2 flex w-full items-center gap-2.5 rounded-[12px] p-1.5 text-left transition-colors hover:bg-fill",
+              "mb-2 flex w-full items-center gap-2.5 rounded-[var(--control-radius)] p-1.5 text-left transition-colors hover:bg-fill",
               collapsed && "justify-center",
             )}
             onClick={() => setView("account")}
@@ -229,7 +220,7 @@ function Sidebar() {
           </button>
           <button
             type="button"
-            className={cn("nav-item text-danger hover:text-danger", collapsed && "justify-center px-2.5")}
+            className={cn("nav-item text-danger hover:text-danger", collapsed && "min-h-10 justify-center px-2.5")}
             onClick={() => void signOut()}
             title="Logout"
           >
@@ -243,7 +234,7 @@ function Sidebar() {
 }
 
 function SectionLabel({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
-  if (collapsed) return <div className="mx-auto my-2.5 h-px w-8 bg-line" />;
+  if (collapsed) return <div className="h-3 shrink-0 first:h-0" aria-hidden="true" />;
   return (
     <div className="mt-4 mb-1.5 flex items-center px-2 text-[10px] font-extrabold tracking-[0.16em] text-faint uppercase first:mt-0">
       {children}
@@ -268,7 +259,7 @@ function NavButton({
   return (
     <button
       type="button"
-      className={cn("nav-item", active && "active", collapsed && "justify-center px-2.5")}
+      className={cn("nav-item", active && "active", collapsed && "min-h-10 justify-center px-2.5")}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
@@ -281,6 +272,199 @@ function NavButton({
         </span>
       ) : null}
     </button>
+  );
+}
+
+type HeaderSearchResult = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+  select: () => void;
+};
+
+const SETTINGS_SEARCH_TABS = [
+  { id: "general", label: "General" },
+  { id: "appearance", label: "Appearance" },
+  { id: "wallpapers", label: "4K Wallpapers" },
+  { id: "bars", label: "Bars" },
+  { id: "access", label: "Access" },
+] as const;
+
+function HeaderSearch() {
+  const {
+    view,
+    openServerId,
+    adminSection,
+    searchQuery,
+    setSearchQuery,
+    servers,
+    team,
+    settings,
+    isAdmin,
+    setView,
+    openServer,
+    setAdminSection,
+    setSettingsTab,
+  } = usePanel();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(event: MouseEvent) {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const query = searchQuery.trim().toLowerCase();
+  const activitySearch = view === "settings" && adminSection === "activity";
+  const inline = (view === "servers" && !openServerId) || view === "team" || view === "users" || activitySearch;
+  const results: HeaderSearchResult[] = [];
+  if (query && !inline) {
+    const matches = (...values: (string | null | undefined)[]) => values.some((value) => value?.toLowerCase().includes(query));
+    NAV.filter((item) => {
+      if (item.section === "admin" && !isAdmin) return false;
+      if (item.id === "team" && !settings.showTeam && !isAdmin) return false;
+      return matches(item.label, TITLES[item.id]);
+    }).forEach((item) => {
+      results.push({
+        id: `page-${item.id}`,
+        title: item.label,
+        subtitle: "Panel page",
+        icon: item.icon,
+        select: () => {
+          setSearchQuery("");
+          setView(item.id);
+        },
+      });
+    });
+    if (isAdmin) {
+      ADMIN_SECTIONS.filter((section) => matches(section.label)).forEach((section) => {
+        results.push({
+          id: `admin-${section.id}`,
+          title: section.label,
+          subtitle: "Admin Control Center",
+          icon: section.icon,
+          select: () => {
+            setSearchQuery("");
+            setAdminSection(section.id);
+          },
+        });
+      });
+      SETTINGS_SEARCH_TABS.filter((tab) => matches(tab.label, `${tab.label} settings`)).forEach((tab) => {
+        results.push({
+          id: `settings-${tab.id}`,
+          title: tab.label,
+          subtitle: "Settings Management",
+          icon: Settings,
+          select: () => {
+            setSearchQuery("");
+            setSettingsTab(tab.id);
+          },
+        });
+      });
+    }
+    servers
+      .filter((server) => matches(server.name, server.template, server.node, server.ip, server.ownerName))
+      .forEach((server) => {
+        results.push({
+          id: `server-${server.id}`,
+          title: server.name,
+          subtitle: `Server · ${server.ip}:${server.port}`,
+          icon: Server,
+          select: () => {
+            setSearchQuery("");
+            openServer(server.id);
+          },
+        });
+      });
+    team
+      .filter((member) => matches(member.username, member.email, member.role, member.bio))
+      .forEach((member) => {
+        results.push({
+          id: `member-${member.userId}`,
+          title: member.username,
+          subtitle: `Team · ${member.role}`,
+          icon: Users,
+          select: () => {
+            setView("team");
+            setSearchQuery(member.username);
+          },
+        });
+      });
+    if (matches("BT Ambient Loop", "ambient audio music")) {
+      results.push({
+        id: "music-ambient",
+        title: "BT Ambient Loop",
+        subtitle: "Music · Ambient audio",
+        icon: Music2,
+        select: () => {
+          setSearchQuery("");
+          setView("music");
+        },
+      });
+    }
+  }
+  const visible = results.slice(0, 8);
+  const showResults = open && !!query && !inline;
+  const label = activitySearch ? "activity" : inline ? (view === "team" ? "team" : view === "users" ? "users" : "servers") : "panel";
+
+  return (
+    <div className="relative min-w-0 flex-1 sm:w-52 sm:flex-none xl:w-64" ref={ref}>
+      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
+      <input
+        type="search"
+        className="panel-input h-10 min-h-10 w-full pl-9"
+        placeholder={`Search ${label}…`}
+        aria-label={`Search ${label}`}
+        autoComplete="off"
+        value={searchQuery}
+        onFocus={() => setOpen(true)}
+        onChange={(event) => {
+          setSearchQuery(event.target.value);
+          setOpen(true);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+          if (event.key === "Enter" && showResults && visible[0]) {
+            event.preventDefault();
+            visible[0].select();
+            setOpen(false);
+          }
+        }}
+      />
+      {showResults ? (
+        <div
+          id="header-search-results"
+          className="glass glass-strong view-enter scrollbar-thin fixed top-[72px] right-4 left-4 z-40 max-h-[70dvh] overflow-y-auto p-1.5 sm:absolute sm:top-[calc(100%+8px)] sm:right-0 sm:left-auto sm:w-[360px]"
+          aria-label="Search results"
+        >
+          {visible.length ? (
+            visible.map((result) => (
+              <button
+                key={result.id}
+                type="button"
+                className="flex w-full items-center gap-3 rounded-[var(--control-radius)] px-3 py-2.5 text-left hover:bg-fill-strong"
+                onClick={() => {
+                  result.select();
+                  setOpen(false);
+                }}
+              >
+                <result.icon className="size-4 shrink-0 text-steel" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-extrabold">{result.title}</span>
+                  <span className="block truncate text-[11px] font-semibold text-steel">{result.subtitle}</span>
+                </span>
+              </button>
+            ))
+          ) : (
+            <p className="px-3 py-5 text-center text-[12px] font-semibold text-steel">No matching pages, servers, or members.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -300,23 +484,23 @@ function Header() {
   const darkBase = draft.mode === "light" ? "dark" : draft.mode;
 
   return (
-    <header className="glass sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-4 md:px-6">
+    <header className="glass glass-strong glass-bar sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-x-0 border-t-0 px-4 md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
-          className="inline-flex size-11 items-center justify-center rounded-[10px] border border-line bg-sunken md:hidden"
+          className="inline-flex size-11 items-center justify-center rounded-[var(--control-radius)] border border-line bg-sunken md:hidden"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
         >
           <Menu className="size-4" />
         </button>
-        <h1 className="truncate text-[18px] font-extrabold tracking-tight">{TITLES[view]}</h1>
+        <h1 className="hidden truncate text-[18px] font-extrabold tracking-tight sm:block">{TITLES[view]}</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {music.playing ? (
           <button
             type="button"
-            className="hidden h-10 items-center gap-2 rounded-[10px] border border-line bg-sunken px-3 text-[12px] font-bold text-steel sm:inline-flex"
+            className="hidden h-10 items-center gap-2 rounded-[var(--control-radius)] border border-line bg-sunken px-3 text-[12px] font-bold text-steel sm:inline-flex"
             onClick={() => setView("music")}
             title="Now playing"
           >
@@ -329,20 +513,23 @@ function Header() {
             Now playing
           </button>
         ) : null}
-        <button
-          type="button"
-          className="inline-flex size-10 items-center justify-center rounded-[10px] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
-          onClick={toggleMode}
-          aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
-          title={mode === "light" ? `Switch to ${darkBase === "oled" ? "OLED black" : "dark"} theme` : "Switch to light theme"}
-        >
-          {mode === "light" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-        </button>
+        <HeaderSearch />
+        {settings.showThemeToggle !== false ? (
+          <button
+            type="button"
+            className="inline-flex size-10 items-center justify-center rounded-[var(--control-radius)] border border-line bg-sunken text-steel transition-colors hover:border-line-strong hover:text-ice"
+            onClick={toggleMode}
+            aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
+            title={mode === "light" ? `Switch to ${darkBase === "oled" ? "OLED black" : "dark"} theme` : "Switch to light theme"}
+          >
+            {mode === "light" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+          </button>
+        ) : null}
         {settings.showHeaderUser ? (
           <div className="relative" ref={ref}>
             <button
               type="button"
-              className="flex items-center gap-2.5 rounded-[12px] border border-line bg-sunken py-1.5 pr-2.5 pl-1.5"
+              className="flex items-center gap-2.5 rounded-[var(--control-radius)] border border-line bg-sunken py-1.5 pr-2.5 pl-1.5"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
             >
@@ -362,7 +549,7 @@ function Header() {
                 <div className="my-1 h-px bg-line" />
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
                   onClick={() => {
                     setView("account");
                     setOpen(false);
@@ -373,7 +560,7 @@ function Header() {
                 </button>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold hover:bg-fill-strong"
                   onClick={() => {
                     setView("servers");
                     setOpen(false);
@@ -385,7 +572,7 @@ function Header() {
                 <div className="my-1 h-px bg-line" />
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-bold text-danger hover:bg-fill-strong"
+                  className="flex w-full items-center gap-2 rounded-[var(--control-radius)] px-3 py-2.5 text-left text-[13px] font-bold text-danger hover:bg-fill-strong"
                   onClick={() => void signOut()}
                 >
                   <LogOut className="size-3.5" />

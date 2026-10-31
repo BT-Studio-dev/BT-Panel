@@ -2,19 +2,18 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Search, Trash, UserPlus } from "lucide-react";
+import { Trash, UserPlus } from "lucide-react";
 import type { PanelProfile, PanelRole } from "@/lib/panel/types";
 import { api, cn, formatJoined, timeAgo } from "@/lib/utils";
 import { usePanel } from "../context";
 import { PresenceAvatar, Spinner, useNow } from "../ui";
 
 export function UsersView() {
-  const { team, setTeam, profile } = usePanel();
+  const { team, setTeam, profile, searchQuery } = usePanel();
   const now = useNow(30000);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "", role: "member" as "member" | "admin" });
   const [busy, setBusy] = useState(false);
-  const [query, setQuery] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const isOwner = profile.role === "owner";
   const isOnline = (u: PanelProfile) => u.online || u.userId === profile.userId;
@@ -49,7 +48,7 @@ export function UsersView() {
     }
   }
 
-  const q = query.trim().toLowerCase();
+  const q = searchQuery.trim().toLowerCase();
   const list = team.filter((u) => !q || [u.username, u.email, u.role].some((v) => v.toLowerCase().includes(q)));
 
   return (
@@ -62,10 +61,6 @@ export function UsersView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
-            <input className="panel-input w-56 pl-9" placeholder="Search users…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          </div>
           <button type="button" className={open ? "btn-ghost" : "btn-accent"} onClick={() => setOpen((v) => !v)}>
             {open ? (
               "Cancel"
@@ -201,7 +196,7 @@ export function UsersView() {
             ))}
           </tbody>
         </table>
-        {list.length === 0 ? <p className="px-5 py-8 text-center text-[13px] font-semibold text-steel">No users match “{query}”.</p> : null}
+        {list.length === 0 ? <p className="px-5 py-8 text-center text-[13px] font-semibold text-steel">No users match “{searchQuery.trim()}”.</p> : null}
       </div>
     </div>
   );

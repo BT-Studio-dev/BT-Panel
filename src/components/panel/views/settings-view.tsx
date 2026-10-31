@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
@@ -11,22 +11,20 @@ import {
   Image as ImageIcon,
   Link2,
   Mail,
-  MonitorCog,
-  Moon,
   ShieldCheck,
   Sparkles,
-  Sun,
   WavesHorizontal,
 } from "lucide-react";
 import {
   SHADER_VARIANTS,
   WALLPAPERS,
   WALLPAPER_CATEGORIES,
+  WALLPAPER_SOURCE,
   parseShaderWallpaper,
   shaderWallpaperValue,
   type WallpaperItem,
 } from "@/lib/panel/catalog";
-import { DEFAULT_THEME, type SettingsTab, type ThemeMode, type ThemeSettings } from "@/lib/panel/types";
+import { DEFAULT_THEME, type SettingsTab, type ThemeSettings } from "@/lib/panel/types";
 import { api, cn, compressImageFile, isVideoUrl } from "@/lib/utils";
 import { usePanel } from "../context";
 import { ShaderCanvas } from "../wallpaper-layer";
@@ -49,10 +47,10 @@ export function SettingsView() {
       <div className="mb-4">
         <h2 className="text-[22px] font-extrabold tracking-tight">Settings Management</h2>
         <p className="mt-1 text-[13px] font-semibold text-steel">
-          Configure your panel, appearance, integrations, and runtime defaults.
+          Configure your panel, appearance, access, and runtime defaults.
         </p>
       </div>
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <div className="glass glass-strong glass-bar mb-4 flex flex-wrap gap-1.5 p-1.5">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -82,8 +80,6 @@ function GeneralPanel() {
     panelName: settings.panelName,
     panelSubtitle: settings.panelSubtitle,
     faviconTitle: settings.faviconTitle,
-    welcomeTitle: settings.welcomeTitle,
-    welcomeMessage: settings.welcomeMessage,
     panelLogo: settings.panelLogo,
     faviconLogo: settings.faviconLogo,
   });
@@ -115,17 +111,6 @@ function GeneralPanel() {
         </Field>
         <Field label="Browser tab title" hint="Falls back to the panel name when empty.">
           <input className="panel-input" value={form.faviconTitle} maxLength={60} onChange={(e) => setForm({ ...form, faviconTitle: e.target.value })} />
-        </Field>
-        <Field label="Welcome title">
-          <input className="panel-input" value={form.welcomeTitle} maxLength={80} onChange={(e) => setForm({ ...form, welcomeTitle: e.target.value })} />
-        </Field>
-        <Field label="Welcome message" className="md:col-span-2">
-          <textarea
-            className="panel-input min-h-[88px] resize-y"
-            value={form.welcomeMessage}
-            maxLength={280}
-            onChange={(e) => setForm({ ...form, welcomeMessage: e.target.value })}
-          />
         </Field>
         <LogoField
           label="Panel logo"
@@ -180,8 +165,8 @@ function LogoField({
   return (
     <div>
       <span className="mb-1.5 block text-[12px] font-bold text-steel">{label}</span>
-      <div className="flex items-center gap-3 rounded-[12px] border border-line bg-fill p-3">
-        <img src={value || fallback} alt="" className="size-12 rounded-[10px] object-contain" />
+      <div className="flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill p-3">
+        <img src={value || fallback} alt="" className="size-12 rounded-[var(--control-radius)] object-contain" />
         <div className="flex flex-1 flex-wrap gap-2">
           <label className="btn-ghost min-h-9 cursor-pointer px-3 text-[12px]">
             <CloudUpload className="size-3.5" /> Upload
@@ -205,14 +190,8 @@ function LogoField({
 }
 
 // ── Appearance ──────────────────────────────────────────────────────────────
-const MODES: { id: ThemeMode; label: string; hint: string; icon: typeof Moon }[] = [
-  { id: "dark", label: "Dark", hint: "classic night palette", icon: Moon },
-  { id: "oled", label: "OLED Black", hint: "pure #000000", icon: MonitorCog },
-  { id: "light", label: "Light", hint: "bright day palette", icon: Sun },
-];
-
 function AppearancePanel() {
-  const { draft, setDraft, persistTheme, clearModeOverride, setSettingsTab } = usePanel();
+  const { settings, draft, setDraft, persistTheme, persistSettings, clearModeOverride, setSettingsTab } = usePanel();
   const [saving, setSaving] = useState(false);
   const [url, setUrl] = useState("");
   const timer = useRef<number | null>(null);
@@ -245,31 +224,19 @@ function AppearancePanel() {
 
       <div className="mt-4">
         <div className="text-[13px] font-extrabold">Base Theme</div>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          {MODES.map((option) => {
-            const active = draft.mode === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                className={cn("select-tile flex items-center gap-2.5 px-3 py-2.5 text-left", active && "active")}
-                onClick={() => {
-                  setDraft({ mode: option.id });
-                  clearModeOverride();
-                }}
-              >
-                <option.icon className={cn("size-[18px] shrink-0", active ? "text-accent" : "text-steel")} />
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold">{option.label}</span>
-                  <span className="block truncate text-[10.5px] font-semibold text-steel">{option.hint}</span>
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-3">
+          <ToggleRow
+            label={`Base Theme: ${settings.showThemeToggle !== false ? "On" : "Off"}`}
+            hint="On = Show · Off = Hide the header sun/moon button."
+            checked={settings.showThemeToggle !== false}
+            onChange={(visible) => {
+              void persistSettings(
+                { showThemeToggle: visible },
+                visible ? "Header theme button shown" : "Header theme button hidden",
+              );
+            }}
+          />
         </div>
-        <p className="mt-1.5 text-[11px] font-semibold text-steel">
-          Panel-wide palette for everyone. Any user can still flip themselves dark↔light with the header sun/moon button.
-        </p>
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(280px,1.05fr)]">
@@ -284,7 +251,7 @@ function AppearancePanel() {
                 className="panel-input"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://images.pexels.com/…"
+                placeholder="https://example.com/wallpaper.jpg"
               />
               <button
                 type="button"
@@ -319,7 +286,12 @@ function AppearancePanel() {
           <Slider label="Background Blur" value={draft.bgBlur} max={100} suffix="px" onChange={(v) => onGlassChange({ bgBlur: v })} />
           <Slider label="Background Opacity" value={draft.bgOpacity} max={100} suffix="%" onChange={(v) => onGlassChange({ bgOpacity: v })} />
           <div>
-            <ColorField label="Accent Color" value={draft.accentColor} onChange={(v) => onGlassChange({ accentColor: v })} />
+            <ColorField
+              label="Theme Color"
+              value={draft.accentColor}
+              hint="Main panel color for buttons, active navigation, and highlights."
+              onChange={(v) => onGlassChange({ accentColor: v })}
+            />
             <div className="mt-2 flex flex-wrap gap-1.5">
               {ACCENT_PRESETS.map((c) => (
                 <button
@@ -331,25 +303,32 @@ function AppearancePanel() {
                   )}
                   style={{ background: c, boxShadow: `0 0 12px ${c}66` }}
                   onClick={() => onGlassChange({ accentColor: c })}
-                  aria-label={`Accent ${c}`}
+                  aria-label={`Theme color ${c}`}
                 />
               ))}
             </div>
           </div>
           <ColorField label="Glass Tint" value={draft.glassTint} hint="Base color for glassmorphism panels" onChange={(v) => onGlassChange({ glassTint: v })} />
           <Slider
-            label="Glass Opacity"
+            label={`Glass Opacity: ${draft.glassOpacity > 0 ? "On" : "Off"}`}
             value={draft.glassOpacity}
             max={100}
             suffix="%"
-            hint="0% = fully transparent, 100% = full tint"
-            onChange={(v) => onGlassChange({ glassOpacity: v })}
+            hint="0% = Off for all glass cards, navigation, and bars · above 0% = On with the selected opacity"
+            onChange={(v) => onGlassChange({ glassOpacity: v, cardGlass: v > 0 })}
           />
           <ColorField label="Nav Text" value={draft.navText} hint="Sidebar inactive item text" onChange={(v) => onGlassChange({ navText: v })} />
           <ColorField label="Nav Text Active" value={draft.navTextActive} hint="Sidebar active item text" onChange={(v) => onGlassChange({ navTextActive: v })} />
           <Slider label="Glass Blur" value={draft.glassBlur} max={40} suffix="px" onChange={(v) => onGlassChange({ glassBlur: v })} />
           <Slider label="Glass Saturate" value={draft.glassSaturate} min={100} max={250} suffix="%" onChange={(v) => onGlassChange({ glassSaturate: v })} />
-          <Slider label="Border Radius" value={draft.borderRadius} max={24} suffix="px" onChange={(v) => onGlassChange({ borderRadius: v })} />
+          <Slider
+            label="Border Radius"
+            value={draft.borderRadius}
+            max={24}
+            suffix="px"
+            hint="Applies to all cards, navigation, headers, tabs, and controls"
+            onChange={(v) => onGlassChange({ borderRadius: v })}
+          />
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-accent" disabled={saving} onClick={() => void save()}>
               {saving ? <Spinner /> : <Check className="size-4" />} Save Theme
@@ -386,7 +365,7 @@ function wallpaperLabel(url: string): string {
 function WallpaperPreview({ url }: { url: string }) {
   const shader = parseShaderWallpaper(url);
   return (
-    <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-line bg-fill p-2.5">
+    <div className="mt-3 flex items-center gap-3 rounded-[var(--control-radius)] border border-line bg-fill p-2.5">
       <div className="wallpaper-tile w-28 shrink-0 cursor-default">
         {shader ? (
           <ShaderCanvas variant={shader} maxDpr={1} className="size-full" />
@@ -429,7 +408,7 @@ function UploadBox({ onUploaded, compact }: { onUploaded: (url: string) => void;
   return (
     <label
       className={cn(
-        "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[14px] border border-dashed border-line-strong bg-sunken px-4 text-center transition-colors hover:border-accent/60",
+        "mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[var(--control-radius)] border border-dashed border-line-strong bg-sunken px-4 text-center transition-colors hover:border-accent/60",
         compact ? "min-h-[110px]" : "min-h-[180px]",
       )}
       onDragOver={(e) => e.preventDefault()}
@@ -448,6 +427,14 @@ function UploadBox({ onUploaded, compact }: { onUploaded: (url: string) => void;
 
 // ── 4K Wallpapers / Background Engine ───────────────────────────────────────
 type EngineMode = "catalog" | "shaders" | "url" | "upload";
+type WallpaperCategory = (typeof WALLPAPER_CATEGORIES)[number]["id"];
+type WallpaperPage = { items: WallpaperItem[]; hasMore: boolean };
+
+const WALLPAPER_PAGE_SIZE = 12;
+
+function wallpapersInCategory(category: WallpaperCategory) {
+  return WALLPAPERS.filter((item) => category === "all" || item.category === category);
+}
 
 const ENGINE_TABS: { id: EngineMode; label: string; icon: typeof Eye }[] = [
   { id: "catalog", label: "4K Wallpapers", icon: ImageIcon },
@@ -459,12 +446,80 @@ const ENGINE_TABS: { id: EngineMode; label: string; icon: typeof Eye }[] = [
 function WallpapersPanel() {
   const { draft, setDraft, persistTheme, settings } = usePanel();
   const [mode, setMode] = useState<EngineMode>("catalog");
-  const [category, setCategory] = useState<(typeof WALLPAPER_CATEGORIES)[number]["id"]>("all");
+  const [category, setCategory] = useState<WallpaperCategory>("all");
+  const [pagedWallpapers, setPagedWallpapers] = useState<WallpaperItem[]>([]);
+  const [page, setPage] = useState(2);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() => WALLPAPERS.length > WALLPAPER_PAGE_SIZE);
+  const [loadError, setLoadError] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const requestRef = useRef(0);
+  const loadingRef = useRef(false);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const saved = settings.wallpaperUrl;
   const previewing = draft.wallpaperUrl !== saved;
   const validUrl = /^https?:\/\/\S+$/i.test(url.trim());
+
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMore || loadError) return;
+    const requestId = ++requestRef.current;
+    loadingRef.current = true;
+    setLoadingMore(true);
+    try {
+      const data = await api<WallpaperPage>(`/api/wallpapers?category=${category}&page=${page}`);
+      if (requestId !== requestRef.current) return;
+      setPagedWallpapers((current) => {
+        const known = new Set(current.map((item) => item.full));
+        return [...current, ...data.items.filter((item) => !known.has(item.full))];
+      });
+      setPage(page + 1);
+      setHasMore(data.hasMore && data.items.length > 0);
+    } catch {
+      if (requestId === requestRef.current) setLoadError(true);
+    } finally {
+      if (requestId === requestRef.current) {
+        loadingRef.current = false;
+        setLoadingMore(false);
+      }
+    }
+  }, [category, hasMore, loadError, page]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (mode !== "catalog" || !sentinel || !hasMore || loadError || loadingMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadError, loadingMore, loadMore, mode]);
+
+  useEffect(
+    () => () => {
+      requestRef.current += 1;
+      loadingRef.current = false;
+    },
+    [],
+  );
+
+  function selectCategory(next: WallpaperCategory) {
+    if (next === category) return;
+    requestRef.current += 1;
+    loadingRef.current = false;
+    setCategory(next);
+    setPagedWallpapers([]);
+    setPage(2);
+    setHasMore(wallpapersInCategory(next).length > WALLPAPER_PAGE_SIZE);
+    setLoadError(false);
+    setLoadingMore(false);
+  }
+
+  const curated = wallpapersInCategory(category).slice(0, WALLPAPER_PAGE_SIZE);
+  const catalog = [...new Map([...curated, ...pagedWallpapers].map((item) => [item.full, item])).values()];
 
   async function apply(value: string, label: string) {
     setBusy(value);
@@ -475,7 +530,7 @@ function WallpapersPanel() {
   }
 
   return (
-    <div className="glass p-5">
+    <div className="glass p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-2 text-[16px] font-extrabold">
@@ -486,14 +541,15 @@ function WallpapersPanel() {
           </p>
         </div>
         {previewing ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn">
-            <Eye className="size-4" /> Previewing {wallpaperLabel(draft.wallpaperUrl)}
-            <button type="button" className="btn-ghost min-h-8 px-2.5 text-[11.5px]" onClick={() => setDraft({ wallpaperUrl: saved })}>
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-[var(--control-radius)] border border-warn/30 bg-warn/10 px-3 py-2 text-[12px] font-bold text-warn sm:w-auto">
+            <Eye className="size-4 shrink-0" />
+            <span className="min-w-28 flex-1">Previewing {wallpaperLabel(draft.wallpaperUrl)}</span>
+            <button type="button" className="btn-ghost min-h-11 px-2.5 text-[11.5px] pointer-fine:min-h-8" onClick={() => setDraft({ wallpaperUrl: saved })}>
               Revert
             </button>
             <button
               type="button"
-              className="btn-accent min-h-8 px-2.5 text-[11.5px]"
+              className="btn-accent min-h-11 px-2.5 text-[11.5px] pointer-fine:min-h-8"
               onClick={() => void apply(draft.wallpaperUrl, wallpaperLabel(draft.wallpaperUrl))}
             >
               Apply
@@ -507,7 +563,7 @@ function WallpapersPanel() {
           <button
             key={tab.id}
             type="button"
-            className={cn("pill-tab inline-flex items-center gap-1.5", mode === tab.id && "active")}
+            className={cn("pill-tab inline-flex min-h-11 items-center gap-1.5 pointer-fine:min-h-10", mode === tab.id && "active")}
             onClick={() => setMode(tab.id)}
           >
             <tab.icon className="size-3.5" />
@@ -524,17 +580,17 @@ function WallpapersPanel() {
                 key={c.id}
                 type="button"
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors",
+                  "min-h-11 rounded-[var(--control-radius)] border px-3 py-1.5 text-[12px] font-bold transition-colors pointer-fine:min-h-0",
                   category === c.id ? "border-accent/60 bg-accent/15 text-ice" : "border-line bg-fill text-steel hover:text-ice",
                 )}
-                onClick={() => setCategory(c.id)}
+                onClick={() => selectCategory(c.id)}
               >
                 {c.name}
               </button>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-            {WALLPAPERS.filter((w) => category === "all" || w.category === category).map((w) => (
+          <div className="mt-4 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 lg:gap-3 xl:grid-cols-4">
+            {catalog.map((w) => (
               <WallpaperCard
                 key={w.id}
                 item={w}
@@ -545,7 +601,40 @@ function WallpapersPanel() {
               />
             ))}
           </div>
-          <p className="mt-3 text-[11px] font-semibold text-faint">Photos via Pexels (free to use). Hover a tile to preview or apply.</p>
+          <div ref={sentinelRef} className="mt-5 flex min-h-10 items-center justify-center gap-3" aria-live="polite">
+            {loadError ? (
+              <>
+                <span className="text-[12px] font-semibold text-steel">More wallpapers could not load.</span>
+                <button type="button" className="btn-ghost min-h-9 px-3 text-[12px]" onClick={() => setLoadError(false)}>
+                  Retry
+                </button>
+              </>
+            ) : hasMore ? (
+              <button
+                type="button"
+                className="btn-ghost min-h-11 px-4 text-[11.5px] pointer-fine:min-h-9"
+                disabled={loadingMore}
+                onClick={() => void loadMore()}
+              >
+                {loadingMore ? <Spinner /> : <ImageIcon className="size-3.5" />}
+                {loadingMore ? "Loading wallpapers…" : "Load more wallpapers"}
+              </button>
+            ) : (
+              <span className="text-[11.5px] font-semibold text-faint">All caught up · {catalog.length} wallpapers</span>
+            )}
+          </div>
+          <p className="mt-3 text-[11px] font-semibold text-faint">
+            High-resolution wallpapers sourced from{" "}
+            <a
+              href={WALLPAPER_SOURCE.url}
+              target="_blank"
+              rel="noreferrer"
+              className="font-extrabold text-steel underline decoration-line-strong underline-offset-2 transition-colors hover:text-ice"
+            >
+              {WALLPAPER_SOURCE.name}
+            </a>
+            , served locally for reliable previews. Use a tile to preview or apply a background.
+          </p>
         </>
       ) : null}
 
@@ -557,7 +646,7 @@ function WallpapersPanel() {
             return (
               <div
                 key={v.id}
-                className={cn("overflow-hidden rounded-[14px] border border-line bg-fill", active && "outline-2 outline-offset-2 outline-accent")}
+                className={cn("overflow-hidden rounded-[var(--control-radius)] border border-line bg-fill", active && "outline-2 outline-offset-2 outline-accent")}
               >
                 <div className="relative aspect-[16/10]">
                   <ShaderCanvas variant={v.id} maxDpr={1} className="absolute inset-0 size-full" />
@@ -571,12 +660,12 @@ function WallpapersPanel() {
                   </div>
                   <p className="mt-0.5 text-[11.5px] font-semibold text-steel">{v.description}</p>
                   <div className="mt-3 flex gap-2">
-                    <button type="button" className="btn-ghost min-h-9 flex-1 px-2 text-[12px]" onClick={() => setDraft({ wallpaperUrl: value })}>
+                    <button type="button" className="btn-ghost min-h-11 flex-1 px-2 text-[12px] pointer-fine:min-h-9" onClick={() => setDraft({ wallpaperUrl: value })}>
                       <Eye className="size-3.5" /> Preview
                     </button>
                     <button
                       type="button"
-                      className="btn-accent min-h-9 flex-1 px-2 text-[12px]"
+                      className="btn-accent min-h-11 flex-1 px-2 text-[12px] pointer-fine:min-h-9"
                       disabled={busy === value}
                       onClick={() => void apply(value, v.name)}
                     >
@@ -632,18 +721,18 @@ function WallpaperCard({
     <div className="group">
       <div className={cn("wallpaper-tile", active && "active")}>
         <img src={item.thumb} alt={item.title} loading="lazy" />
-        <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/75 via-black/10 to-transparent p-2.5 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/75 via-black/10 to-transparent p-2.5 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100">
           <div className="flex w-full gap-1.5">
             <button
               type="button"
-              className="flex-1 rounded-[8px] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25"
+              className="min-h-11 flex-1 rounded-[var(--control-radius)] bg-white/15 px-2 py-1.5 text-[11.5px] font-bold text-white backdrop-blur hover:bg-white/25 pointer-fine:min-h-0"
               onClick={onPreview}
             >
               Preview
             </button>
             <button
               type="button"
-              className="flex-1 rounded-[8px] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110"
+              className="min-h-11 flex-1 rounded-[var(--control-radius)] bg-accent px-2 py-1.5 text-[11.5px] font-bold text-white hover:brightness-110 pointer-fine:min-h-0"
               onClick={onApply}
               disabled={busy}
             >
@@ -657,9 +746,9 @@ function WallpaperCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-1.5 flex items-center justify-between gap-2 px-0.5">
-        <span className="truncate text-[12.5px] font-extrabold">{item.title}</span>
-        <span className="truncate text-[10.5px] font-semibold text-faint">© {item.credit}</span>
+      <div className="mt-2 flex flex-col gap-0.5 px-0.5 min-[480px]:mt-1.5 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between min-[480px]:gap-2">
+        <span className="truncate text-[13px] font-extrabold min-[480px]:text-[12.5px]">{item.title}</span>
+        <span className="truncate text-[10.5px] font-semibold text-faint">Source: {item.credit}</span>
       </div>
     </div>
   );
@@ -669,20 +758,14 @@ function WallpaperCard({
 function BarsPanel() {
   const { settings, persistSettings } = usePanel();
   const [form, setForm] = useState({
-    showAdminStats: settings.showAdminStats,
-    showVersion: settings.showVersion,
-    showRole: settings.showRole,
     showHeaderUser: settings.showHeaderUser,
   });
   const [saving, setSaving] = useState(false);
   return (
     <div className="glass p-5">
-      <h3 className="text-[16px] font-extrabold">Home indicators</h3>
-      <p className="mt-1 text-[13px] font-semibold text-steel">Choose which bars and cards appear on Home and in the header.</p>
-      <div className="mt-4 grid gap-2 md:grid-cols-2">
-        <ToggleRow label="Admin statistics" hint="Total users & quick links on Home (admins only)" checked={form.showAdminStats} onChange={(v) => setForm({ ...form, showAdminStats: v })} />
-        <ToggleRow label="Panel version card" hint="Running version and access level" checked={form.showVersion} onChange={(v) => setForm({ ...form, showVersion: v })} />
-        <ToggleRow label="Signed-in role phrase" hint="“You are signed in as a …” on Home" checked={form.showRole} onChange={(v) => setForm({ ...form, showRole: v })} />
+      <h3 className="text-[16px] font-extrabold">Header controls</h3>
+      <p className="mt-1 text-[13px] font-semibold text-steel">Choose which account controls appear in the header.</p>
+      <div className="mt-4 grid gap-2">
         <ToggleRow label="Top-header account control" hint="Avatar menu in the top-right header" checked={form.showHeaderUser} onChange={(v) => setForm({ ...form, showHeaderUser: v })} />
       </div>
       <button
@@ -873,7 +956,7 @@ function AccessPanel() {
         {form.googleOauthEnabled ? (
           <p
             className={cn(
-              "mt-3 rounded-[10px] border px-3 py-2 text-[12px] font-semibold",
+              "mt-3 rounded-[var(--control-radius)] border px-3 py-2 text-[12px] font-semibold",
               googleReady
                 ? "border-ok/35 bg-ok/10 text-ok"
                 : "border-warn/35 bg-warn/10 text-warn",

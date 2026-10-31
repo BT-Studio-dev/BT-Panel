@@ -1,19 +1,31 @@
 export type PanelRole = "owner" | "admin" | "member";
 export type PanelStatus = "active" | "suspended";
 export type PanelView =
-  | "home"
   | "servers"
   | "team"
   | "music"
   | "settings"
   | "users"
-  | "updates"
-  | "account"
-  | "integrations";
+  | "account";
 export type SettingsTab = "general" | "appearance" | "wallpapers" | "bars" | "access";
+export type AdminSection =
+  | "overview"
+  | "activity"
+  | "settings"
+  | "users"
+  | "locations"
+  | "nodes"
+  | "server"
+  | "databases"
+  | "mounts"
+  | "eggs"
+  | "tags"
+  | "extensions"
+  | "api-keys";
 
-/** Panel color-scheme: classic dark, OLED pure-black (#000000), or light. */
+/** Panel color-scheme: midnight dark, OLED pure-black (#000000), or porcelain light. */
 export type ThemeMode = "dark" | "light" | "oled";
+export type CardTheme = "auto" | "hidden" | "off-white" | "dark";
 
 export type ThemeSettings = {
   mode: ThemeMode;
@@ -28,6 +40,8 @@ export type ThemeSettings = {
   glassSaturate: number;
   borderRadius: number;
   glassOpacity: number;
+  cardGlass: boolean;
+  cardTheme: CardTheme;
   showTeam: boolean;
 };
 
@@ -46,6 +60,7 @@ export type BarsSettings = {
   showVersion: boolean;
   showRole: boolean;
   showHeaderUser: boolean;
+  showThemeToggle: boolean;
 };
 
 export type AccessSettings = {
@@ -90,6 +105,7 @@ export type PanelProfile = {
   status: PanelStatus;
   bio: string;
   profilePic: string;
+  profileBanner: string;
   lastSeen: string | null;
   lastLoginAt: string | null;
   createdAt: string;
@@ -124,6 +140,21 @@ export type ServerEventDto = {
   createdAt: string;
 };
 
+export type AdminActivityDto = ServerEventDto & {
+  serverId: string;
+  serverName: string;
+};
+
+export type ApiKeyDto = {
+  id: string;
+  name: string;
+  prefix: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  ownerName?: string;
+};
+
 export type BackupStatus = "creating" | "ready";
 
 export type BackupDto = {
@@ -147,17 +178,19 @@ export type BootstrapPayload = {
 
 export const DEFAULT_THEME: ThemeSettings = {
   mode: "dark",
-  wallpaperUrl: "shader:waves",
+  wallpaperUrl: "",
   bgBlur: 0,
   bgOpacity: 100,
   accentColor: "#d00000",
-  glassTint: "#0a0c14",
-  navText: "#9da3b4",
-  navTextActive: "#e7e9f0",
+  glassTint: "#0b101a",
+  navText: "#a7b2c6",
+  navTextActive: "#f3f6fc",
   glassBlur: 32,
   glassSaturate: 180,
   borderRadius: 18,
   glassOpacity: 88,
+  cardGlass: true,
+  cardTheme: "auto",
   showTeam: true,
 };
 
@@ -176,6 +209,7 @@ export const DEFAULT_BARS: BarsSettings = {
   showVersion: true,
   showRole: true,
   showHeaderUser: true,
+  showThemeToggle: true,
 };
 
 export const DEFAULT_ACCESS: AccessSettings = {
@@ -218,12 +252,10 @@ export function pickTheme(settings: PanelSettings): ThemeSettings {
 }
 
 export const PANEL_VERSION = "v2.1.1";
-export const REPO_URL = "https://github.com/BT-Studio-dev/BT-Panel";
 
-/** Demo accounts seeded on a fresh database (ids below match the seed). */
+/** Demo owner seeded on a fresh database (the id matches the seed). */
 export const DEMO_ACCOUNTS = [
   { id: "usr_admin", label: "Owner", username: "admin", password: "btpanel123" },
-  { id: "usr_steve", label: "Member", username: "steve", password: "steve12345" },
 ] as const;
 
 export function isAdminRole(role: PanelRole | string | undefined): boolean {
@@ -231,21 +263,18 @@ export function isAdminRole(role: PanelRole | string | undefined): boolean {
 }
 
 export const PANEL_VIEWS: PanelView[] = [
-  "home",
   "servers",
   "team",
   "music",
   "settings",
   "users",
-  "updates",
   "account",
-  "integrations",
 ];
-const ADMIN_VIEWS: PanelView[] = ["settings", "users", "updates", "integrations"];
+const ADMIN_VIEWS: PanelView[] = ["settings", "users"];
 
-/** Validate a ?view= value; members asking for admin pages land on Home. */
+/** Validate a ?view= value; invalid or unauthorized destinations land on Servers. */
 export function resolveView(requested: unknown, role: PanelRole | string): PanelView {
   const view =
-    typeof requested === "string" && (PANEL_VIEWS as string[]).includes(requested) ? (requested as PanelView) : "home";
-  return ADMIN_VIEWS.includes(view) && !isAdminRole(role) ? "home" : view;
+    typeof requested === "string" && (PANEL_VIEWS as string[]).includes(requested) ? (requested as PanelView) : "servers";
+  return ADMIN_VIEWS.includes(view) && !isAdminRole(role) ? "servers" : view;
 }

@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * BT Panel schema — accounts, sessions, the singleton panel settings row
+ * BT Panel schema — accounts, sessions, hashed API keys, the singleton panel settings row
  * (theme / branding / bars / access), game & app servers with a console
  * event log, on-demand backup snapshots, and uploaded wallpaper media.
  *
@@ -26,10 +26,28 @@ export const users = pgTable("users", {
   status: text("status").notNull().default("active"),
   bio: text("bio").notNull().default(""),
   profilePic: text("profile_pic").notNull().default(""),
+  profileBanner: text("profile_banner").notNull().default(""),
   lastSeen: timestamp("last_seen", { withTimezone: true }),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    prefix: text("prefix").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+  },
+  (t) => [index("api_keys_user_idx").on(t.userId), index("api_keys_hash_idx").on(t.tokenHash)],
+);
 
 export const sessions = pgTable(
   "sessions",
@@ -47,7 +65,7 @@ export const sessions = pgTable(
 export const panelSettings = pgTable("panel_settings", {
   id: integer("id").primaryKey(),
   themeMode: text("theme_mode").notNull().default("dark"),
-  wallpaperUrl: text("wallpaper_url").notNull().default("shader:waves"),
+  wallpaperUrl: text("wallpaper_url").notNull().default(""),
   bgBlur: integer("bg_blur").notNull().default(0),
   bgOpacity: integer("bg_opacity").notNull().default(100),
   accentColor: text("accent_color").notNull().default("#d00000"),
@@ -58,6 +76,8 @@ export const panelSettings = pgTable("panel_settings", {
   glassSaturate: integer("glass_saturate").notNull().default(160),
   borderRadius: integer("border_radius").notNull().default(16),
   glassOpacity: integer("glass_opacity").notNull().default(62),
+  cardGlass: boolean("card_glass").notNull().default(true),
+  cardTheme: text("card_theme").notNull().default("auto"),
   showTeam: boolean("show_team").notNull().default(true),
   panelName: text("panel_name").notNull().default("BT Panel"),
   panelSubtitle: text("panel_subtitle").notNull().default("Command center"),
@@ -70,6 +90,7 @@ export const panelSettings = pgTable("panel_settings", {
   showVersion: boolean("show_version").notNull().default(true),
   showRole: boolean("show_role").notNull().default(true),
   showHeaderUser: boolean("show_header_user").notNull().default(true),
+  showThemeToggle: boolean("show_theme_toggle").notNull().default(true),
   allowRegistration: boolean("allow_registration").notNull().default(true),
   tutorialsEnabled: boolean("tutorials_enabled").notNull().default(true),
   showDemoLogin: boolean("show_demo_login").notNull().default(true),

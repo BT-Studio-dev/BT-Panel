@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ArrowUpRight, Bot, CodeXml, Crosshair, Flame, Hexagon, LoaderCircle, Pickaxe, Swords, X } from "lucide-react";
 import { getTemplate, type TemplateIcon } from "@/lib/panel/catalog";
 import type { ServerStatus } from "@/lib/panel/types";
@@ -28,8 +29,8 @@ export function PresenceAvatar({
     <div className={cn("relative shrink-0 overflow-hidden", dim)} title={name}>
       <div
         className={cn(
-          "grid size-full place-items-center overflow-hidden rounded-[12px] bg-fill-strong",
-          size === "lg" && "rounded-[22px]",
+          "grid size-full place-items-center overflow-hidden rounded-[var(--control-radius)] bg-fill-strong",
+          size === "lg" && "rounded-[var(--panel-radius)]",
         )}
       >
         <img src={image} alt="" className="block size-full object-cover" aria-hidden="true" />
@@ -45,9 +46,13 @@ export function PresenceAvatar({
 export function useNow(intervalMs = 1000): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
-    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
-    return () => window.clearInterval(id);
+    const update = () => setNow(Date.now());
+    const initial = window.setTimeout(update, 0);
+    const interval = window.setInterval(update, intervalMs);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, [intervalMs]);
   return now;
 }
@@ -65,7 +70,7 @@ const ICONS: Record<TemplateIcon, typeof Pickaxe> = {
 export function TemplateBadge({ templateId, size = "md" }: { templateId: string; size?: "sm" | "md" | "lg" }) {
   const t = getTemplate(templateId);
   const Icon = ICONS[t.icon];
-  const dim = size === "lg" ? "size-14 rounded-[16px]" : size === "sm" ? "size-8 rounded-[9px]" : "size-11 rounded-[12px]";
+  const dim = size === "lg" ? "size-14 rounded-[var(--panel-radius)]" : size === "sm" ? "size-8 rounded-[var(--control-radius)]" : "size-11 rounded-[var(--control-radius)]";
   return (
     <div
       className={cn("grid shrink-0 place-items-center border", dim)}
@@ -131,7 +136,7 @@ export function Stat({
   hint?: ReactNode;
 }) {
   return (
-    <div className="glass-soft h-full rounded-[calc(var(--panel-radius)-6px)] border border-line px-4 py-4 transition-colors hover:border-line-strong">
+    <div className="glass-soft h-full rounded-[var(--control-radius)] border border-line px-4 py-4 transition-colors hover:border-line-strong">
       <div className="text-[11px] font-extrabold tracking-[0.12em] text-steel uppercase">{label}</div>
       <div
         className={cn(
@@ -185,13 +190,20 @@ export function ToggleRow({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[12px] border border-line bg-fill px-4 py-3">
-      <div className="min-w-0">
-        <div className="text-[13.5px] font-extrabold">{label}</div>
-        {hint ? <div className="mt-0.5 text-[12px] font-semibold text-steel">{hint}</div> : null}
-      </div>
-      <Switch checked={checked} onChange={onChange} label={label} />
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className="flex w-full items-center justify-between gap-4 rounded-[var(--control-radius)] border border-line bg-fill px-4 py-3 text-left transition-colors hover:border-line-strong"
+      onClick={() => onChange(!checked)}
+    >
+      <span className="min-w-0">
+        <span className="block text-[13.5px] font-extrabold">{label}</span>
+        {hint ? <span className="mt-0.5 block text-[12px] font-semibold text-steel">{hint}</span> : null}
+      </span>
+      <span className="switch" data-checked={checked} aria-hidden="true" />
+    </button>
   );
 }
 
@@ -216,7 +228,7 @@ export function Slider({
     <label className="block">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12.5px] font-bold text-ice">{label}</span>
-        <span className="rounded-md border border-line bg-sunken px-2 py-0.5 font-mono text-[11.5px] font-semibold text-accent">
+        <span className="rounded-[var(--control-radius)] border border-line bg-sunken px-2 py-0.5 font-mono text-[11.5px] font-semibold text-accent">
           {value}
           {suffix}
         </span>
@@ -245,21 +257,24 @@ export function ColorField({
   hint?: string;
   onChange: (value: string) => void;
 }) {
-  const [text, setText] = useState(value);
-  useEffect(() => setText(value), [value]);
+  const [edit, setEdit] = useState<{ base: string; text: string } | null>(null);
+  const text = edit?.base === value ? edit.text : value;
   return (
     <div>
       <div className="text-[12.5px] font-bold text-ice">{label}</div>
       <div className="mt-1.5 flex items-center gap-2">
         <label
-          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-[10px] border border-line-strong"
+          className="relative size-11 shrink-0 cursor-pointer overflow-hidden rounded-[var(--control-radius)] border border-line-strong"
           style={{ background: value }}
         >
           <input
             type="color"
             className="absolute inset-0 size-full cursor-pointer opacity-0"
             value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              setEdit({ base: e.target.value, text: e.target.value });
+              onChange(e.target.value);
+            }}
             aria-label={label}
           />
         </label>
@@ -268,8 +283,9 @@ export function ColorField({
           value={text}
           maxLength={7}
           onChange={(e) => {
-            setText(e.target.value);
-            if (/^#[0-9a-f]{6}$/i.test(e.target.value)) onChange(e.target.value.toLowerCase());
+            const next = e.target.value;
+            setEdit({ base: value, text: next });
+            if (/^#[0-9a-f]{6}$/i.test(next)) onChange(next.toLowerCase());
           }}
         />
       </div>
@@ -326,7 +342,7 @@ export function SectionCard({
           {icon ? <span className="text-accent">{icon}</span> : null}
           <div className="min-w-0">
             <h2 className="truncate text-[16px] font-extrabold">{title}</h2>
-            {subtitle ? <p className="mt-0.5 text-[12px] font-semibold text-steel">{subtitle}</p> : null}
+            {subtitle ? <p className="mt-0.5 text-[12.5px] font-semibold text-steel">{subtitle}</p> : null}
           </div>
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -359,8 +375,10 @@ export function Modal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
-  if (!open) return null;
-  return (
+  if (!open || typeof document === "undefined") return null;
+  // Glass blur and overflow create fixed-position containing blocks/clips.
+  // Portal every dialog so nested cards can never trap it inside their bounds.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 grid overflow-y-auto bg-black/85 p-4 [place-items:center]"
       onMouseDown={onClose}
@@ -379,7 +397,7 @@ export function Modal({
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
             <h3 className="truncate text-[16px] font-extrabold">{title}</h3>
-            {subtitle ? <p className="mt-0.5 text-[12px] font-semibold text-steel">{subtitle}</p> : null}
+            {subtitle ? <p className="mt-0.5 text-[12.5px] font-semibold text-steel">{subtitle}</p> : null}
           </div>
           <button type="button" className="icon-btn size-8" onClick={onClose} aria-label="Close">
             <X className="size-4" />
@@ -387,14 +405,15 @@ export function Modal({
         </div>
         <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 export function EmptyState({ icon, title, body, action }: { icon: ReactNode; title: string; body: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      <div className="grid size-12 place-items-center rounded-2xl border border-accent/40 bg-accent/15 text-accent shadow-[0_0_22px_var(--accent-glow)]">
+      <div className="grid size-12 place-items-center rounded-[var(--panel-radius)] border border-accent/40 bg-accent/15 text-accent shadow-[0_0_22px_var(--accent-glow)]">
         {icon}
       </div>
       <div className="mt-4 text-[15px] font-extrabold">{title}</div>

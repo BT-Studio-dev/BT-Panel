@@ -33,7 +33,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const mode = parseMode(store.get(MODE_COOKIE)?.value) ?? settings.mode;
   const vars = themeVars(pickTheme(settings), mode);
   return (
-    <html lang="en" data-theme-mode={mode} style={vars as CSSProperties} suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme-mode={mode}
+      data-card-glass={settings.glassOpacity > 0 ? "on" : "off"}
+      data-card-theme={settings.cardTheme}
+      style={vars as CSSProperties}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -1,5 +1,5 @@
 import { parseShaderWallpaper } from "./catalog";
-import { DEFAULT_THEME, type ThemeMode, type ThemeSettings } from "./types";
+import { DEFAULT_THEME, type CardTheme, type ThemeMode, type ThemeSettings } from "./types";
 import { clamp, hexToRgbTriplet, isVideoUrl, toHexColor } from "@/lib/utils";
 
 /**
@@ -13,8 +13,12 @@ export function parseMode(value: unknown): ThemeMode | null {
   return value === "dark" || value === "light" || value === "oled" ? value : null;
 }
 
+export function parseCardTheme(value: unknown): CardTheme | null {
+  return value === "auto" || value === "hidden" || value === "off-white" || value === "dark" ? value : null;
+}
+
 // Light scheme replaces the admin-picked glass tint / nav colors.
-const LIGHT = { tint: "250 251 254", nav: "#4e5669", navActive: "#13162a" } as const;
+const LIGHT = { tint: "255 255 255", nav: "#55657f", navActive: "#182238" } as const;
 
 export function themeVars(theme: ThemeSettings, mode: ThemeMode): Record<string, string> {
   const accent = toHexColor(theme.accentColor, DEFAULT_THEME.accentColor);
@@ -53,8 +57,12 @@ export function getLocalModeOverride(): ThemeMode | null {
   } catch {
     /* storage unavailable */
   }
-  const match = document.cookie.match(new RegExp(`(?:^|; )${MODE_COOKIE}=([^;]*)`));
-  return parseMode(match?.[1]);
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${MODE_COOKIE}=([^;]*)`));
+    return parseMode(match?.[1]);
+  } catch {
+    return null;
+  }
 }
 
 export function setLocalModeOverride(mode: ThemeMode | null) {
@@ -67,15 +75,21 @@ export function setLocalModeOverride(mode: ThemeMode | null) {
   }
   const secure = window.location.protocol === "https:";
   const attrs = secure ? "; SameSite=None; Secure; Partitioned" : "; SameSite=Lax";
-  document.cookie = mode
-    ? `${MODE_COOKIE}=${mode}; Path=/; Max-Age=31536000${attrs}`
-    : `${MODE_COOKIE}=; Path=/; Max-Age=0${attrs}`;
+  try {
+    document.cookie = mode
+      ? `${MODE_COOKIE}=${mode}; Path=/; Max-Age=31536000${attrs}`
+      : `${MODE_COOKIE}=; Path=/; Max-Age=0${attrs}`;
+  } catch {
+    /* A blocked cookie store must not prevent the in-memory theme switch. */
+  }
 }
 
 export function applyTheme(theme: ThemeSettings, mode: ThemeMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.themeMode = mode;
+  root.dataset.cardGlass = theme.glassOpacity > 0 ? "on" : "off";
+  root.dataset.cardTheme = parseCardTheme(theme.cardTheme) ?? "auto";
   const vars = themeVars(theme, mode);
   for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);
 }

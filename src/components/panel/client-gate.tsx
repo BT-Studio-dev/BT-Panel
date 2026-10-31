@@ -9,7 +9,7 @@ import {
   type ThemeMode,
   type ThemeSettings,
 } from "@/lib/panel/types";
-import { api, cachePanel, clearCachedPanel, clearStoredToken, getCachedPanel, getStoredToken } from "@/lib/utils";
+import { api, cachePanel, clearCachedPanel, clearStoredToken, getCachedPanel, getStoredToken, isSessionExpiredError } from "@/lib/utils";
 import { PanelShell } from "./shell";
 import { WallpaperLayer } from "./wallpaper-layer";
 
@@ -34,12 +34,13 @@ function bail() {
  * are blocked in embedded previews, so the session lives in a Bearer token).
  *
  * There is deliberately NO loading screen here: the dashboard signed into
- * last is cached, so Home paints immediately and the network call only
- * refreshes it in the background. If the session is gone or the call times
- * out, we leave for sign-in instead of showing a spinner.
+ * last is cached, so Servers paints immediately and the network call only
+ * refreshes it in the background. Only a confirmed 401 removes the session;
+ * slow or failed network requests preserve it and offer a retry instead.
  */
 export function ClientGate({ theme }: { theme: ThemeSettings }) {
   const [ready, setReady] = useState<Ready | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -47,25 +48,33 @@ export function ClientGate({ theme }: { theme: ThemeSettings }) {
       return;
     }
     const cached = getCachedPanel<BootstrapPayload>();
+    // Restore a cached dashboard without waiting for the network request.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (cached) setReady(readReady(cached));
 
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      if (!cancelled && !cached) bail();
+      if (!cancelled && !cached) setLoadError("The panel is taking longer than expected to respond.");
     }, TIMEOUT_MS);
 
     api<BootstrapPayload>("/api/bootstrap")
       .then((data) => {
         if (cancelled) return;
         window.clearTimeout(timer);
+        setLoadError("");
         cachePanel(data);
         setReady(readReady(data));
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (cancelled) return;
         window.clearTimeout(timer);
-        if (!cached) bail();
-        else clearStoredToken(); // cache stays on screen; refresh() will bounce out if the session is really gone
+        if (isSessionExpiredError(error)) {
+          bail();
+          return;
+        }
+        // Network, proxy, and server errors are not proof that a session is
+        // invalid. Keep the token so the next scheduled refresh can succeed.
+        if (!cached) setLoadError(error instanceof Error ? error.message : "Could not reach the panel.");
       });
     return () => {
       cancelled = true;
@@ -84,10 +93,20 @@ export function ClientGate({ theme }: { theme: ThemeSettings }) {
     );
   }
 
-  // No cached dashboard to paint: just the background while it is fetched.
+  // No cached dashboard to paint: keep the session saved while it is fetched.
   return (
-    <div className="relative min-h-dvh" aria-busy="true">
+    <div className="relative min-h-dvh" aria-busy={!loadError}>
       <WallpaperLayer theme={theme} />
+      {loadError ? (
+        <main className="relative z-10 grid min-h-dvh place-items-center p-4">
+          <section className="glass glass-strong w-full max-w-sm p-6 text-center" role="alert">
+            <h1 className="text-lg font-extrabold">Couldn’t refresh the panel</h1>
+            <p className="mt-2 text-sm font-semibold text-steel">{loadError}</p>
+            <p className="mt-2 text-xs font-semibold text-steel">Your sign-in is still saved. Check the connection and try again.</p>
+            <button className="btn-accent mt-5 w-full" type="button" onClick={() => window.location.reload()}>Retry connection</button>
+          </section>
+        </main>
+      ) : null}
     </div>
   );
 }

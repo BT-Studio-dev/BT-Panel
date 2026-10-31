@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Check,
+  ChevronDown,
   Clock,
   Copy,
   Cpu,
@@ -13,7 +15,6 @@ import {
   Play,
   Plus,
   RotateCw,
-  Search,
   Send,
   Server as ServerIcon,
   Skull,
@@ -49,8 +50,7 @@ export function ServersView() {
 
 // ── List ────────────────────────────────────────────────────────────────────
 function ServerList() {
-  const { servers, isAdmin } = usePanel();
-  const [query, setQuery] = useState("");
+  const { servers, searchQuery: query } = usePanel();
   const [filter, setFilter] = useState<Filter>("all");
   const [creating, setCreating] = useState(false);
   const now = useNow(2000);
@@ -64,38 +64,20 @@ function ServerList() {
       v.toLowerCase().includes(q),
     );
   });
-  const running = servers.filter((s) => s.status === "running").length;
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h2 className="text-[22px] font-extrabold tracking-tight">Server Fleet</h2>
-          <p className="mt-1 text-[13px] font-semibold text-steel">
-            {running} of {servers.length} running · {isAdmin ? "every server on the panel" : "servers you own"}
-          </p>
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <div className="flex gap-1.5">
+          {(["all", "running", "offline"] as Filter[]).map((f) => (
+            <button key={f} type="button" className={cn("pill-tab capitalize", filter === f && "active")} onClick={() => setFilter(f)}>
+              {f}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel" />
-            <input
-              className="panel-input w-56 pl-9"
-              placeholder="Search servers…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-1.5">
-            {(["all", "running", "offline"] as Filter[]).map((f) => (
-              <button key={f} type="button" className={cn("pill-tab capitalize", filter === f && "active")} onClick={() => setFilter(f)}>
-                {f}
-              </button>
-            ))}
-          </div>
-          <button type="button" className="btn-accent" onClick={() => setCreating(true)}>
-            <Plus className="size-4" /> Create Server
-          </button>
-        </div>
+        <button type="button" className="btn-accent" onClick={() => setCreating(true)}>
+          <Plus className="size-4" /> Create Server
+        </button>
       </div>
 
       {list.length === 0 ? (
@@ -152,7 +134,7 @@ function ServerCard({ server, now }: { server: ServerDto; now: number | null }) 
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[11.5px] font-semibold text-steel">
         <CopyAddress value={`${server.ip}:${server.port}`} />
-        <span className="rounded-md border border-line bg-fill px-2 py-1">{node ? `${node.region} · ${node.name}` : server.node}</span>
+        <span className="rounded-[var(--control-radius)] border border-line bg-fill px-2 py-1">{node ? `${node.region} · ${node.name}` : server.node}</span>
         {server.ownerName ? <span className="truncate">@{server.ownerName}</span> : null}
       </div>
       <div className="mt-4 grid gap-2.5">
@@ -213,7 +195,7 @@ function CopyAddress({ value }: { value: string }) {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-md border border-line bg-sunken px-2 py-1 font-mono text-[11.5px] text-ice transition-colors hover:border-line-strong"
+      className="inline-flex items-center gap-1.5 rounded-[var(--control-radius)] border border-line bg-sunken px-2 py-1 font-mono text-[11.5px] text-ice transition-colors hover:border-line-strong"
       title="Copy address"
       onClick={() => {
         if (!navigator.clipboard) {
@@ -300,6 +282,138 @@ function PowerButtons({
 }
 
 // ── Create ──────────────────────────────────────────────────────────────────
+type ResourceOption = { value: string; label: string };
+
+function ResourceSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: ResourceOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
+  const [activeIndex, setActiveIndex] = useState(selectedIndex);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listId = useId().replace(/:/g, "");
+  const selected = options[selectedIndex] ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) document.getElementById(`${listId}-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, listId, open]);
+
+  function choose(index: number) {
+    onChange(options[index].value);
+    setActiveIndex(index);
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  function onTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "Tab") {
+      setOpen(false);
+      return;
+    }
+    if (event.key === "Escape" && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      buttonRef.current?.focus();
+      return;
+    }
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      if (!open) {
+        setActiveIndex(selectedIndex);
+        setOpen(true);
+        return;
+      }
+      const next =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? options.length - 1
+            : event.key === "ArrowDown"
+              ? Math.min(options.length - 1, activeIndex + 1)
+              : Math.max(0, activeIndex - 1);
+      setActiveIndex(next);
+      return;
+    }
+    if (open && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      choose(activeIndex);
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        className="panel-input flex items-center justify-between gap-3 text-left"
+        role="combobox"
+        aria-label={label}
+        aria-autocomplete="none"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        aria-activedescendant={open ? `${listId}-${activeIndex}` : undefined}
+        onClick={() => {
+          setActiveIndex(selectedIndex);
+          setOpen((current) => !current);
+        }}
+        onKeyDown={onTriggerKeyDown}
+      >
+        <span className="min-w-0 truncate">{selected.label}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-steel transition-transform", open && "rotate-180")} />
+      </button>
+      {open ? (
+        <div
+          id={listId}
+          role="listbox"
+          aria-label={`${label} options`}
+          className="glass-modal view-enter scrollbar-thin absolute right-0 bottom-[calc(100%+6px)] left-0 z-40 max-h-56 overflow-y-auto p-1.5"
+        >
+          {options.map((option, index) => (
+            <button
+              id={`${listId}-${index}`}
+              key={option.value}
+              type="button"
+              role="option"
+              tabIndex={-1}
+              aria-selected={index === selectedIndex}
+              className={cn(
+                "flex min-h-10 w-full items-center justify-between gap-3 rounded-[var(--control-radius)] px-3 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-fill-strong",
+                index === activeIndex && "bg-accent/12",
+                index === selectedIndex ? "text-accent" : index === activeIndex && "text-ice",
+              )}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => choose(index)}
+            >
+              <span className="min-w-0 truncate">{option.label}</span>
+              {index === selectedIndex ? <Check className="size-4 shrink-0" /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function CreateServerModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { setServers, openServer } = usePanel();
   const [name, setName] = useState("");
@@ -366,40 +480,36 @@ function CreateServerModal({ open, onClose }: { open: boolean; onClose: () => vo
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Node">
-            <select className="panel-input" value={node} onChange={(e) => setNode(e.target.value)}>
-              {NODES.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.name} ({n.region})
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Node"
+              value={node}
+              options={NODES.map((item) => ({ value: item.id, label: `${item.name} (${item.region})` }))}
+              onChange={setNode}
+            />
           </Field>
           <Field label="Memory">
-            <select className="panel-input" value={memoryMb} onChange={(e) => setMemoryMb(Number(e.target.value))}>
-              {MEMORY_OPTIONS.map((m) => (
-                <option key={m} value={m}>
-                  {formatMb(m)}
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Memory"
+              value={String(memoryMb)}
+              options={MEMORY_OPTIONS.map((item) => ({ value: String(item), label: formatMb(item) }))}
+              onChange={(next) => setMemoryMb(Number(next))}
+            />
           </Field>
           <Field label="CPU limit">
-            <select className="panel-input" value={cpuLimit} onChange={(e) => setCpuLimit(Number(e.target.value))}>
-              {CPU_OPTIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c}% · {c / 100} vCPU
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="CPU limit"
+              value={String(cpuLimit)}
+              options={CPU_OPTIONS.map((item) => ({ value: String(item), label: `${item}% · ${item / 100} vCPU` }))}
+              onChange={(next) => setCpuLimit(Number(next))}
+            />
           </Field>
           <Field label="Disk">
-            <select className="panel-input" value={diskMb} onChange={(e) => setDiskMb(Number(e.target.value))}>
-              {DISK_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {formatMb(d)}
-                </option>
-              ))}
-            </select>
+            <ResourceSelect
+              label="Disk"
+              value={String(diskMb)}
+              options={DISK_OPTIONS.map((item) => ({ value: String(item), label: formatMb(item) }))}
+              onChange={(next) => setDiskMb(Number(next))}
+            />
           </Field>
         </div>
         <div className="flex justify-end gap-2 border-t border-line pt-4">
@@ -421,10 +531,7 @@ function ServerDetail({ id }: { id: string }) {
   const [server, setServer] = useState<ServerDto | null>(() => servers.find((s) => s.id === id) ?? null);
   const [events, setEvents] = useState<ServerEventDto[] | null>(null);
   const [missing, setMissing] = useState(false);
-  const [history, setHistory] = useState<{ cpu: number[]; mem: number[] }>({ cpu: [], mem: [] });
   const now = useNow(1000);
-  const serverRef = useRef(server);
-  serverRef.current = server;
 
   const apply = useCallback(
     (data: ServerSnapshot) => {
@@ -444,32 +551,30 @@ function ServerDetail({ id }: { id: string }) {
   }, [id, apply]);
 
   useEffect(() => {
-    void load();
-    const timer = window.setInterval(() => {
+    const initial = window.setTimeout(() => void load(), 0);
+    const interval = window.setInterval(() => {
       if (!document.hidden) void load();
     }, 1500);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, [load]);
 
-  useEffect(() => {
-    const s = serverRef.current;
-    if (!now || !s) return;
-    setHistory((h) => {
-      if (h.cpu.length === 0) {
-        // Backfill: telemetry is deterministic, so the recent past is reproducible.
-        const cpu: number[] = [];
-        const mem: number[] = [];
-        for (let i = 47; i >= 0; i--) {
-          const tel = sampleTelemetry(s, now - i * 1000);
-          cpu.push(tel.cpu / s.cpuLimit);
-          mem.push(tel.memMb / s.memoryMb);
-        }
-        return { cpu, mem };
+  const history = useMemo(() => {
+    const cpu: number[] = [];
+    const mem: number[] = [];
+    if (now && server) {
+      // Telemetry is deterministic, so the complete recent series can be
+      // derived without a state-synchronizing effect or render-time ref.
+      for (let i = 47; i >= 0; i--) {
+        const sample = sampleTelemetry(server, now - i * 1000);
+        cpu.push(sample.cpu / server.cpuLimit);
+        mem.push(sample.memMb / server.memoryMb);
       }
-      const tel = sampleTelemetry(s, now);
-      return { cpu: [...h.cpu.slice(-47), tel.cpu / s.cpuLimit], mem: [...h.mem.slice(-47), tel.memMb / s.memoryMb] };
-    });
-  }, [now]);
+    }
+    return { cpu, mem };
+  }, [now, server]);
 
   if (missing || !server) {
     return (
@@ -608,7 +713,7 @@ function StatTile({
     <div className="glass p-4">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-extrabold tracking-[0.12em] text-steel uppercase">{label}</span>
-        <span className="grid size-8 place-items-center rounded-[9px] border border-accent/35 bg-accent/12 text-accent">{icon}</span>
+        <span className="grid size-8 place-items-center rounded-[var(--control-radius)] border border-accent/35 bg-accent/12 text-accent">{icon}</span>
       </div>
       <div className="mt-2 font-mono text-[20px] font-semibold tracking-tight">{value}</div>
       <div className="text-[11.5px] font-semibold text-steel">{sub}</div>
@@ -811,7 +916,7 @@ function ServerSettingsCard({
           Rename
         </button>
       </form>
-      <div className="mt-4 rounded-[12px] border border-danger/30 bg-danger/8 p-3">
+      <div className="mt-4 rounded-[var(--control-radius)] border border-danger/30 bg-danger/8 p-3">
         <div className="text-[12.5px] font-extrabold text-danger">Danger zone</div>
         <p className="mt-0.5 text-[11.5px] font-semibold text-steel">Deleting a server wipes its files and console history.</p>
         <button type="button" className="btn-danger mt-2.5 w-full" disabled={busy} onClick={() => void remove()}>

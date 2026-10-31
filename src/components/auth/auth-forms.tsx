@@ -45,9 +45,6 @@ export function AuthShell({
           </div>
           {children}
         </div>
-        <p className="mt-6 text-center text-[11px] font-bold tracking-[0.14em] text-faint uppercase">
-          Glassmorphism control panel for game &amp; app servers
-        </p>
       </main>
     </div>
   );
@@ -94,7 +91,7 @@ function PasswordInput({
 function ErrorNote({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <p className="mt-3 rounded-[10px] border border-danger/35 bg-danger/10 px-3 py-2 text-[12px] font-bold text-danger" role="alert">
+    <p className="mt-3 rounded-[var(--control-radius)] border border-danger/35 bg-danger/10 px-3 py-2 text-[12px] font-bold text-danger" role="alert">
       {message}
     </p>
   );
@@ -200,7 +197,7 @@ export function LoginForm({
           <Divider>or</Divider>
           <a
             href="/api/auth/google/start"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-fill px-4 py-2.5 text-[13.5px] font-bold text-ice transition-colors hover:border-accent/55 hover:bg-fill-strong"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--control-radius)] border border-line-strong bg-fill px-4 py-2.5 text-[13.5px] font-bold text-ice transition-colors hover:border-accent/55 hover:bg-fill-strong"
           >
             <GoogleG className="size-4" />
             Continue with Google
@@ -208,12 +205,12 @@ export function LoginForm({
         </>
       ) : null}
       {googleError ? (
-        <p className="mt-3 rounded-[10px] border border-danger/35 bg-danger/10 px-3 py-2 text-[12px] font-bold text-danger" role="alert">
+        <p className="mt-3 rounded-[var(--control-radius)] border border-danger/35 bg-danger/10 px-3 py-2 text-[12px] font-bold text-danger" role="alert">
           Google sign-in failed: {googleError}
         </p>
       ) : null}
       {demos.length ? (
-        <div className="mt-4 rounded-[12px] border border-accent/35 bg-accent/10 px-3 py-3 text-left">
+        <div className="mt-4 rounded-[var(--control-radius)] border border-accent/35 bg-accent/10 px-3 py-3 text-left">
           <div className="flex items-center gap-1.5 text-[10.5px] font-extrabold tracking-[0.12em] text-accent uppercase">
             <Sparkles className="size-3.5" /> Demo access
           </div>
@@ -222,7 +219,7 @@ export function LoginForm({
               <button
                 key={account.username}
                 type="button"
-                className="flex w-full items-center justify-between gap-3 rounded-[9px] border border-line bg-fill px-2.5 py-1.5 text-left transition-colors hover:border-accent/50"
+                className="flex w-full items-center justify-between gap-3 rounded-[var(--control-radius)] border border-line bg-fill px-2.5 py-1.5 text-left transition-colors hover:border-accent/50"
                 onClick={() => {
                   setIdentifier(account.username);
                   setPassword(account.password);
@@ -406,7 +403,7 @@ export function ForgotForm({ panelName, enabled }: { panelName: string; enabled:
   return (
     <>
       {!enabled ? (
-        <p className="mb-4 rounded-[12px] border border-warn/35 bg-warn/10 px-3 py-2 text-left text-[12.5px] font-semibold text-warn">
+        <p className="mb-4 rounded-[var(--control-radius)] border border-warn/35 bg-warn/10 px-3 py-2 text-left text-[12.5px] font-semibold text-warn">
           Self-service password reset is currently disabled by the panel administrator. Ask an admin to reset your password.
         </p>
       ) : null}
@@ -435,10 +432,10 @@ export function ForgotForm({ panelName, enabled }: { panelName: string; enabled:
         </button>
       </form>
       {info ? (
-        <div className="mt-4 rounded-[12px] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12px] font-semibold text-ok">
+        <div className="mt-4 rounded-[var(--control-radius)] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12px] font-semibold text-ok">
           {info}
           {previewUrl ? (
-            <div className="mt-2 break-all rounded-[8px] border border-accent/30 bg-fill px-2 py-1.5 font-mono text-[11px] text-ice">
+            <div className="mt-2 break-all rounded-[var(--control-radius)] border border-accent/30 bg-fill px-2 py-1.5 font-mono text-[11px] text-ice">
               Dev preview:{" "}
               <Link href={previewUrl} className="text-accent underline">
                 open reset link
@@ -474,7 +471,7 @@ export function ResetForm({ panelName, token }: { panelName: string; token: stri
   if (!token && !done) {
     return (
       <>
-        <p className="rounded-[12px] border border-danger/35 bg-danger/10 px-3 py-3 text-[12.5px] font-semibold text-danger">
+        <p className="rounded-[var(--control-radius)] border border-danger/35 bg-danger/10 px-3 py-3 text-[12.5px] font-semibold text-danger">
           This reset link is missing a token. Open the link from your email or request a new one.
         </p>
         <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">
@@ -505,7 +502,7 @@ export function ResetForm({ panelName, token }: { panelName: string; token: stri
   if (done) {
     return (
       <>
-        <div className="rounded-[12px] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12.5px] font-semibold text-ok">
+        <div className="rounded-[var(--control-radius)] border border-ok/30 bg-ok/10 px-3 py-3 text-left text-[12.5px] font-semibold text-ok">
           Your {panelName} password has been updated. Sign in with your new password below.
         </div>
         <div className="mt-5 border-t border-line pt-4 text-[12.5px] font-semibold text-steel">

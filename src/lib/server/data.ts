@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { randomBytes } from "node:crypto";
 import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { db, pool } from "@/db";
 import { mediaFiles, panelSettings, passwordResetTokens, serverBackups, serverEvents, servers, sessions, users } from "@/db/schema";
@@ -13,7 +12,7 @@ import {
   getTemplate,
   parseShaderWallpaper,
 } from "@/lib/panel/catalog";
-import { parseMode } from "@/lib/panel/theme";
+import { parseCardTheme, parseMode } from "@/lib/panel/theme";
 import {
   DEFAULT_SETTINGS,
   DEMO_ACCOUNTS,
@@ -48,12 +47,14 @@ create table if not exists users (
   status text not null default 'active',
   bio text not null default '',
   profile_pic text not null default '',
+  profile_banner text not null default '',
   last_seen timestamptz,
   last_login_at timestamptz,
   created_at timestamptz not null default now(),
   constraint users_username_unique unique (username),
   constraint users_email_unique unique (email)
 );
+alter table users add column if not exists profile_banner text not null default '';
 create table if not exists sessions (
   id text primary key,
   user_id text not null,
@@ -62,10 +63,23 @@ create table if not exists sessions (
   constraint sessions_user_id_users_id_fk foreign key (user_id) references users(id) on delete cascade
 );
 create index if not exists sessions_user_idx on sessions (user_id);
+create table if not exists api_keys (
+  id text primary key,
+  user_id text not null,
+  name text not null,
+  prefix text not null,
+  token_hash text not null unique,
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz,
+  expires_at timestamptz,
+  constraint api_keys_user_id_users_id_fk foreign key (user_id) references users(id) on delete cascade
+);
+create index if not exists api_keys_user_idx on api_keys (user_id);
+create index if not exists api_keys_hash_idx on api_keys (token_hash);
 create table if not exists panel_settings (
   id integer primary key,
   theme_mode text not null default 'dark',
-  wallpaper_url text not null default 'shader:waves',
+  wallpaper_url text not null default '',
   bg_blur integer not null default 0,
   bg_opacity integer not null default 100,
   accent_color text not null default '#d00000',
@@ -76,6 +90,8 @@ create table if not exists panel_settings (
   glass_saturate integer not null default 160,
   border_radius integer not null default 16,
   glass_opacity integer not null default 62,
+  card_glass boolean not null default true,
+  card_theme text not null default 'auto',
   show_team boolean not null default true,
   panel_name text not null default 'BT Panel',
   panel_subtitle text not null default 'Command center',
@@ -88,6 +104,7 @@ create table if not exists panel_settings (
   show_version boolean not null default true,
   show_role boolean not null default true,
   show_header_user boolean not null default true,
+  show_theme_toggle boolean not null default true,
   allow_registration boolean not null default true,
   tutorials_enabled boolean not null default true,
   show_demo_login boolean not null default true,
@@ -104,9 +121,13 @@ create table if not exists panel_settings (
   google_allowed_email text not null default '',
   updated_at timestamptz not null default now()
 );
+alter table panel_settings alter column wallpaper_url set default '';
 insert into panel_settings (id) values (1) on conflict (id) do nothing;
 -- Column backfill for upgrades from older versions where the table
 -- already exists from before the new columns were added.
+alter table panel_settings add column if not exists card_glass boolean not null default true;
+alter table panel_settings add column if not exists card_theme text not null default 'auto';
+alter table panel_settings add column if not exists show_theme_toggle boolean not null default true;
 alter table panel_settings add column if not exists password_reset_enabled boolean not null default true;
 alter table panel_settings add column if not exists smtp_host text not null default '';
 alter table panel_settings add column if not exists smtp_port integer not null default 587;
@@ -205,59 +226,31 @@ const LINES = {
   killed: `${SYSTEM} Server process killed (SIGKILL)`,
 };
 const DAY = 86_400_000;
-const HOUR = 3_600_000;
 
 function levelOf(message: string): EventLevel {
   return message.startsWith(SYSTEM) ? "system" : "info";
 }
 
 async function seedDemo() {
-  // SEED_DEMO=false (a real server) skips the sample accounts and fleet so the
-  // first account registered becomes the panel owner.
+  // SEED_DEMO=false skips the owner login so the first registered account
+  // becomes the panel owner. Demo mode seeds only that login: the fleet starts
+  // empty and no additional member accounts are created.
   if (process.env.SEED_DEMO === "false" || process.env.SEED_DEMO === "0") return;
   const res = await pool.query<{ n: number }>("select count(*)::int as n from users");
   if ((res.rows[0]?.n ?? 0) > 0) return;
-  const now = Date.now();
-  const [ownerDemo, memberDemo] = DEMO_ACCOUNTS;
-  const ownerHash = await hashPassword(ownerDemo.password);
-  const steveHash = await hashPassword(memberDemo.password);
-  const lockedHash = await hashPassword(randomBytes(18).toString("hex"));
+  const [ownerDemo] = DEMO_ACCOUNTS;
   await db
     .insert(users)
-    .values([
-      { id: ownerDemo.id, username: ownerDemo.username, email: "admin@btpanel.local", passwordHash: ownerHash, role: "owner", bio: "Panel owner — keeps every server humming.", createdAt: new Date(now - 64 * DAY) },
-      { id: memberDemo.id, username: memberDemo.username, email: "steve@btpanel.local", passwordHash: steveHash, role: "member", bio: "Runs the Valheim realm and the building contests.", createdAt: new Date(now - 22 * DAY) },
-      { id: "usr_nova", username: "nova", email: "nova@btpanel.local", passwordHash: lockedHash, role: "admin", bio: "Infrastructure & game ops.", lastSeen: new Date(now - 3 * HOUR), createdAt: new Date(now - 51 * DAY) },
-      { id: "usr_kairo", username: "kairo", email: "kairo@btpanel.local", passwordHash: lockedHash, role: "member", bio: "Minecraft builder and redstone wizard.", lastSeen: new Date(now - 26 * HOUR), createdAt: new Date(now - 30 * DAY) },
-      { id: "usr_lumen", username: "lumen", email: "lumen@btpanel.local", passwordHash: lockedHash, role: "member", bio: "Discord bot maintainer.", lastSeen: new Date(now - 6 * DAY), createdAt: new Date(now - 12 * DAY) },
-    ])
+    .values({
+      id: ownerDemo.id,
+      username: ownerDemo.username,
+      email: "admin@btpanel.local",
+      passwordHash: await hashPassword(ownerDemo.password),
+      role: "owner",
+      bio: "Panel owner — keeps every server humming.",
+      createdAt: new Date(Date.now() - 64 * DAY),
+    })
     .onConflictDoNothing();
-
-  const seeds = [
-    { id: "srv_smp", name: "Survival SMP", template: "minecraft", up: 3 * DAY + 4 * HOUR, node: "eu-fra-01", ip: "10.20.0.11", port: 25565, cpuLimit: 400, memoryMb: 8192, diskMb: 51200, ownerId: "usr_admin" },
-    { id: "srv_cs2", name: "CS2 Competitive", template: "cs2", up: 7 * HOUR, node: "us-nyc-02", ip: "10.40.0.21", port: 27015, cpuLimit: 200, memoryMb: 4096, diskMb: 51200, ownerId: "usr_nova" },
-    { id: "srv_bot", name: "BT Discord Bot", template: "discord-bot", up: 12 * DAY, node: "eu-fra-01", ip: "10.20.0.14", port: 8080, cpuLimit: 100, memoryMb: 1024, diskMb: 10240, ownerId: "usr_admin" },
-    { id: "srv_api", name: "Status API", template: "nodejs", up: 26 * HOUR, node: "us-nyc-02", ip: "10.40.0.22", port: 3000, cpuLimit: 100, memoryMb: 2048, diskMb: 10240, ownerId: "usr_admin" },
-    { id: "srv_rust", name: "Rust Main", template: "rust", up: 0, node: "ap-sgp-01", ip: "10.60.0.31", port: 28015, cpuLimit: 400, memoryMb: 16384, diskMb: 102400, ownerId: "usr_admin" },
-    { id: "srv_valheim", name: "Valheim Realm", template: "valheim", up: 0, node: "eu-fra-01", ip: "10.20.0.12", port: 2456, cpuLimit: 200, memoryMb: 4096, diskMb: 20480, ownerId: "usr_steve" },
-  ];
-  for (const [index, seed] of seeds.entries()) {
-    const { up, ...rest } = seed;
-    const startedAt = up ? new Date(now - up) : null;
-    const changedAt = startedAt ?? new Date(now - 2 * DAY);
-    const inserted = await db
-      .insert(servers)
-      .values({ ...rest, status: up ? "running" : "offline", statusChangedAt: changedAt, startedAt, createdAt: new Date(now - 40 * DAY + index * 60_000) })
-      .onConflictDoNothing()
-      .returning({ id: servers.id });
-    if (!inserted.length) continue;
-    const t = getTemplate(seed.template);
-    const lines = startedAt ? [...t.bootLog, LINES.running] : [LINES.stopping, ...t.stopLog, LINES.offline];
-    const origin = changedAt.getTime() - (startedAt ? BOOT_MS : 0);
-    await db.insert(serverEvents).values(
-      lines.map((message, i) => ({ serverId: seed.id, level: levelOf(message), message, createdAt: new Date(origin + i * 600) })),
-    );
-  }
 }
 
 // ── Settings ────────────────────────────────────────────────────────────────
@@ -275,6 +268,8 @@ function rowToSettings(row: SettingsRow): PanelSettings {
     glassSaturate: row.glassSaturate,
     borderRadius: row.borderRadius,
     glassOpacity: row.glassOpacity,
+    cardGlass: row.cardGlass,
+    cardTheme: parseCardTheme(row.cardTheme) ?? "auto",
     showTeam: row.showTeam,
     panelName: row.panelName,
     panelSubtitle: row.panelSubtitle,
@@ -287,6 +282,7 @@ function rowToSettings(row: SettingsRow): PanelSettings {
     showVersion: row.showVersion,
     showRole: row.showRole,
     showHeaderUser: row.showHeaderUser,
+    showThemeToggle: row.showThemeToggle,
     allowRegistration: row.allowRegistration,
     showDemoLogin: row.showDemoLogin,
     passwordResetEnabled: row.passwordResetEnabled,
@@ -353,6 +349,8 @@ export async function updateSettings(input: Record<string, unknown>): Promise<Pa
   put("glassSaturate", intIn(input.glassSaturate, 100, 250));
   put("borderRadius", intIn(input.borderRadius, 0, 24));
   put("glassOpacity", intIn(input.glassOpacity, 0, 100));
+  put("cardGlass", bool(input.cardGlass));
+  put("cardTheme", parseCardTheme(input.cardTheme) ?? undefined);
   put("showTeam", bool(input.showTeam));
   const panelName = str(input.panelName, 40);
   if (panelName !== undefined && !panelName) throw new HttpError(400, "Panel name cannot be empty.");
@@ -367,6 +365,7 @@ export async function updateSettings(input: Record<string, unknown>): Promise<Pa
   put("showVersion", bool(input.showVersion));
   put("showRole", bool(input.showRole));
   put("showHeaderUser", bool(input.showHeaderUser));
+  put("showThemeToggle", bool(input.showThemeToggle));
   put("allowRegistration", bool(input.allowRegistration));
   put("showDemoLogin", bool(input.showDemoLogin));
   put("passwordResetEnabled", bool(input.passwordResetEnabled));
@@ -407,6 +406,7 @@ export function toProfile(row: UserRow, includeEmail = true): PanelProfile {
     status: row.status === "suspended" ? "suspended" : "active",
     bio: row.bio,
     profilePic: row.profilePic,
+    profileBanner: row.profileBanner,
     lastSeen: row.lastSeen ? row.lastSeen.toISOString() : null,
     lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
@@ -518,6 +518,13 @@ export async function updateOwnProfile(user: UserRow, input: Record<string, unkn
     if (pic && !/^data:image\/(png|jpe?g|webp);base64,/i.test(pic)) throw new HttpError(400, "Profile picture must be a PNG, JPEG or WebP image.");
     if (pic.length > 200_000) throw new HttpError(413, "Profile picture is too large.");
     patch.profilePic = pic;
+  }
+  if (input.profileBanner !== undefined) {
+    const banner = typeof input.profileBanner === "string" ? input.profileBanner.trim() : "";
+    const match = banner.match(/^data:image\/(?:png|gif);base64,([A-Za-z0-9+/=]+)$/i);
+    if (banner && !match) throw new HttpError(400, "Profile banner must be a PNG or GIF image.");
+    if (match && match[1].length > 6_000_000) throw new HttpError(413, "Profile banner is too large (max 4.5 MB).");
+    patch.profileBanner = banner;
   }
   if (Object.keys(patch).length === 0) throw new HttpError(400, "Nothing to update.");
   const rows = await db.update(users).set(patch).where(eq(users.id, user.id)).returning();

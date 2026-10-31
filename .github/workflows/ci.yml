@@ -24,7 +24,9 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Type check
         run: npm run typecheck
-      - name: Lint integration and module files
-        run: npx eslint src/components/panel/views/pterodactyl-view.tsx src/components/panel/shell.tsx src/lib/panel/modules.ts src/lib/panel/types.ts src/lib/server/pterodactyl.ts src/app/api/integrations/pterodactyl
+      - name: Lint panel modules and auth flow
+        run: npx eslint src/components/panel/shell.tsx src/lib/panel/modules.ts src/lib/panel/types.ts src/components/auth/auth-entry.tsx src/components/panel/client-gate.tsx src/lib/utils.ts
+      - name: Lint game admin center
+        run: npx eslint src/components/panel/views/admin-*.tsx src/components/panel/views/api-keys-view.tsx src/components/panel/views/settings-view.tsx src/app/api/admin src/app/layout.tsx src/lib/server/auth.ts src/lib/server/data.ts src/lib/panel/theme.ts src/db/schema.ts
       - name: Build
         run: npm run build

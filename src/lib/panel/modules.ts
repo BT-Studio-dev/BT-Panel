@@ -1,4 +1,4 @@
-import { PlugZap, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { PanelView } from "./types";
 
 /**
@@ -17,13 +17,5 @@ export type PanelModuleDefinition = {
   description: string;
 };
 
-export const PANEL_MODULES: PanelModuleDefinition[] = [
-  {
-    id: "integrations",
-    label: "Integrations",
-    icon: PlugZap,
-    section: "admin",
-    requiredRole: "admin",
-    description: "Connect upstream server-management services.",
-  },
-];
+/** Optional admin modules are registered here when needed. */
+export const PANEL_MODULES: PanelModuleDefinition[] = [];
